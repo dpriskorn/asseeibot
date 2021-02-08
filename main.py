@@ -6,10 +6,48 @@ from time import sleep
 
 import aiohttp
 from aiosseclient import aiosseclient # type: ignore
-from mediawikiapi import MediaWikiAPI # type: ignore
+from mediawikiapi import MediaWikiAPI, PageError # type: ignore
+from rich import print
 
 doi_prefix = "https://doi.org/"
 excluded_wikis = ["ceb", "zh", "ja"]
+mediawikiapi = MediaWikiAPI()
+found_text = "[bold red]DOI link found:[/bold red] "
+
+def search_doi(page):
+    # Look for doi links
+    links = page.references  # broken because of bug
+    if links is not None:
+        #print(f"References:{links}")
+        found = False
+        for link in links:
+            if link.find(doi_prefix) != -1:
+                found = True
+                print(
+                    f"{found_text}{link.replace(doi_prefix, '')} ",
+                )
+        if found:
+            sleep(1)
+    else:
+        print("External links not found")
+
+def download_page(
+        language_code: str = None,
+        title: str = None,
+):
+    print("Downloading wikitext")
+    mediawikiapi.config.language = language_code
+    #print(mediawikiapi.summary(title, sentences=1))
+    page = False
+    try:
+        page = mediawikiapi.page(title)
+    except PageError:
+        print("Got page error, skipping")
+    if page:
+        print("Download finished")
+        #print(page.sections)
+        search_doi(page)
+        #print("Looking for templates")
 
 async def main():
     async for event in aiosseclient(
@@ -22,11 +60,12 @@ async def main():
         # what is the difference?
         server_name = data['server_name']
         namespace = int(data['namespace'])
-        for exclude in excluded_wikis:
-            if server_name.find(exclude) == -1:
-                continue
+        language_code = server_name.replace(".wikipedia.org", "")
+        # for exclude in excluded_wikis:
+            #if language_code == exclude:
+        if language_code != "en":
+            continue
         if server_name.find("wikipedia") != -1 and namespace == 0:
-            language_code = server_name.replace(".wikipedia.org", "")
             title = data['title']
             if data['bot'] is True:
                 bot = "(bot)"
@@ -38,38 +77,13 @@ async def main():
                 type = "(edit)"
             else:
                 type = None
-            if type is not None and language_code == "en":
+            if type is not None:
                 print(f"{type}\t{server_name}\t{bot}\t'{title}'")
                 print(f"http://{server_name}/wiki/{title.replace(' ', '_')}")
-                print("Downloading wikitext")
-                mediawikiapi = MediaWikiAPI()
-                mediawikiapi.config.language = language_code
-                #print(mediawikiapi.summary(title, sentences=1))
-                try:
-                    page = mediawikiapi.page(title)
-                except mediawikiapi.exceptions.PageError:
-                    print("Got page error, skipping")
-                if page:
-                    print("Download finished")
-                    print(page.sections)
-                    if language_code == "en":
-                        #print("enwiki detected")
-                        # Look for doi links
-                        links = page.references
-                        if links is not None:
-                            print(f"References:{links}")
-                            for link in links:
-                                if link.find(doi_prefix) != -1:
-                                    print(
-                                        "DOI link found: {link.replace(doi_prefix, '')} ",
-                                    )
-                        else:
-                            print("External links not found")
-                    # print(page.content.find("DOI"))
-                    # print(page.content.find("DOI:"))
-                    # print(page.content.find("doi="))
-                    #print("Looking for templates")
-            sleep(2)
+                download_page(
+                    language_code=language_code,
+                    title=title,
+                )
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())

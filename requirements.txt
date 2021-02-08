@@ -1,0 +1,7 @@
+aiohttp
+aisseclient
+asyncio
+json
+mediawikiapi
+requests
+rich
