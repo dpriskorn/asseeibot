@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import asyncio
 import json
-import requests
 from time import sleep
 from urllib.parse import quote
 
@@ -9,68 +8,32 @@ import aiohttp
 from aiosseclient import aiosseclient # type: ignore
 from mediawikiapi import MediaWikiAPI, PageError # type: ignore
 from rich import print
-from typing import List, Union
+from typing import List, Union, Dict
 #from wikibaseintegrator import wbi_core
-from sparqldataframe import wikidata_query # type: ignore
 
-import util
+import io
+import wikidata
 
 doi_prefix = "https://doi.org/"
 excluded_wikis = ["ceb", "zh", "ja"]
 mediawikiapi = MediaWikiAPI()
 found_text = "[bold red]DOI link found:[/bold red] "
 wd_prefix = "http://www.wikidata.org/entity/"
-
-def lookup_dois(dois: List = None):
-    print("Looking up DOIs on WD")
-    dataframes = []
-    print(f"dois:{dois}")
-    if dois is not None:
-        for doi in dois:
-            # doi="10.1161/01.HYP.14.4.367"
-            df = wikidata_query(f'''
-        SELECT ?item ?itemLabel 
-        WHERE 
-        {{
-        ?item wdt:P356 "{doi}".
-        SERVICE wikibase:label
-            {{ bd:serviceParam wikibase:language "en,[AUTO_LANGUAGE]". }}
-        }}
-        ''')
-            #print(df)
-            if len(df.index) > 0:
-                dataframes.append(df)
-            else:
-                answer = util.yes_no_question(f"{doi} is missing in WD. Add now?")
-                if answer:
-                    pass
-                else:
-                    pass
-        if len(dataframes) > 0:
-            print(dataframes)
-# dois=[1]
-# lookup_dois(dois)
-# exit(0)
+trust_url_file_endings = True
 
 def search_isbn(page):
     content = page.content
-    if links is not None:
-        #print(f"References:{links}")
-        found = False
-        dois = []
-        for link in links:
-            if link.find(doi_prefix) != -1:
-                found = True
-                doi = link.replace(doi_prefix, '')
-                dois.append(doi)
-                print(
-                    f"{found_text}{doi}",
-                )
-        if found:
-            lookup_dois(dois)
-            sleep(1)
-    else:
-        print("ISBN number not found")
+    # TODO search for isbns
+    #             found = True
+    #             isbns.append(isbn)
+    #             print(
+    #                 f"{found_text}{doi}",
+    #             )
+    #     if found:
+    #         lookup_isbn(isbns)
+    #         sleep(1)
+    # else:
+    #     print("ISBN number not found")
 
         
 def search_doi(page) -> Union[List[str],None]:
@@ -107,16 +70,20 @@ def download_page(
     try:
         page = mediawikiapi.page(title)
         success = True
+        if page is not None:
+            print("Download finished")
+            return page
+        else:
+            return None
     except PageError:
         print("Got page error, skipping")
         success = False
-    if success and page is not None:
-        print("Download finished")
-        return page
-        #print(page.sections)
-        #print("Looking for templates")
+        return None
+    #print(page.sections)
+    #print("Looking for templates")
 
 async def main():
+    count = 0
     async for event in aiosseclient(
             'https://stream.wikimedia.org/v2/stream/recentchange',
     ):
@@ -151,7 +118,14 @@ async def main():
                     language_code=language_code,
                     title=title,
                 )
-                search_doi(page)
+                if page is not None:
+                    dois = search_doi(page)
+                    if dois is not None:
+                        io.save_to_wikipedia_list(dois, language_code, title)
+                        wikidata.lookup_dois(dois)
+                    count += 1
+    if count == 100:
+        exit(0)
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
