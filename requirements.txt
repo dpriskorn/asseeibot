@@ -5,3 +5,4 @@ json
 mediawikiapi
 requests
 rich
+sparqldataframe
