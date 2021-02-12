@@ -6,7 +6,10 @@ from typing import List, Union, Dict
 import crossref
 import util
 
-def lookup_dois(dois: List[str] = None):
+def lookup_dois(
+        dois: List[str] = None,
+        in_wikipedia: bool = False,
+):
     print("Looking up DOIs on WD")
     dataframes = []
     print(f"dois:{dois}")
@@ -31,7 +34,7 @@ def lookup_dois(dois: List[str] = None):
                     " want to add it and all it's references now?"
                 )
                 if answer:
-                    crossref.lookup_data(doi)
+                    crossref.lookup_data(doi=doi, in_wikidata=True)
                     pass
                 else:
                     pass

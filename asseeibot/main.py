@@ -11,7 +11,7 @@ from rich import print
 from typing import List, Union, Dict
 #from wikibaseintegrator import wbi_core
 
-import io
+import input_output
 import wikidata
 
 doi_prefix = "https://doi.org/"
@@ -20,6 +20,10 @@ mediawikiapi = MediaWikiAPI()
 found_text = "[bold red]DOI link found:[/bold red] "
 wd_prefix = "http://www.wikidata.org/entity/"
 trust_url_file_endings = True
+
+# debug
+# input_output.save_to_wikipedia_list(["doi"], "en", "title")
+# exit(0)
 
 def search_isbn(page):
     content = page.content
@@ -83,6 +87,7 @@ def download_page(
     #print("Looking for templates")
 
 async def main():
+    print("Running main")
     count = 0
     async for event in aiosseclient(
             'https://stream.wikimedia.org/v2/stream/recentchange',
@@ -112,7 +117,7 @@ async def main():
             else:
                 type = None
             if type is not None:
-                print(f"{type}\t{server_name}\t{bot}\t'{title}'")
+                print(f"{type}\t{server_name}\t{bot}\t\"{title}\"")
                 print(f"http://{server_name}/wiki/{quote(title)}")
                 page = download_page(
                     language_code=language_code,
@@ -121,8 +126,8 @@ async def main():
                 if page is not None:
                     dois = search_doi(page)
                     if dois is not None:
-                        io.save_to_wikipedia_list(dois, language_code, title)
-                        wikidata.lookup_dois(dois)
+                        input_output.save_to_wikipedia_list(dois, language_code, title)
+                        wikidata.lookup_dois(dois=dois, in_wikipedia=True)
                     count += 1
     if count == 100:
         exit(0)
