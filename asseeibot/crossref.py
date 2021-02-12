@@ -86,19 +86,24 @@ def handle_references(
 def extract_data(message: Dict, in_wikipedia: bool = False):
     keys_we_want = ["author", "title", "original-title", "subtitle",
                     "publisher", "publisher-location", "score", "ISBN",
-                    "reference", "license", "link", "URL"]
+                    "reference", "license", "link", "URL", "ISSN", "issued"]
     data = {}
     # Extract data
     for key in message.keys():
+        if key == "is-referenced-by-count":
+            data[key] = message[key]
+        if key == "ISBN":
+            data[key] = message[key]
+        if key == "ISSN":
+            data[key] = message[key]
+        if key == "issued":
+            data[key] = message[key]
         if key == "publisher-location":
             data[key] = message[key]
         if key == "publisher":
             data[key] = message[key]
         if key == "references-count":
             data[key] = message[key]
-        if key == "is-referenced-by-count":
-            data[key] = message[key]
-            referenced_by_count = message[key]
         if key == "url":
             # What URL is this?
             data[key] = message[key]
@@ -125,7 +130,7 @@ def extract_data(message: Dict, in_wikipedia: bool = False):
             if license_url is None:
                 print("No license found for this article")
         if key not in keys_we_want:
-            print("Skipping key: {key} with data: {message[key]}")
+            print(f"Skipping key: {key} with data: {message[key]}")
     return data
             
 def lookup_data(
@@ -149,7 +154,7 @@ def lookup_data(
         if object_type == "book":
             print("Book detected, we exclude those for now.")
             return None
-        print(message.keys())
+        #print(message.keys())
         data = extract_data(message, in_wikipedia)
         print(data)
         if data.get("publisher") and data.get("publisher_location"): 

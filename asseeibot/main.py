@@ -102,7 +102,7 @@ def finish_all_in_list():
     data = input_output.get_wikipedia_list()
     dois = []
     if data is not None:
-        print(data)
+        # print(data)
         for doi in data:
             if data[doi]["done"] is False:
                 dois.append(doi)
