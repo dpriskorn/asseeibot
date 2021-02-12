@@ -31,7 +31,7 @@ def lookup_dois(
             else:
                 answer = util.yes_no_question(
                     f"{doi} is missing in WD. Do you"+
-                    " want to add it and all it's references now?"
+                    " want to add it now?"
                 )
                 if answer:
                     crossref.lookup_data(doi=doi, in_wikipedia=True)

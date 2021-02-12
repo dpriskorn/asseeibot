@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import asyncio
 import json
+import logging
 from time import sleep
 from urllib.parse import quote
 
@@ -16,7 +17,6 @@ import wikidata
 
 doi_prefix = "https://doi.org/"
 excluded_wikis = ["ceb", "zh", "ja"]
-mediawikiapi = MediaWikiAPI()
 found_text = "[bold red]DOI link found:[/bold red] "
 wd_prefix = "http://www.wikidata.org/entity/"
 trust_url_file_endings = True
@@ -86,8 +86,36 @@ def download_page(
     #print(page.sections)
     #print("Looking for templates")
 
+def check_if_done(doi):
+    """Checks whether the doi has has already been imported by this bot"""
+    data = input_output.get_wikipedia_list()
+    found = False
+    for item in data:
+        if item == doi:
+            return True
+    # This is only reached if no match
+    return found
+
+def finish_all_in_list():
+    print("Going through the local list of found DOIs and finishing importing them all")
+    data = None
+    data = input_output.get_wikipedia_list()
+    dois = []
+    if data is not None:
+        print(data)
+        for doi in data:
+            if data[doi]["done"] is False:
+                dois.append(doi)
+        if len(dois) >0:
+            wikidata.lookup_dois(dois=dois, in_wikipedia=True)
+        print("Done")
+
 async def main():
     print("Running main")
+    finish_all_in_list()
+    exit(0)
+    print("Looking for new DOIs from the Event stream")
+    mediawikiapi = MediaWikiAPI()
     count = 0
     async for event in aiosseclient(
             'https://stream.wikimedia.org/v2/stream/recentchange',
@@ -125,9 +153,17 @@ async def main():
                 )
                 if page is not None:
                     dois = search_doi(page)
-                    if dois is not None:
+                    if len(dois) > 0:
+                        for doi in dois:
+                            done = check_if_done(doi)
+                            if done:
+                                dois.remove(doi)
+                                print(f"{doi} was already imported and marked as done.")           
+                    if dois is not None and not done:
                         input_output.save_to_wikipedia_list(dois, language_code, title)
                         wikidata.lookup_dois(dois=dois, in_wikipedia=True)
+                    else:
+                        pass
                     count += 1
     if count == 100:
         exit(0)
