@@ -34,7 +34,7 @@ def lookup_dois(
                     " want to add it and all it's references now?"
                 )
                 if answer:
-                    crossref.lookup_data(doi=doi, in_wikidata=True)
+                    crossref.lookup_data(doi=doi, in_wikipedia=True)
                     pass
                 else:
                     pass

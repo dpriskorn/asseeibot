@@ -136,11 +136,12 @@ def lookup_data(
         if message.get("is-referenced-by-count"):
             referenced_by_count = message["is-referenced-by-count"]
         url = message["URL"]
-        links: Dict = message["link"]
-        if links is not None:
-            urls = handle_links(links)
-        if urls is not None:
-            print(urls)
+        if message.get("link"):
+            links: Dict = message["link"]
+            if links is not None:
+                urls = handle_links(links)
+            if urls is not None:
+                print(urls)
         # TODO detect garbage license URLs like
         # www.springer.com/tdm
         if message.get("license"):
