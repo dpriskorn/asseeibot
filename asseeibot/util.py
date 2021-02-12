@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import requests
+from typing import Union, Literal
 
 def yes_no_question(message: str):
     # https://www.quora.com/
@@ -14,27 +15,44 @@ def yes_no_question(message: str):
                 # the == operator just returns a boolean,
                 return answer[0].lower() == 'y'
 
-
-def check_if_xml(url: str) -> bool:
-    # We don't trust blindly that the full text is still available
+def get_response(url: str) -> Union[requests.models.Response,Literal[False]]:
     print(f"Checking {url}") 
-    r = requests.get(url)
-    # inspect header to see if we got a PDF back
-    # print(r.headers)
-    if r.headers["Content-Type"] != "application/xml":
-        print("Did not get XML, so it's probably not available")
+    r = requests.head(url)
+    if r.status_code == 200:
+        return r
+    elif r.status_code == 301:
+        # This is permanently moved.
+        # See e.g. https://www.journals.uchicago.edu/doi/pdf/10.1086/243149
+        return False
+    elif r.status_code == 403:
+        # This is forbidden.
+        # See e.g. https://onlinelibrary.wiley.com/doi/full/10.1002/elan.200390114
         return False
     else:
-        return True
-
-def check_if_pdf(url: str) -> bool:
-    # We don't trust blindly that the full text is still available
-    print(f"Checking {url}") 
-    r = requests.get(url)
-    # inspect header to see if we got a PDF back
-    # print(r.headers)
-    if r.headers["Content-Type"] != "application/pdf":
-        print("Did not get PDF, so it's probably not available")
+        print(f"Unknown response code {r.status_code}")
         return False
+    
+            
+def check_if_xml(response) -> bool:
+    # We don't trust blindly that the full text is still available
+    # inspect header to see if we got XML back
+    if response.headers.get("Content-Type"):
+        if response.headers["Content-Type"] != "application/xml":
+            print("Did not get XML, so it's probably not available")
+            return False
+        else:
+            return True
     else:
-        return True
+        return False
+
+def check_if_pdf(response) -> bool:
+    # We don't trust blindly that the full text is still available
+    # inspect header to see if we got a PDF back
+    if response.headers.get("Content-Type"):
+        if response.headers["Content-Type"] != "application/pdf":
+            print("Did not get PDF, so it's probably not available")
+            return False
+        else:
+            return True
+    else:
+        return False

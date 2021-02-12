@@ -15,6 +15,9 @@ from typing import List, Union, Dict
 import input_output
 import wikidata
 
+# wikidata.lookup_issn("2535-7492")
+# exit(0)
+
 doi_prefix = "https://doi.org/"
 excluded_wikis = ["ceb", "zh", "ja"]
 found_text = "[bold red]DOI link found:[/bold red] "

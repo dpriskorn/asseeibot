@@ -34,21 +34,35 @@ def handle_links(links: Dict) -> Union[Dict,None]:
                 if xml_url == url:
                     xml_duplicate = True
                     continue
-        if not pdf_duplicate and ending == "pdf":
-            if util.check_if_pdf(url):
+        if pdf_duplicate or xml_duplicate:
+            continue
+        if ending == "pdf":
+            r = util.get_response(url)
+            if r is not False and util.check_if_pdf(r):
                 found = True
                 pdf_urls.append(url)
             else:
                 continue
-        if not xml_duplicate and ending == "xml":
-            if util.check_if_xml(url):
+        if ending == "xml":
+            r = util.get_response(url)
+            if r is not False and util.check_if_xml(r):
                 found = True
                 xml_urls.append(url)
             else:
                 continue
         if ending not in supported_endings:
             print(f"URL ending not recognized: {link}")
-            continue
+            # Test to see if it serves PDF or XML anyway
+            r = util.get_response(url)
+            if r is not False:
+                if util.check_if_pdf(r):
+                    found = True
+                    pdf_urls.append(url)
+                elif util.check_if_xml(r):
+                    found = True
+                    xml_urls.append(url) 
+            else:
+                continue 
     if found is False:
         print("No fulltext links found")
         return None
@@ -82,7 +96,6 @@ def handle_references(
     if len(dois) > 0:
         wikidata.lookup_dois(dois)
 
-
 def extract_data(message: Dict, in_wikipedia: bool = False):
     keys_we_want = ["author", "title", "original-title", "subtitle",
                     "publisher", "publisher-location", "score", "ISBN",
@@ -95,7 +108,9 @@ def extract_data(message: Dict, in_wikipedia: bool = False):
         if key == "ISBN":
             data[key] = message[key]
         if key == "ISSN":
-            data[key] = message[key]
+            qid = wikidata.lookup_issn(message[key])
+            if qid is not None:
+                data[key] = qid
         if key == "issued":
             data[key] = message[key]
         if key == "publisher-location":

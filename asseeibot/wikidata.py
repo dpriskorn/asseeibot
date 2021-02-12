@@ -3,8 +3,11 @@ from rich import print
 from sparqldataframe import wikidata_query # type: ignore
 from typing import List, Union, Dict
 
+import config
 import crossref
 import util
+
+wd_prefix = config.wd_prefix
 
 def lookup_dois(
         dois: List[str] = None,
@@ -40,6 +43,26 @@ def lookup_dois(
                     pass
         if len(dataframes) > 0:
             print(dataframes)
-# dois=[1]
-# lookup_dois(dois)
-# exit(0)
+
+
+def lookup_issn(issn: List[str]) -> Union[str,None]:
+    print("Looking up ISSN on WD")
+    #  TODO maybe dataframe is a little heavy for just getting the qid?
+    #  TODO decide if we need the label for anything
+    # Pick the first for now.
+    df = wikidata_query(f'''
+        SELECT ?item ?itemLabel 
+        WHERE 
+        {{
+        ?item wdt:P236 "{issn[0]}".
+        SERVICE wikibase:label
+            {{ bd:serviceParam wikibase:language "en,[AUTO_LANGUAGE]". }}
+        }}
+        ''')
+    # print(df)
+    if len(df.index) > 0:
+        # Pick the first as they are unique in WD
+        return df["item"][0].replace(wd_prefix, "")
+    else:
+        print("ISSN not found on WD.")
+        return None
