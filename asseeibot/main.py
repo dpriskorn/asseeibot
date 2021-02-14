@@ -10,8 +10,8 @@ from aiosseclient import aiosseclient # type: ignore
 from mediawikiapi import MediaWikiAPI, PageError # type: ignore
 from rich import print
 from typing import List, Union, Dict
-#from wikibaseintegrator import wbi_core
 
+import config
 import input_output
 import wikidata
 
@@ -67,6 +67,7 @@ def search_doi(page) -> Union[List[str],None]:
         return None
 
 def download_page(
+        mediawikiapi,
         language_code: str = None,
         title: str = None,
 ):
@@ -115,8 +116,8 @@ def finish_all_in_list():
 
 async def main():
     print("Running main")
-    finish_all_in_list()
-    exit(0)
+    if config.import_mode:
+        finish_all_in_list()
     print("Looking for new DOIs from the Event stream")
     mediawikiapi = MediaWikiAPI()
     count = 0
@@ -151,12 +152,13 @@ async def main():
                 print(f"{type}\t{server_name}\t{bot}\t\"{title}\"")
                 print(f"http://{server_name}/wiki/{quote(title)}")
                 page = download_page(
+                    mediawikiapi,
                     language_code=language_code,
                     title=title,
                 )
                 if page is not None:
                     dois = search_doi(page)
-                    if len(dois) > 0:
+                    if dois is not None and len(dois) > 0:
                         for doi in dois:
                             done = check_if_done(doi)
                             if done:
@@ -164,11 +166,12 @@ async def main():
                                 print(f"{doi} was already imported and marked as done.")           
                     if dois is not None and not done:
                         input_output.save_to_wikipedia_list(dois, language_code, title)
-                        wikidata.lookup_dois(dois=dois, in_wikipedia=True)
+                        if config.import_mode:
+                            wikidata.lookup_dois(dois=dois, in_wikipedia=True)
                     else:
                         pass
                     count += 1
-    if count == 100:
+    if config.max_events > 0 and count == config.max_events:
         exit(0)
 
 loop = asyncio.get_event_loop()

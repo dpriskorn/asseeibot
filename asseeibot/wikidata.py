@@ -2,6 +2,7 @@
 from rich import print
 from sparqldataframe import wikidata_query # type: ignore
 from typing import List, Union, Dict
+#from wikibaseintegrator import wbi_core
 
 import config
 import crossref
