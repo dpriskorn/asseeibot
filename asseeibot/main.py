@@ -93,10 +93,11 @@ def download_page(
 def check_if_done(doi):
     """Checks whether the doi has has already been imported by this bot"""
     data = input_output.get_wikipedia_list()
-    found = False
-    for item in data:
-        if item == doi:
-            return True
+    if data is not None:
+        found = False
+        for item in data:
+            if item == doi:
+                return True
     # This is only reached if no match
     return found
 
