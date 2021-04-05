@@ -19,7 +19,9 @@ First clone the repo
  $ git clone ...
 
 Then install the dependencies
- $ sudo pip install -r requirements.txt
+ $ sudo pip3 install -r requirements.txt
+ $ sudo pip3 install git+https://github.com/dpriskorn/MediaWikiAPI
+ $ sudo pip3 install git+https://github.com/ebraminio/aiosseclient
 
 Please don't hold me accountable if the dependecies eat your dog. Look at their
 sources and decide for yoursef whether to trust their authors and the code.
