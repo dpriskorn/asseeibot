@@ -3,7 +3,7 @@ import asyncio
 import json
 import logging
 from time import sleep
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 
 import aiohttp
 from aiosseclient import aiosseclient # type: ignore
@@ -52,7 +52,8 @@ def search_doi(page) -> Union[List[str],None]:
         for link in links:
             if link.find(doi_prefix) != -1:
                 found = True
-                doi = link.replace(doi_prefix, '')
+                # unquote to convert %2F -> /
+                doi = unquote(link.replace(doi_prefix, ''))
                 dois.append(doi)
                 print(
                     f"{found_text}{doi}",
@@ -94,12 +95,11 @@ def check_if_done(doi):
     """Checks whether the doi has has already been imported by this bot"""
     data = input_output.get_wikipedia_list()
     if data is not None:
-        found = False
         for item in data:
             if item == doi:
                 return True
     # This is only reached if no match
-    return found
+    return False
 
 def finish_all_in_list():
     print("Going through the local list of found DOIs and finishing importing them all")
@@ -167,6 +167,8 @@ async def main():
                                 print(f"{doi} was already imported and marked as done.")           
                     if dois is not None and not done:
                         input_output.save_to_wikipedia_list(dois, language_code, title)
+                        #input('Press enter to continue: ')
+                       
                         if config.import_mode:
                             wikidata.lookup_dois(dois=dois, in_wikipedia=True)
                     else:
