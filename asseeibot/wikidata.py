@@ -10,11 +10,13 @@ import util
 
 wd_prefix = config.wd_prefix
 
+
 def lookup_dois(
         dois: List[str] = None,
         in_wikipedia: bool = False,
 ):
     print("Looking up DOIs on WD")
+    missing_dois = []
     dataframes = []
     print(f"dois:{dois}")
     if dois is not None:
@@ -33,17 +35,10 @@ def lookup_dois(
             if len(df.index) > 0:
                 dataframes.append(df)
             else:
-                answer = util.yes_no_question(
-                    f"{doi} is missing in WD. Do you"+
-                    " want to add it now?"
-                )
-                if answer:
-                    crossref.lookup_data(doi=doi, in_wikipedia=True)
-                    pass
-                else:
-                    pass
+                missing_dois.append(doi)
         if len(dataframes) > 0:
             print(dataframes)
+        return missing_dois
 
 
 def lookup_issn(issn: List[str]) -> Union[str,None]:

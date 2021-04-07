@@ -2,6 +2,7 @@
 import requests
 from typing import Union, Literal
 
+
 def yes_no_question(message: str):
     # https://www.quora.com/
     # I%E2%80%99m-new-to-Python-how-can-I-write-a-yes-no-question
@@ -15,8 +16,9 @@ def yes_no_question(message: str):
                 # the == operator just returns a boolean,
                 return answer[0].lower() == 'y'
 
-def get_response(url: str) -> Union[requests.models.Response,Literal[False]]:
-    print(f"Checking {url}") 
+
+def get_response(url: str) -> Union[requests.models.Response, Literal[False]]:
+    print(f"Checking {url}")
     r = requests.head(url)
     if r.status_code == 200:
         return r
@@ -26,13 +28,14 @@ def get_response(url: str) -> Union[requests.models.Response,Literal[False]]:
         return False
     elif r.status_code == 403:
         # This is forbidden.
-        # See e.g. https://onlinelibrary.wiley.com/doi/full/10.1002/elan.200390114
+        # See e.g.
+        # https://onlinelibrary.wiley.com/doi/full/10.1002/elan.200390114
         return False
     else:
         print(f"Unknown response code {r.status_code}")
         return False
-    
-            
+
+
 def check_if_xml(response) -> bool:
     # We don't trust blindly that the full text is still available
     # inspect header to see if we got XML back
@@ -44,6 +47,7 @@ def check_if_xml(response) -> bool:
             return True
     else:
         return False
+
 
 def check_if_pdf(response) -> bool:
     # We don't trust blindly that the full text is still available

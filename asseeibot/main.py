@@ -42,7 +42,6 @@ def search_isbn(page):
     # else:
     #     print("ISBN number not found")
 
-        
 def search_doi(page) -> Union[List[str],None]:
     links = page.references
     if links is not None:
@@ -66,6 +65,7 @@ def search_doi(page) -> Union[List[str],None]:
     else:
         print("External links not found")
         return None
+
 
 def download_page(
         mediawikiapi,
@@ -91,6 +91,7 @@ def download_page(
     #print(page.sections)
     #print("Looking for templates")
 
+
 def check_if_done(doi):
     """Checks whether the doi has has already been imported by this bot"""
     data = input_output.get_wikipedia_list()
@@ -100,6 +101,7 @@ def check_if_done(doi):
                 return True
     # This is only reached if no match
     return False
+
 
 def finish_all_in_list():
     print("Going through the local list of found DOIs and finishing importing them all")
@@ -115,6 +117,55 @@ def finish_all_in_list():
             wikidata.lookup_dois(dois=dois, in_wikipedia=True)
         print("Done")
 
+
+def process_event(
+        mediawikiapi,
+        language_code=None,
+        title=None,
+):
+    page = download_page(
+        mediawikiapi,
+        language_code=language_code,
+        title=title,
+    )
+    dois = None
+    missing_dois = None
+    if page is not None:
+        dois = search_doi(page)
+        if dois is not None and len(dois) > 0:
+            for doi in dois:
+                done = check_if_done(doi)
+                if done:
+                    dois.remove(doi)
+                    print(f"{doi} has been found before.")
+        if dois is not None and not done:
+            #input('Press enter to continue: ')
+            missing_dois = wikidata.lookup_dois(dois=dois, in_wikipedia=True)
+            if len(missing_dois) > 0:
+                input_output.save_to_wikipedia_list(missing_dois, language_code, title)
+            #if config.import_mode:
+                # answer = util.yes_no_question(
+                #     f"{doi} is missing in WD. Do you"+
+                #     " want to add it now?"
+                # )
+                # if answer:
+                #     crossref.lookup_data(doi=doi, in_wikipedia=True)
+                #     pass
+                # else:
+                #     pass
+        else:
+            pass
+    # Return tuple with counts
+    if dois is not None and missing_dois is None:
+        return (len(dois), 0)
+    elif dois is None and missing_dois is not None:
+        return (len(dois),len(missing_dois))
+    elif dois is not None and missing_dois is not None:
+        return (len(dois),len(missing_dois))
+    else:
+        return (0,0)
+
+
 async def main():
     print("Running main")
     if config.import_mode:
@@ -122,19 +173,21 @@ async def main():
     print("Looking for new DOIs from the Event stream")
     mediawikiapi = MediaWikiAPI()
     count = 0
+    count_dois_found = 0
+    count_missing_dois = 0
     async for event in aiosseclient(
             'https://stream.wikimedia.org/v2/stream/recentchange',
     ):
-        #print(event)
+        # print(event)
         data = json.loads(str(event))
-        #print(data)
+        # print(data)
         meta = data["meta"]
         # what is the difference?
         server_name = data['server_name']
         namespace = int(data['namespace'])
         language_code = server_name.replace(".wikipedia.org", "")
         # for exclude in excluded_wikis:
-            #if language_code == exclude:
+            # if language_code == exclude:
         if language_code != "en":
             continue
         if server_name.find("wikipedia") != -1 and namespace == 0:
@@ -152,28 +205,18 @@ async def main():
             if type is not None:
                 print(f"{type}\t{server_name}\t{bot}\t\"{title}\"")
                 print(f"http://{server_name}/wiki/{quote(title)}")
-                page = download_page(
+                dois_count_tuple = process_event(
                     mediawikiapi,
                     language_code=language_code,
                     title=title,
                 )
-                if page is not None:
-                    dois = search_doi(page)
-                    if dois is not None and len(dois) > 0:
-                        for doi in dois:
-                            done = check_if_done(doi)
-                            if done:
-                                dois.remove(doi)
-                                print(f"{doi} was already imported and marked as done.")           
-                    if dois is not None and not done:
-                        input_output.save_to_wikipedia_list(dois, language_code, title)
-                        #input('Press enter to continue: ')
-                       
-                        if config.import_mode:
-                            wikidata.lookup_dois(dois=dois, in_wikipedia=True)
-                    else:
-                        pass
-                    count += 1
+                if dois_count_tuple[0] > 0:
+                    count_dois_found += dois_count_tuple[0]
+                if dois_count_tuple[1] > 0:
+                    count_missing_dois += dois_count_tuple[1]
+                count += 1
+                print(f"Processed {count} events and found {count_dois_found}"+
+                      f" DOIs where {count_missing_dois} were missing in WD.")
     if config.max_events > 0 and count == config.max_events:
         exit(0)
 
