@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
+import sys
+# Workaround for 3.7 missing Literal see https://python.plainenglish.io/the-literal-annotation-in-python-f882c021ab53
+if sys.version_info.major == 3 and sys.version_info.minor == 7:
+    from typing import Union
+    from typing_extensions import Literal
+else:
+    from typing import Union, Literal
+
 import requests
-from typing import Union, Literal
 
 
 def yes_no_question(message: str):
