@@ -4,3 +4,6 @@ requests
 rich
 sparqldataframe
 habanero
+git+git://github.com/lehinevych/MediaWikiAPI#egg=mediawikiapi
+git+git://github.com/ebraminio/aiosseclient#egg=aiosseclient
+simplejson
