@@ -9,7 +9,13 @@ Currently all it does is to collect DOIs in a json file (see details below).
 These can be used with https://sourcemd.toolforge.org/index_old.php where they 
 can be added seamlessly.
 
-## TODO
+The development was paused in 2021 because the Wikidata infrastructure is not 
+ready to handle all the new items and triples that this bot would create over time.
+
+As of december 2021 WMF is trying to fix the scaling issues surrounding BlazeGraph. 
+See https://phabricator.wikimedia.org/T206560
+
+## TODO once WMF fixed the infrastructure
 *Support for ISBN
 *Import from Crossref.org and Worldcat.org if a non existing match is found.
 *When importing DOIs it also imports all references that have DOIs.
