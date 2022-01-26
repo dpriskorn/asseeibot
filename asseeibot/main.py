@@ -116,7 +116,7 @@ def process_event(
         # else:
         #     pass
     # Return tuple with counts
-    return (len(dois), len(missing_dois))
+    return len(dois), len(missing_dois)
 
 
 async def main():
@@ -136,7 +136,7 @@ async def main():
         # print(event)
         data = json.loads(str(event))
         # print(data)
-        meta = data["meta"]
+        # meta = data["meta"]
         # what is the difference?
         server_name = data['server_name']
         namespace = int(data['namespace'])
