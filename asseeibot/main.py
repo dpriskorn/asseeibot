@@ -5,6 +5,7 @@ import logging
 from urllib.parse import quote
 
 import pywikibot
+from aiohttp import ClientPayloadError
 from aiosseclient import aiosseclient  # type: ignore
 from rich import print
 
@@ -119,6 +120,7 @@ def process_event(
 
 
 async def main():
+    logger = logging.getLogger(__name__)
     print("Running main")
     if config.import_mode:
         finish_all_in_list()
@@ -128,57 +130,65 @@ async def main():
     count = 0
     count_dois_found = 0
     count_missing_dois = 0
-    async for event in aiosseclient(
-            'https://stream.wikimedia.org/v2/stream/recentchange',
-    ):
-        logger = logging.getLogger(__name__)
-        # print(event)
-        data = json.loads(str(event))
-        # print(data)
-        # meta = data["meta"]
-        # what is the difference?
-        server_name = data['server_name']
-        namespace = int(data['namespace'])
-        language_code = server_name.replace(".wikipedia.org", "")
-        # for exclude in excluded_wikis:
-        # if language_code == exclude:
-        if language_code != "en":
+    # We run in a while loop so we can continue even if we get a ClientPayloadError
+    while True:
+        try:
+            async for event in aiosseclient(
+                    'https://stream.wikimedia.org/v2/stream/recentchange',
+            ):
+                logger = logging.getLogger(__name__)
+                # print(event)
+                data = json.loads(str(event))
+                # print(data)
+                # meta = data["meta"]
+                # what is the difference?
+                server_name = data['server_name']
+                namespace = int(data['namespace'])
+                language_code = server_name.replace(".wikipedia.org", "")
+                # for exclude in excluded_wikis:
+                # if language_code == exclude:
+                if language_code != "en":
+                    continue
+                if server_name.find("wikipedia") != -1 and namespace == 0:
+                    title = data['title']
+                    if data['bot'] is True:
+                        bot = "(bot)"
+                    else:
+                        bot = "(!bot)"
+                    if data['type'] == "new":
+                        edit_type = "(new)"
+                    elif data['type'] == "edit":
+                        edit_type = "(edit)"
+                    else:
+                        edit_type = None
+                    if edit_type is not None:
+                        logger.info(f"{edit_type}\t{server_name}\t{bot}\t\"{title}\"")
+                        logger.info(f"http://{server_name}/wiki/{quote(title)}")
+                        dois_count_tuple = process_event(
+                            site,
+                            # language_code=language_code,
+                            title=title,
+                        )
+                        if dois_count_tuple[0] > 0:
+                            count_dois_found += dois_count_tuple[0]
+                        if dois_count_tuple[1] > 0:
+                            count_missing_dois += dois_count_tuple[1]
+                        count += 1
+                        if count_dois_found > 0:
+                            percentage = int(round(count_missing_dois*100/count_dois_found, 0))
+                        else:
+                            percentage = 0
+                        print(f"Processed {count} events and found {count_dois_found}" +
+                              f" DOIs. {count_missing_dois} "
+                              f"({percentage}%) "
+                              f"were missing in WD.")
+                if config.max_events > 0 and count == config.max_events:
+                    exit(0)
+        except ClientPayloadError:
+            logger.error("ClientPayloadError")
             continue
-        if server_name.find("wikipedia") != -1 and namespace == 0:
-            title = data['title']
-            if data['bot'] is True:
-                bot = "(bot)"
-            else:
-                bot = "(!bot)"
-            if data['type'] == "new":
-                edit_type = "(new)"
-            elif data['type'] == "edit":
-                edit_type = "(edit)"
-            else:
-                edit_type = None
-            if edit_type is not None:
-                logger.info(f"{edit_type}\t{server_name}\t{bot}\t\"{title}\"")
-                logger.info(f"http://{server_name}/wiki/{quote(title)}")
-                dois_count_tuple = process_event(
-                    site,
-                    # language_code=language_code,
-                    title=title,
-                )
-                if dois_count_tuple[0] > 0:
-                    count_dois_found += dois_count_tuple[0]
-                if dois_count_tuple[1] > 0:
-                    count_missing_dois += dois_count_tuple[1]
-                count += 1
-                if count_dois_found > 0:
-                    percentage = int(round(count_missing_dois*100/count_dois_found, 0))
-                else:
-                    percentage = 0
-                print(f"Processed {count} events and found {count_dois_found}" +
-                      f" DOIs. {count_missing_dois} "
-                      f"({percentage}%) "
-                      f"were missing in WD.")
-    if config.max_events > 0 and count == config.max_events:
-        exit(0)
+        if config.max_events > 0 and count == config.max_events:
+            exit(0)
 
 
 loop = asyncio.get_event_loop()
