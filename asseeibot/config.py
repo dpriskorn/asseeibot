@@ -11,7 +11,7 @@ max_events = 0
 username = "So9q"
 loglevel = logging.WARNING
 
-version = "0.1-alpha0"
+version = "0.2-alpha0"
 user_agent = f"Asynchronous Server Side Events External Identifier Bot/v{version} " \
            f"https://github.com/dpriskorn/asseeibot run by User:{username}"
 wikipedia_list = "found_in_wikipedia.json"
