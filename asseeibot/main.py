@@ -102,7 +102,7 @@ def process_event(
                     logger.info(f"{doi} has been found before.")
     if len(dois) > 0:
         missing_dois = wikidata.lookup_dois(dois=dois, in_wikipedia=True)
-        if missing_dois is not None and len(missing_dois) > 0:
+        if len(missing_dois) > 0:
             input_output.save_to_wikipedia_list(missing_dois, language_code, title)
         # if config.import_mode:
         # answer = util.yes_no_question(

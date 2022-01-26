@@ -47,13 +47,13 @@ def query(url, sparql_query):
 def lookup_dois(
         dois: List[str] = None,
         in_wikipedia: bool = False,
-) -> Optional[List[str]]:
+) -> List[str]:
+    missing_dois = []
     if config.lookup_dois:
         print(f"dois:{dois}")
         if config.ask_before_lookup:
             input('Press enter to lookup if any of these are missing in Wikidata: ')
         print("Looking up DOIs on WD")
-        missing_dois = []
         dataframe = pd.DataFrame()
         if dois is not None:
             for doi in dois:
@@ -75,7 +75,7 @@ def lookup_dois(
             if len(dataframe) > 0:
                 print(repr(dataframe))
             return missing_dois
-
+    return missing_dois
 
 def lookup_issn(issn: List[str]) -> Union[str,None]:
     print("Looking up ISSN on WD")
