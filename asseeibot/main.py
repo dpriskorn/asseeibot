@@ -9,7 +9,7 @@ import aiohttp
 from aiosseclient import aiosseclient # type: ignore
 from mediawikiapi import MediaWikiAPI, PageError # type: ignore
 from rich import print
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Optional
 
 import config
 import input_output
@@ -42,7 +42,8 @@ def search_isbn(page):
     # else:
     #     print("ISBN number not found")
 
-def search_doi(page) -> Union[List[str],None]:
+
+def search_doi(page) -> Optional[List[str]]:
     links = page.references
     if links is not None:
         #print(f"References:{links}")
