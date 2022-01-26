@@ -11,14 +11,7 @@ import loglevel
 
 # Logging
 logger = logging.getLogger(__name__)
-if config.loglevel is None:
-    # Set loglevel
-    logger.debug("Setting loglevel in config")
-    loglevel.set_loglevel()
-logger.setLevel(config.loglevel)
-logger.level = logger.getEffectiveLevel()
-file_handler = logging.FileHandler("input_output.log")
-logger.addHandler(file_handler)
+
 
 def get_wikipedia_list():
     filename = config.wikipedia_list
