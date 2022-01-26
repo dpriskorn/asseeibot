@@ -9,9 +9,7 @@ from aiohttp import ClientPayloadError
 from aiosseclient import aiosseclient  # type: ignore
 from rich import print
 
-import config
-import input_output
-import wikidata
+from asseeibot import config, input_output, wikidata
 from asseeibot.models.cite_journal import CiteJournal
 
 logging.basicConfig(level=config.loglevel)
@@ -55,14 +53,18 @@ def finish_all_in_list():
 
 def process_event(
         site,
-        language_code=None,
-        title=None,
+        language_code: str = None,
+        title: str =None,
 ):
+    if site is None:
+        raise ValueError("got no site")
+    if language_code is None:
+        raise ValueError("got no language_code")
     logger = logging.getLogger(__name__)
-    # TODO flesh out the finding of cite journal and
-    #  create an OOP model for it
     page = pywikibot.Page(site, title)
+    page_id = page.pageid
     raw = page.raw_extracted_templates
+    # TODO model a Wikicitations Page and populate it
     dois = set()
     # What do we want to use these objects for?
     cite_journals = []
@@ -75,8 +77,12 @@ def process_event(
             if cite_journal.doi is not None:
                 dois.add(cite_journal.doi)
             else:
-                logger.warning(f"An article titled {cite_journal.article_title} in the journal {journal} was found but no DOI. "
-                               f"pmid:{cite_journal.pmid} jstor:{cite_journal.jstor}")
+                # We ignore cultural magazines for now
+                if not "magazine" in cite_journal.journal:
+                    logger.warning(f"An article titled {cite_journal.article_title} "
+                                   f"in the journal {cite_journal.journal} "
+                                   f"was found but no DOI. "
+                                   f"(pmid:{cite_journal.pmid} jstor:{cite_journal.jstor})")
     missing_dois = []
     if config.import_mode:
         # Remove the DOIs that are marked done locally
@@ -148,10 +154,10 @@ async def main():
                         edit_type = None
                     if edit_type is not None:
                         logger.info(f"{edit_type}\t{server_name}\t{bot}\t\"{title}\"")
-                        logger.info(f"http://{server_name}/wiki/{quote(title)}")
+                        print(f"Working on http://{server_name}/wiki/{quote(title)}")
                         dois_count_tuple = process_event(
                             site,
-                            # language_code=language_code,
+                            language_code=language_code,
                             title=title,
                         )
                         if dois_count_tuple[0] > 0:

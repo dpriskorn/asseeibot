@@ -7,7 +7,7 @@ from rich import print
 from wikibaseintegrator import wbi_config
 from wikibaseintegrator.wbi_helpers import execute_sparql_query
 
-import config
+from asseeibot import config
 
 wbi_config.config['USER_AGENT'] = config.user_agent
 

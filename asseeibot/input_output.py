@@ -5,7 +5,7 @@ from datetime import datetime
 from os import path
 from typing import List
 
-import config
+from asseeibot import config
 
 # Logging
 logger = logging.getLogger(__name__)
