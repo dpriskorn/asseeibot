@@ -78,7 +78,7 @@ def process_event(
                 dois.add(cite_journal.doi)
             else:
                 # We ignore cultural magazines for now
-                if not "magazine" in cite_journal.journal:
+                if cite_journal.journal is not None and not "magazine" in cite_journal.journal:
                     logger.warning(f"An article titled {cite_journal.article_title} "
                                    f"in the journal {cite_journal.journal} "
                                    f"was found but no DOI. "
