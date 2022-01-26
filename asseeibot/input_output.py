@@ -51,7 +51,6 @@ def save_to_wikipedia_list(
                         # parse file
                         wikipedia_list = json.loads(json_data)
                         wikipedia_list[doi] = data
-                        print(wikipedia_list)
                         if config.debug_wikipedia_list:
                             logging.debug(f"dumping altered list:{wikipedia_list}")
                         json.dump(wikipedia_list, myfile, ensure_ascii=False)
