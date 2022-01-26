@@ -1,9 +1,11 @@
 aiohttp
-asyncio
-requests
-rich
-sparqldataframe
-habanero
+asyncio~=3.4.3
+requests~=2.26.0
+rich~=10.10.0
+sparqldataframe~=0.1.0
+habanero~=0.7.4
 git+git://github.com/lehinevych/MediaWikiAPI#egg=mediawikiapi
 git+git://github.com/ebraminio/aiosseclient#egg=aiosseclient
 simplejson
+pywikibot~=6.6.3
+pandas~=1.3.3
