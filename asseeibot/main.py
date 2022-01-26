@@ -12,8 +12,9 @@ from rich import print
 import config
 import input_output
 import wikidata
+from asseeibot.models.cite_journal import CiteJournal
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=config.loglevel)
 
 # wikidata.lookup_issn("2535-7492")
 # exit(0)
@@ -63,35 +64,19 @@ def process_event(
     page = pywikibot.Page(site, title)
     raw = page.raw_extracted_templates
     dois = set()
+    # What do we want to use these objects for?
+    cite_journals = []
     for template_name, content in raw:
         # print(f"working on {template_name}")
         if template_name.lower() == "cite journal":
             logger.debug(f"content:{content}")
-            journal = None
-            doi = None
-            jstor = None
-            pmid = None
-            article_title = None
-            for key, value in content.items():
-                if key == "doi":
-                    logger.info(f"Found doi: {value}")
-                    doi = value
-                    dois.add(doi)
-                if key == "journal":
-                    logger.info(f"Found journal: {value}")
-                    journal = value
-                if key == "jstor":
-                    logger.info(f"Found jstor: {value}")
-                    jstor = value
-                if key == "pmid":
-                    logger.info(f"Found pmid: {value}")
-                    pmid = value
-                if key == "title":
-                    logger.info(f"Found title: {value}")
-                    article_title = value
-            if doi is None:
-                logger.warning(f"An article titled {article_title} in the journal {journal} was found but no DOI. "
-                               f"pmid:{pmid} jstor:{jstor}")
+            cite_journal = CiteJournal(content)
+            cite_journals.append(cite_journal)
+            if cite_journal.doi is not None:
+                dois.add(cite_journal.doi)
+            else:
+                logger.warning(f"An article titled {cite_journal.article_title} in the journal {journal} was found but no DOI. "
+                               f"pmid:{cite_journal.pmid} jstor:{cite_journal.jstor}")
     missing_dois = []
     if config.import_mode:
         # Remove the DOIs that are marked done locally
@@ -181,7 +166,7 @@ async def main():
                         print(f"Processed {count} events and found {count_dois_found}" +
                               f" DOIs. {count_missing_dois} "
                               f"({percentage}%) "
-                              f"were missing in WD.")
+                              f"are missing in WD.")
                 if config.max_events > 0 and count == config.max_events:
                     exit(0)
         except ClientPayloadError:

@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
-# Default is list-mode where we collect all DOIs found but do nothing else 
+# Default is list-mode where we collect all DOIs found but do nothing else
+import logging
+
 import_mode = False
 lookup_dois = True
 ask_before_lookup = False
 # Max events to read. 0 = unlimited
 max_events = 0
 username = "So9q"
+loglevel = logging.WARNING
 
 version = "0.1-alpha0"
 user_agent = f"Asynchronous Server Side Events External Identifier Bot/v{version} " \
