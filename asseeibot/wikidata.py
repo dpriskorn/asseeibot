@@ -23,7 +23,7 @@ def query(url, sparql_query):
     try:
         r = requests.get(url, params={'format': 'json',
                                       'query': sparql_query,
-                                      'User-Agent': config.toolname})
+                                      'User-Agent': config.user_agent})
         if r.status_code == 200:
             data = r.json()
         else:
