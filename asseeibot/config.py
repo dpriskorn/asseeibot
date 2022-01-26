@@ -4,11 +4,13 @@
 import_mode = False
 lookup_dois = True
 ask_before_lookup = True
-
 # Max events to read. 0 = unlimited
 max_events = 0
+username = "So9q"
 
-loglevel = None
+version = "0.1-alpha0"
+user_agent = f"Asynchronous Server Side Events External Identifier Bot/v{version} " \
+           f"https://github.com/dpriskorn/asseeibot run by User:{username}"
 wikipedia_list = "found_in_wikipedia.json"
 wd_prefix = "http://www.wikidata.org/entity/"
 

@@ -1,15 +1,47 @@
 #!/usr/bin/env python3
+from json import JSONDecodeError
+from typing import List, Union, Optional
+
 import pandas as pd
+import requests
 from rich import print
-from sparqldataframe import wikidata_query # type: ignore
-from typing import List, Union, Dict, Optional
-#from wikibaseintegrator import wbi_core
 
 import config
-import crossref
-import util
+
+# from wikibaseintegrator import wbi_core
 
 wd_prefix = config.wd_prefix
+
+
+def wikidata_query(sparql_query):
+    url = 'https://query.wikidata.org/sparql'
+    return query(url, sparql_query)
+
+
+def query(url, sparql_query):
+    r = None
+    try:
+        r = requests.get(url, params={'format': 'json',
+                                      'query': sparql_query,
+                                      'User-Agent': config.toolname})
+        if r.status_code == 200:
+            data = r.json()
+        else:
+            data = None
+            print(f"Got {r.status_code} from Wikimedia")
+    except JSONDecodeError as e:
+        print(r.content)
+        raise Exception('Something went wrong!')
+
+    if ('results' in data) and ('bindings' in data['results']):
+        columns = data['head']['vars']
+        rows = [[binding[col]['value'] if col in binding else None
+                for col in columns]
+                for binding in data['results']['bindings']]
+    else:
+        raise Exception('No results')
+
+    return pd.DataFrame(rows, columns=columns)
 
 
 def lookup_dois(
