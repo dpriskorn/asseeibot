@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
+import pandas as pd
 from rich import print
 from sparqldataframe import wikidata_query # type: ignore
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Optional
 #from wikibaseintegrator import wbi_core
 
 import config
@@ -14,31 +15,32 @@ wd_prefix = config.wd_prefix
 def lookup_dois(
         dois: List[str] = None,
         in_wikipedia: bool = False,
-):
-    print("Looking up DOIs on WD")
-    missing_dois = []
-    dataframes = []
-    print(f"dois:{dois}")
-    if dois is not None:
-        for doi in dois:
-            # doi="10.1161/01.HYP.14.4.367"
-            df = wikidata_query(f'''
-        SELECT ?item ?itemLabel 
-        WHERE 
-        {{
-        ?item wdt:P356 "{doi}".
-        SERVICE wikibase:label
-            {{ bd:serviceParam wikibase:language "en,[AUTO_LANGUAGE]". }}
-        }}
-        ''')
-            #print(df)
-            if len(df.index) > 0:
-                dataframes.append(df)
-            else:
-                missing_dois.append(doi)
-        if len(dataframes) > 0:
-            print(dataframes)
-        return missing_dois
+) -> Optional[List[str]]:
+    if config.lookup_dois:
+        print("Looking up DOIs on WD")
+        missing_dois = []
+        dataframe = pd.DataFrame()
+        print(f"dois:{dois}")
+        if dois is not None:
+            for doi in dois:
+                # doi="10.1161/01.HYP.14.4.367"
+                df = wikidata_query(f'''
+            SELECT ?item ?itemLabel 
+            WHERE 
+            {{
+            ?item wdt:P356 "{doi}".
+            SERVICE wikibase:label
+                {{ bd:serviceParam wikibase:language "en,[AUTO_LANGUAGE]". }}
+            }}
+            ''')
+                #print(df)
+                if len(df.index) > 0:
+                    dataframe = dataframe.append(df)
+                else:
+                    missing_dois.append(doi)
+            if len(dataframe) > 0:
+                print(repr(dataframe))
+            return missing_dois
 
 
 def lookup_issn(issn: List[str]) -> Union[str,None]:
