@@ -77,6 +77,7 @@ def lookup_dois(
             return missing_dois
     return missing_dois
 
+
 def lookup_issn(issn: List[str]) -> Union[str,None]:
     print("Looking up ISSN on WD")
     #  TODO maybe dataframe is a little heavy for just getting the qid?
