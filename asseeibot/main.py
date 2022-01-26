@@ -2,6 +2,7 @@
 import asyncio
 import json
 import logging
+from pprint import pprint
 from time import sleep
 from urllib.parse import quote, unquote
 
@@ -14,6 +15,8 @@ from typing import List, Union, Dict, Optional
 import config
 import input_output
 import wikidata
+
+logging.basicConfig(level=logging.DEBUG)
 
 # wikidata.lookup_issn("2535-7492")
 # exit(0)
@@ -44,9 +47,10 @@ def search_isbn(page):
 
 
 def search_doi(page) -> Optional[List[str]]:
+    logger = logging.getLogger(__name__)
     links = page.references
     if links is not None:
-        #print(f"References:{links}")
+        logger.debug(f"References:{links}")
         found = False
         dois = []
         for link in links:
@@ -59,6 +63,9 @@ def search_doi(page) -> Optional[List[str]]:
                     f"{found_text}{doi}",
                 )
         if found:
+            logger.debug(f"found the following dois")
+            pprint(dois)
+            exit()
             return dois
         else:
             print("External links not found")
