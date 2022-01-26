@@ -101,8 +101,6 @@ def process_event(
                     dois.remove(doi)
                     logger.info(f"{doi} has been found before.")
     if len(dois) > 0:
-        if config.ask_before_lookup:
-            input('Press enter to continue: ')
         missing_dois = wikidata.lookup_dois(dois=dois, in_wikipedia=True)
         if missing_dois is not None and len(missing_dois) > 0:
             input_output.save_to_wikipedia_list(missing_dois, language_code, title)

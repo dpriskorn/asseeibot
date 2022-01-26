@@ -20,6 +20,7 @@ def wikidata_query(sparql_query):
 
 def query(url, sparql_query):
     r = None
+    data = None
     try:
         r = requests.get(url, params={'format': 'json',
                                       'query': sparql_query,
@@ -27,7 +28,6 @@ def query(url, sparql_query):
         if r.status_code == 200:
             data = r.json()
         else:
-            data = None
             print(f"Got {r.status_code} from Wikimedia")
     except JSONDecodeError as e:
         print(r.content)
@@ -49,10 +49,12 @@ def lookup_dois(
         in_wikipedia: bool = False,
 ) -> Optional[List[str]]:
     if config.lookup_dois:
+        print(f"dois:{dois}")
+        if config.ask_before_lookup:
+            input('Press enter to lookup if any of these are missing in Wikidata: ')
         print("Looking up DOIs on WD")
         missing_dois = []
         dataframe = pd.DataFrame()
-        print(f"dois:{dois}")
         if dois is not None:
             for doi in dois:
                 # doi="10.1161/01.HYP.14.4.367"
