@@ -96,6 +96,7 @@ def handle_references(
     if len(dois) > 0:
         wikidata.lookup_dois(dois)
 
+
 def extract_data(message: Dict, in_wikipedia: bool = False):
     keys_we_want = ["author", "title", "original-title", "subtitle",
                     "publisher", "publisher-location", "score", "ISBN",
