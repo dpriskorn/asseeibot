@@ -169,8 +169,14 @@ async def main():
                 if dois_count_tuple[1] > 0:
                     count_missing_dois += dois_count_tuple[1]
                 count += 1
+                if count_dois_found > 0:
+                    percentage = int(round(count_missing_dois*100/count_dois_found, 0))
+                else:
+                    percentage = 0
                 print(f"Processed {count} events and found {count_dois_found}" +
-                      f" DOIs where {count_missing_dois} were missing in WD.")
+                      f" DOIs. {count_missing_dois} "
+                      f"({percentage}%) "
+                      f"were missing in WD.")
     if config.max_events > 0 and count == config.max_events:
         exit(0)
 

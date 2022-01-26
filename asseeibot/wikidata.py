@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import logging
 from json import JSONDecodeError
 from typing import List, Union, Optional
 
@@ -19,6 +20,7 @@ def wikidata_query(sparql_query):
 
 
 def query(url, sparql_query):
+    logger = logging.getLogger(__name__)
     r = None
     data = None
     try:
@@ -32,16 +34,16 @@ def query(url, sparql_query):
     except JSONDecodeError as e:
         print(r.content)
         raise Exception('Something went wrong!')
-
-    if ('results' in data) and ('bindings' in data['results']):
+    if data is not None and ('results' in data) and ('bindings' in data['results']):
         columns = data['head']['vars']
         rows = [[binding[col]['value'] if col in binding else None
                 for col in columns]
                 for binding in data['results']['bindings']]
+        return pd.DataFrame(rows, columns=columns)
     else:
-        raise Exception('No results')
+        logger.error(f"Skipping this lookup")
+        #raise Exception('No results')
 
-    return pd.DataFrame(rows, columns=columns)
 
 
 def lookup_dois(
@@ -68,10 +70,11 @@ def lookup_dois(
             }}
             ''')
                 #print(df)
-                if len(df.index) > 0:
-                    dataframe = dataframe.append(df)
-                else:
-                    missing_dois.append(doi)
+                if df is not None:
+                    if len(df) > 0:
+                        dataframe = dataframe.append(df)
+                    else:
+                        missing_dois.append(doi)
             if len(dataframe) > 0:
                 print(repr(dataframe))
             return missing_dois
