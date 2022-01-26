@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
-from os import path 
-from datetime import datetime, timezone
 import json
 import logging
-
-from typing import List, Union, Dict
+from datetime import datetime
+from os import path
+from typing import List
 
 import config
-import loglevel
 
 # Logging
 logger = logging.getLogger(__name__)
