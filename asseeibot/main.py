@@ -2,15 +2,14 @@
 import asyncio
 import json
 import logging
+import re
 from pprint import pprint
-from time import sleep
+from typing import List, Optional
 from urllib.parse import quote, unquote
 
-import aiohttp
-from aiosseclient import aiosseclient # type: ignore
-from mediawikiapi import MediaWikiAPI, PageError # type: ignore
+from aiosseclient import aiosseclient  # type: ignore
+from mediawikiapi import MediaWikiAPI, PageError  # type: ignore
 from rich import print
-from typing import List, Union, Dict, Optional
 
 import config
 import input_output
@@ -21,11 +20,14 @@ logging.basicConfig(level=logging.DEBUG)
 # wikidata.lookup_issn("2535-7492")
 # exit(0)
 
-doi_prefix = "https://doi.org/"
+doi_prefixes = ["https://doi.org/", "http://doi.org/",
+                "http://citeseerx.ist.psu.edu/viewdoc/summary?doi=",
+                "http://www.tandfonline.com/doi/abs/"]
 excluded_wikis = ["ceb", "zh", "ja"]
-found_text = "[bold red]DOI link found:[/bold red] "
+found_text = "[bold red]DOI link found via prefix, but not the regex:[/bold red] "
 wd_prefix = "http://www.wikidata.org/entity/"
 trust_url_file_endings = True
+
 
 # debug
 # input_output.save_to_wikipedia_list(["doi"], "en", "title")
@@ -52,16 +54,33 @@ def search_doi(page) -> Optional[List[str]]:
     if links is not None:
         logger.debug(f"References:{links}")
         found = False
-        dois = []
+        dois = set()
+        # This should catch >99% of all DOIs
+        # but it seems it does not...
+        doi_regex_pattern = "/^10.\d{4,9}/[-._;()/:A-Z0-9]+$/i"
         for link in links:
-            if link.find(doi_prefix) != -1:
+            # We unquote to avoid the URL garbage like %A1
+            match = re.search(doi_regex_pattern, unquote(link))
+            if match is not None:
                 found = True
-                # unquote to convert %2F -> /
-                doi = unquote(link.replace(doi_prefix, ''))
+                doi = match[0]
                 dois.append(doi)
-                print(
-                    f"{found_text}{doi}",
-                )
+                logger.info(f"found DOI via regex: {doi}")
+            for doi_prefix in doi_prefixes:
+                if link.find(doi_prefix) != -1:
+                    # unquote to convert %2F -> /
+                    doi = unquote(link.replace(doi_prefix, ''))
+                    if doi not in dois:
+                        found = True
+                        dois.add(doi)
+                        print(f"{found_text}{doi}")
+            if link.find("doi") != -1:
+                known_prefix = True
+                for doi_prefix in doi_prefixes:
+                    if link.find(doi_prefix) == -1:
+                        known_prefix = False
+                        print(f"new doi prefix found: {link}")
+                        exit()
         if found:
             logger.debug(f"found the following dois")
             pprint(dois)
@@ -82,7 +101,7 @@ def download_page(
 ):
     print("Downloading wikitext")
     mediawikiapi.config.language = language_code
-    #print(mediawikiapi.summary(title, sentences=1))
+    # print(mediawikiapi.summary(title, sentences=1))
     page = False
     try:
         page = mediawikiapi.page(title)
@@ -96,8 +115,8 @@ def download_page(
         print("Got page error, skipping")
         success = False
         return None
-    #print(page.sections)
-    #print("Looking for templates")
+    # print(page.sections)
+    # print("Looking for templates")
 
 
 def check_if_done(doi):
@@ -121,7 +140,7 @@ def finish_all_in_list():
         for doi in data:
             if data[doi]["done"] is False:
                 dois.append(doi)
-        if len(dois) >0:
+        if len(dois) > 0:
             wikidata.lookup_dois(dois=dois, in_wikipedia=True)
         print("Done")
 
@@ -147,31 +166,31 @@ def process_event(
                     dois.remove(doi)
                     print(f"{doi} has been found before.")
         if dois is not None and not done:
-            #input('Press enter to continue: ')
+            # input('Press enter to continue: ')
             missing_dois = wikidata.lookup_dois(dois=dois, in_wikipedia=True)
             if len(missing_dois) > 0:
                 input_output.save_to_wikipedia_list(missing_dois, language_code, title)
-            #if config.import_mode:
-                # answer = util.yes_no_question(
-                #     f"{doi} is missing in WD. Do you"+
-                #     " want to add it now?"
-                # )
-                # if answer:
-                #     crossref.lookup_data(doi=doi, in_wikipedia=True)
-                #     pass
-                # else:
-                #     pass
+            # if config.import_mode:
+            # answer = util.yes_no_question(
+            #     f"{doi} is missing in WD. Do you"+
+            #     " want to add it now?"
+            # )
+            # if answer:
+            #     crossref.lookup_data(doi=doi, in_wikipedia=True)
+            #     pass
+            # else:
+            #     pass
         else:
             pass
     # Return tuple with counts
     if dois is not None and missing_dois is None:
         return (len(dois), 0)
     elif dois is None and missing_dois is not None:
-        return (len(dois),len(missing_dois))
+        return (len(dois), len(missing_dois))
     elif dois is not None and missing_dois is not None:
-        return (len(dois),len(missing_dois))
+        return (len(dois), len(missing_dois))
     else:
-        return (0,0)
+        return (0, 0)
 
 
 async def main():
@@ -195,7 +214,7 @@ async def main():
         namespace = int(data['namespace'])
         language_code = server_name.replace(".wikipedia.org", "")
         # for exclude in excluded_wikis:
-            # if language_code == exclude:
+        # if language_code == exclude:
         if language_code != "en":
             continue
         if server_name.find("wikipedia") != -1 and namespace == 0:
@@ -223,10 +242,11 @@ async def main():
                 if dois_count_tuple[1] > 0:
                     count_missing_dois += dois_count_tuple[1]
                 count += 1
-                print(f"Processed {count} events and found {count_dois_found}"+
+                print(f"Processed {count} events and found {count_dois_found}" +
                       f" DOIs where {count_missing_dois} were missing in WD.")
     if config.max_events > 0 and count == config.max_events:
         exit(0)
+
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
