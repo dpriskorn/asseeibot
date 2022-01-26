@@ -65,7 +65,7 @@ def process_event(
     for template_name, content in raw:
         # print(f"working on {template_name}")
         if template_name.lower() == "cite journal":
-            print(f"content:{content}")
+            logger.debug(f"content:{content}")
             journal = None
             doi = None
             jstor = None
@@ -153,13 +153,13 @@ async def main():
             else:
                 bot = "(!bot)"
             if data['type'] == "new":
-                type = "(new)"
+                edit_type = "(new)"
             elif data['type'] == "edit":
-                type = "(edit)"
+                edit_type = "(edit)"
             else:
-                type = None
-            if type is not None:
-                logger.info(f"{type}\t{server_name}\t{bot}\t\"{title}\"")
+                edit_type = None
+            if edit_type is not None:
+                logger.info(f"{edit_type}\t{server_name}\t{bot}\t\"{title}\"")
                 logger.info(f"http://{server_name}/wiki/{quote(title)}")
                 dois_count_tuple = process_event(
                     site,
