@@ -15,16 +15,16 @@ import config
 import input_output
 import wikidata
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
 
 # wikidata.lookup_issn("2535-7492")
 # exit(0)
 
 doi_prefixes = ["https://doi.org/", "http://doi.org/",
                 "http://citeseerx.ist.psu.edu/viewdoc/summary?doi=",
-                "http://www.tandfonline.com/doi/abs/"]
+                "http://www.tandfonline.com/doi/abs/",
+                "https://dx.doi.org/"]
 excluded_wikis = ["ceb", "zh", "ja"]
-found_text = "[bold red]DOI link found via prefix, but not the regex:[/bold red] "
 wd_prefix = "http://www.wikidata.org/entity/"
 trust_url_file_endings = True
 
@@ -57,15 +57,26 @@ def search_doi(page) -> Optional[List[str]]:
         dois = set()
         # This should catch >99% of all DOIs
         # but it seems it does not...
-        doi_regex_pattern = "/^10.\d{4,9}/[-._;()/:A-Z0-9]+$/i"
+        # doi_regex_pattern = "/^10.\d{4,9}/[-._;()/:A-Z0-9]+$/i"
+        # This is my simplified pattern
+        doi_regex_pattern = "10.\d{4,9}\/+.+"
         for link in links:
             # We unquote to avoid the URL garbage like %A1
             match = re.search(doi_regex_pattern, unquote(link))
             if match is not None:
-                found = True
-                doi = match[0]
-                dois.append(doi)
-                logger.info(f"found DOI via regex: {doi}")
+                found_excluded_word = False
+                doi = match.group()
+                excluded_words = ["http", ".pdf", "jsessionid", "htm", "jpg", "png"]
+                for word in excluded_words:
+                    if word in doi:
+                        found_excluded_word = True
+                        # This is probably a fulltext url, so we skip it
+                        # e.g. 10.1525/aa.1965.67.5.02a00560/asset/aa.1965.67.5.02a00560.pdf;jsessionid=F9912E4EA20516C07E35701700EEBE71.f04t01?v=1&t=hoovxr8v&s=91fed24eb577
+                        # 9c1f45a2e1729d1dc3e0bf734fab
+                if not found_excluded_word:
+                    found = True
+                    dois.add(doi)
+                    logger.info(f"found DOI via regex: {doi}")
             for doi_prefix in doi_prefixes:
                 if link.find(doi_prefix) != -1:
                     # unquote to convert %2F -> /
@@ -73,18 +84,22 @@ def search_doi(page) -> Optional[List[str]]:
                     if doi not in dois:
                         found = True
                         dois.add(doi)
+                        found_text = "[bold red]DOI link found via prefix, but not the regex:[/bold red] "
                         print(f"{found_text}{doi}")
-            if link.find("doi") != -1:
-                known_prefix = True
-                for doi_prefix in doi_prefixes:
-                    if link.find(doi_prefix) == -1:
-                        known_prefix = False
-                        print(f"new doi prefix found: {link}")
+                        print(match)
                         exit()
+            if link.find("doi") != -1:
+                known_prefix = False
+                for doi_prefix in doi_prefixes:
+                    if link.find(doi_prefix) != -1:
+                        known_prefix = True
+                if not known_prefix:
+                    print(f"new doi prefix found: {link}")
+                    #exit()
         if found:
             logger.debug(f"found the following dois")
             pprint(dois)
-            exit()
+            #exit()
             return dois
         else:
             print("External links not found")
@@ -99,7 +114,8 @@ def download_page(
         language_code: str = None,
         title: str = None,
 ):
-    print("Downloading wikitext")
+    logger = logging.getLogger(__name__)
+    logger.info("Downloading wikitext")
     mediawikiapi.config.language = language_code
     # print(mediawikiapi.summary(title, sentences=1))
     page = False
@@ -107,12 +123,12 @@ def download_page(
         page = mediawikiapi.page(title)
         success = True
         if page is not None:
-            print("Download finished")
+            logger.info("Download finished")
             return page
         else:
             return None
     except PageError:
-        print("Got page error, skipping")
+        logger.warning("Got page error, skipping")
         success = False
         return None
     # print(page.sections)
@@ -205,6 +221,7 @@ async def main():
     async for event in aiosseclient(
             'https://stream.wikimedia.org/v2/stream/recentchange',
     ):
+        logger = logging.getLogger(__name__)
         # print(event)
         data = json.loads(str(event))
         # print(data)
@@ -230,8 +247,8 @@ async def main():
             else:
                 type = None
             if type is not None:
-                print(f"{type}\t{server_name}\t{bot}\t\"{title}\"")
-                print(f"http://{server_name}/wiki/{quote(title)}")
+                logger.info(f"{type}\t{server_name}\t{bot}\t\"{title}\"")
+                logger.info(f"http://{server_name}/wiki/{quote(title)}")
                 dois_count_tuple = process_event(
                     mediawikiapi,
                     language_code=language_code,
