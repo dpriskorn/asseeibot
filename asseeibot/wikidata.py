@@ -32,10 +32,10 @@ def lookup_dois(
 ) -> List[str]:
     missing_dois = []
     if config.lookup_dois:
-        print(f"dois:{dois}")
+        logging.info(f"dois found:{dois}")
         if config.ask_before_lookup:
             input('Press enter to lookup if any of these are missing in Wikidata: ')
-        print("Looking up DOIs on WD")
+        print(f"Looking up {len(dois)} DOIs on WD")
         dataframe = pd.DataFrame()
         if dois is not None:
             for doi in dois:
