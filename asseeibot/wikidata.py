@@ -1,47 +1,29 @@
 #!/usr/bin/env python3
-from json import JSONDecodeError
+import logging
 from typing import List, Union, Optional
 
 import pandas as pd
-import requests
 from rich import print
+from wikibaseintegrator import wbi_config
+from wikibaseintegrator.wbi_helpers import execute_sparql_query
 
-import config
+from asseeibot import config
 
-# from wikibaseintegrator import wbi_core
-
-wd_prefix = config.wd_prefix
+wbi_config.config['USER_AGENT'] = config.user_agent
 
 
 def wikidata_query(sparql_query):
-    url = 'https://query.wikidata.org/sparql'
-    return query(url, sparql_query)
-
-
-def query(url, sparql_query):
-    r = None
-    data = None
-    try:
-        r = requests.get(url, params={'format': 'json',
-                                      'query': sparql_query,
-                                      'User-Agent': config.user_agent})
-        if r.status_code == 200:
-            data = r.json()
-        else:
-            print(f"Got {r.status_code} from Wikimedia")
-    except JSONDecodeError as e:
-        print(r.content)
-        raise Exception('Something went wrong!')
-
-    if ('results' in data) and ('bindings' in data['results']):
+    logger = logging.getLogger(__name__)
+    data = execute_sparql_query(sparql_query)
+    if data is not None and ('results' in data) and ('bindings' in data['results']):
         columns = data['head']['vars']
         rows = [[binding[col]['value'] if col in binding else None
                 for col in columns]
                 for binding in data['results']['bindings']]
+        return pd.DataFrame(rows, columns=columns)
     else:
-        raise Exception('No results')
-
-    return pd.DataFrame(rows, columns=columns)
+        logger.error(f"Skipping this lookup")
+        #raise Exception('No results')
 
 
 def lookup_dois(
@@ -50,10 +32,10 @@ def lookup_dois(
 ) -> List[str]:
     missing_dois = []
     if config.lookup_dois:
-        print(f"dois:{dois}")
+        logging.info(f"dois found:{dois}")
         if config.ask_before_lookup:
             input('Press enter to lookup if any of these are missing in Wikidata: ')
-        print("Looking up DOIs on WD")
+        print(f"Looking up {len(dois)} DOIs on WD")
         dataframe = pd.DataFrame()
         if dois is not None:
             for doi in dois:
@@ -68,37 +50,39 @@ def lookup_dois(
             }}
             ''')
                 #print(df)
-                if len(df.index) > 0:
-                    dataframe = dataframe.append(df)
-                else:
-                    missing_dois.append(doi)
+                if df is not None:
+                    if len(df) > 0:
+                        dataframe = dataframe.append(df)
+                    else:
+                        missing_dois.append(doi)
             if len(dataframe) > 0:
                 print(repr(dataframe))
             return missing_dois
     return missing_dois
 
 
-def lookup_issn(issn: List[str]) -> Union[str,None]:
-    print("Looking up ISSN on WD")
-    #  TODO maybe dataframe is a little heavy for just getting the qid?
-    #  TODO decide if we need the label for anything
-    # Pick the first for now.
-    df = wikidata_query(f'''
-        SELECT ?item ?itemLabel 
-        WHERE 
-        {{
-        ?item wdt:P236 "{issn[0]}".
-        SERVICE wikibase:label
-            {{ bd:serviceParam wikibase:language "en,[AUTO_LANGUAGE]". }}
-        }}
-        ''')
-    # print(df)
-    if len(df.index) > 0:
-        # Pick the first as they are unique in WD
-        return df["item"][0].replace(wd_prefix, "")
-    else:
-        print("ISSN not found on WD.")
-        return None
+# DISABLED BECAUSE WE DON'T SUPPORT ISBN YET
+# def lookup_issn(issn: List[str]) -> Union[str,None]:
+#     print("Looking up ISSN on WD")
+#     #  TODO maybe dataframe is a little heavy for just getting the qid?
+#     #  TODO decide if we need the label for anything
+#     # Pick the first for now.
+#     df = wikidata_query(f'''
+#         SELECT ?item ?itemLabel
+#         WHERE
+#         {{
+#         ?item wdt:P236 "{issn[0]}".
+#         SERVICE wikibase:label
+#             {{ bd:serviceParam wikibase:language "en,[AUTO_LANGUAGE]". }}
+#         }}
+#         ''')
+#     # print(df)
+#     if len(df.index) > 0:
+#         # Pick the first as they are unique in WD
+#         return df["item"][0].replace(config.wd_prefix, "")
+#     else:
+#         print("ISSN not found on WD.")
+#         return None
 
 # def add_scientific_author(
 #         author_orcid=None,

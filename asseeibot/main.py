@@ -5,14 +5,14 @@ import logging
 from urllib.parse import quote
 
 import pywikibot
+from aiohttp import ClientPayloadError
 from aiosseclient import aiosseclient  # type: ignore
 from rich import print
 
-import config
-import input_output
-import wikidata
+from asseeibot import config, input_output, wikidata
+from asseeibot.models.cite_journal import CiteJournal
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=config.loglevel)
 
 # wikidata.lookup_issn("2535-7492")
 # exit(0)
@@ -53,44 +53,36 @@ def finish_all_in_list():
 
 def process_event(
         site,
-        language_code=None,
-        title=None,
+        language_code: str = None,
+        title: str =None,
 ):
+    if site is None:
+        raise ValueError("got no site")
+    if language_code is None:
+        raise ValueError("got no language_code")
     logger = logging.getLogger(__name__)
-    # TODO flesh out the finding of cite journal and
-    #  create an OOP model for it
     page = pywikibot.Page(site, title)
+    page_id = page.pageid
     raw = page.raw_extracted_templates
+    # TODO model a Wikicitations Page and populate it
     dois = set()
+    # What do we want to use these objects for?
+    cite_journals = []
     for template_name, content in raw:
         # print(f"working on {template_name}")
         if template_name.lower() == "cite journal":
             logger.debug(f"content:{content}")
-            journal = None
-            doi = None
-            jstor = None
-            pmid = None
-            article_title = None
-            for key, value in content.items():
-                if key == "doi":
-                    logger.info(f"Found doi: {value}")
-                    doi = value
-                    dois.add(doi)
-                if key == "journal":
-                    logger.info(f"Found journal: {value}")
-                    journal = value
-                if key == "jstor":
-                    logger.info(f"Found jstor: {value}")
-                    jstor = value
-                if key == "pmid":
-                    logger.info(f"Found pmid: {value}")
-                    pmid = value
-                if key == "title":
-                    logger.info(f"Found title: {value}")
-                    article_title = value
-            if doi is None:
-                logger.warning(f"An article titled {article_title} in the journal {journal} was found but no DOI. "
-                               f"pmid:{pmid} jstor:{jstor}")
+            cite_journal = CiteJournal(content)
+            cite_journals.append(cite_journal)
+            if cite_journal.doi is not None:
+                dois.add(cite_journal.doi)
+            else:
+                # We ignore cultural magazines for now
+                if cite_journal.journal is not None and not "magazine" in cite_journal.journal:
+                    logger.warning(f"An article titled {cite_journal.article_title} "
+                                   f"in the journal {cite_journal.journal} "
+                                   f"was found but no DOI. "
+                                   f"(pmid:{cite_journal.pmid} jstor:{cite_journal.jstor})")
     missing_dois = []
     if config.import_mode:
         # Remove the DOIs that are marked done locally
@@ -119,6 +111,7 @@ def process_event(
 
 
 async def main():
+    logger = logging.getLogger(__name__)
     print("Running main")
     if config.import_mode:
         finish_all_in_list()
@@ -128,51 +121,65 @@ async def main():
     count = 0
     count_dois_found = 0
     count_missing_dois = 0
-    async for event in aiosseclient(
-            'https://stream.wikimedia.org/v2/stream/recentchange',
-    ):
-        logger = logging.getLogger(__name__)
-        # print(event)
-        data = json.loads(str(event))
-        # print(data)
-        # meta = data["meta"]
-        # what is the difference?
-        server_name = data['server_name']
-        namespace = int(data['namespace'])
-        language_code = server_name.replace(".wikipedia.org", "")
-        # for exclude in excluded_wikis:
-        # if language_code == exclude:
-        if language_code != "en":
+    # We run in a while loop so we can continue even if we get a ClientPayloadError
+    while True:
+        try:
+            async for event in aiosseclient(
+                    'https://stream.wikimedia.org/v2/stream/recentchange',
+            ):
+                logger = logging.getLogger(__name__)
+                # print(event)
+                data = json.loads(str(event))
+                # print(data)
+                # meta = data["meta"]
+                # what is the difference?
+                server_name = data['server_name']
+                namespace = int(data['namespace'])
+                language_code = server_name.replace(".wikipedia.org", "")
+                # for exclude in excluded_wikis:
+                # if language_code == exclude:
+                if language_code != "en":
+                    continue
+                if server_name.find("wikipedia") != -1 and namespace == 0:
+                    title = data['title']
+                    if data['bot'] is True:
+                        bot = "(bot)"
+                    else:
+                        bot = "(!bot)"
+                    if data['type'] == "new":
+                        edit_type = "(new)"
+                    elif data['type'] == "edit":
+                        edit_type = "(edit)"
+                    else:
+                        edit_type = None
+                    if edit_type is not None:
+                        logger.info(f"{edit_type}\t{server_name}\t{bot}\t\"{title}\"")
+                        print(f"Working on http://{server_name}/wiki/{quote(title)}")
+                        dois_count_tuple = process_event(
+                            site,
+                            language_code=language_code,
+                            title=title,
+                        )
+                        if dois_count_tuple[0] > 0:
+                            count_dois_found += dois_count_tuple[0]
+                        if dois_count_tuple[1] > 0:
+                            count_missing_dois += dois_count_tuple[1]
+                        count += 1
+                        if count_dois_found > 0:
+                            percentage = int(round(count_missing_dois*100/count_dois_found, 0))
+                        else:
+                            percentage = 0
+                        print(f"Processed {count} events and found {count_dois_found}" +
+                              f" DOIs. {count_missing_dois} "
+                              f"({percentage}%) "
+                              f"are missing in WD.")
+                if config.max_events > 0 and count == config.max_events:
+                    exit(0)
+        except ClientPayloadError:
+            logger.error("ClientPayloadError")
             continue
-        if server_name.find("wikipedia") != -1 and namespace == 0:
-            title = data['title']
-            if data['bot'] is True:
-                bot = "(bot)"
-            else:
-                bot = "(!bot)"
-            if data['type'] == "new":
-                edit_type = "(new)"
-            elif data['type'] == "edit":
-                edit_type = "(edit)"
-            else:
-                edit_type = None
-            if edit_type is not None:
-                logger.info(f"{edit_type}\t{server_name}\t{bot}\t\"{title}\"")
-                logger.info(f"http://{server_name}/wiki/{quote(title)}")
-                dois_count_tuple = process_event(
-                    site,
-                    # language_code=language_code,
-                    title=title,
-                )
-                if dois_count_tuple[0] > 0:
-                    count_dois_found += dois_count_tuple[0]
-                if dois_count_tuple[1] > 0:
-                    count_missing_dois += dois_count_tuple[1]
-                count += 1
-                print(f"Processed {count} events and found {count_dois_found}" +
-                      f" DOIs where {count_missing_dois} were missing in WD.")
-    if config.max_events > 0 and count == config.max_events:
-        exit(0)
+        if config.max_events > 0 and count == config.max_events:
+            exit(0)
 
 
 loop = asyncio.get_event_loop()

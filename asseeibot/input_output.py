@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
-from os import path 
-from datetime import datetime, timezone
 import json
 import logging
+from datetime import datetime
+from os import path
+from typing import List
 
-from typing import List, Union, Dict
-
-import config
-import loglevel
+from asseeibot import config
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -51,7 +49,6 @@ def save_to_wikipedia_list(
                         # parse file
                         wikipedia_list = json.loads(json_data)
                         wikipedia_list[doi] = data
-                        print(wikipedia_list)
                         if config.debug_wikipedia_list:
                             logging.debug(f"dumping altered list:{wikipedia_list}")
                         json.dump(wikipedia_list, myfile, ensure_ascii=False)

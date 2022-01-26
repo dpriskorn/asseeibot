@@ -47,8 +47,8 @@ Then install the dependencies:
 Please don't hold me accountable if the dependecies eat your dog. Look at their
 sources and decide for yourself whether to trust their authors and the code.
 
-## Get DOIs for use in other tools
-Make sure you have `jq` installed and run the script.
+## Get DOIs for use in other tools (Linux)
+Make sure you have `jq` installed and run the following command line in a Linux terminal.
 
  $ cat found_in_wikipedia.json | jq 'keys'| jq -r '.[]'
 
