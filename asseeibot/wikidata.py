@@ -30,6 +30,8 @@ def lookup_dois(
         dois: List[str] = None,
         in_wikipedia: bool = False,
 ) -> List[str]:
+    if dois is None:
+        raise ValueError("dois was None")
     missing_dois = []
     if config.lookup_dois:
         logging.info(f"dois found:{dois}")
@@ -39,18 +41,27 @@ def lookup_dois(
         dataframe = pd.DataFrame()
         if dois is not None:
             for doi in dois:
+                logging.info(f"looking up: {doi}")
+                # TODO use the cirrussearch API instead
                 # doi="10.1161/01.HYP.14.4.367"
                 df = wikidata_query(f'''
-            SELECT ?item ?itemLabel 
+            SELECT DISTINCT ?item
             WHERE 
             {{
+            {{
             ?item wdt:P356 "{doi}".
-            SERVICE wikibase:label
-                {{ bd:serviceParam wikibase:language "en,[AUTO_LANGUAGE]". }}
+            }} union {{
+            ?item wdt:P356 "{doi.lower()}".
+            }} union {{
+            ?item wdt:P356 "{doi.upper()}".
+            }} 
             }}
             ''')
                 #print(df)
                 if df is not None:
+                    #print(df.info())
+                    #print(f"df length: {len(df)}")
+                    #exit()
                     if len(df) > 0:
                         dataframe = dataframe.append(df)
                     else:
