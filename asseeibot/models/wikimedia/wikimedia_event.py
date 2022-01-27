@@ -53,10 +53,12 @@ class WikimediaEvent:
             self.page_title = self.event_data['title']
             self.bot_edit = bool(self.event_data['bot'])
             self.edit_type = WikimediaEditType(self.event_data['type'])
-            self.__print_progress__()
-            self.wikipedia_page = WikipediaPage(wikimedia_event=self)
         else:
             logger.debug(f"Skipping event from {self.server_name}")
+
+    def process(self):
+        self.__print_progress__()
+        self.wikipedia_page = WikipediaPage(wikimedia_event=self)
 
     def url(self):
         return f"http://{self.server_name}/wiki/{quote(self.page_title)}"
