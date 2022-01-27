@@ -1,14 +1,10 @@
-from __future__ import annotations
 import json
 import logging
-from typing import Any, Dict, TYPE_CHECKING
+from typing import Any, Dict
 from urllib.parse import quote
 
 from asseeibot.models.wikimedia.enums import WikimediaEditType
 from asseeibot.models.wikimedia.wikipedia_page import WikipediaPage
-
-if TYPE_CHECKING:
-    from asseeibot.models.wikimedia.event_stream import EventStream
 
 
 class WikimediaEvent:
@@ -16,7 +12,7 @@ class WikimediaEvent:
     bot_edit: bool
     edit_type: WikimediaEditType = None
     event_data: Dict[str, str] = None
-    event_stream: EventStream = None
+    event_stream: Any = None  # We can't type this because of pydantic
     language_code: str = None
     namespace: int = None
     page_title: str = None
@@ -24,7 +20,7 @@ class WikimediaEvent:
     wikipedia_page: WikipediaPage = None
 
     def __init__(self, event: Any = None,
-                 event_stream: EventStream = None):
+                 event_stream: Any = None):
         if event is None:
             raise ValueError("event was None")
         self.event_data = json.loads(str(event))
@@ -42,8 +38,9 @@ class WikimediaEvent:
         self.server_name = self.event_data['server_name']
         self.namespace = int(self.event_data['namespace'])
         self.language_code = self.server_name.replace(f".{self.event_stream.event_site.value}.org", "")
-        # for exclude in excluded_wikis:
-        # if language_code == exclude:
+        self.page_title = self.event_data['title']
+        self.bot_edit = bool(self.event_data['bot'])
+        self.edit_type = WikimediaEditType(self.event_data['type'])
 
     def process(self):
         logger = logging.getLogger(__name__)
@@ -52,9 +49,6 @@ class WikimediaEvent:
         # We only want the article namespace (0)
         if self.server_name.find(self.event_stream.event_site.value) != -1 and self.namespace == 0:
             logger.info("Found enwp article edit")
-            self.page_title = self.event_data['title']
-            self.bot_edit = bool(self.event_data['bot'])
-            self.edit_type = WikimediaEditType(self.event_data['type'])
             self.__print_progress__()
             self.wikipedia_page = WikipediaPage(wikimedia_event=self)
         else:

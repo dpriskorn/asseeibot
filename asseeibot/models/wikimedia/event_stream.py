@@ -1,11 +1,12 @@
 import asyncio
 import logging
-from typing import List, Any
+from typing import List, Set
 from urllib.parse import quote
 
 import pywikibot
 from aiohttp import ClientPayloadError
 from aiosseclient import aiosseclient
+from purl import URL
 from pywikibot import APISite
 
 from asseeibot import config
@@ -28,7 +29,7 @@ class EventStream:
     total_number_of_missing_isbn: int = 0
     total_number_of_isbn: int = 0
     event_count: int = 0
-    earlier_events: set = set()
+    earlier_events: Set[str] = set()
 
     async def __get_events__(self):
         """Get events from the event stream until missing identifier limit"""
@@ -45,22 +46,27 @@ class EventStream:
                 ):
                     wmf_event = WikimediaEvent(event=event,
                                                event_stream=self)
-                    if wmf_event.page_title not in self.earlier_events:
-                        wmf_event.process()
-                        self.earlier_events.add(wmf_event.page_title)
-                        if wmf_event.wikipedia_page is not None:
-                            self.total_number_of_missing_dois += wmf_event.wikipedia_page.number_of_missing_dois
-                            self.total_number_of_dois += wmf_event.wikipedia_page.number_of_dois
-                            missing_dois = wmf_event.wikipedia_page.missing_dois
-                            if missing_dois is not None and len(missing_dois) > 0:
-                                self.missing_dois.extend(missing_dois)
-                            self.__print_statistics__()
-                            self.event_count += 1
+                    if wmf_event.page_title is not None:
+                        logger.debug(f"Page title found: {wmf_event.page_title}")
+                        if wmf_event.page_title not in self.earlier_events:
+                            logger.info("Processing new event")
+                            wmf_event.process()
+                            self.earlier_events.add(wmf_event.page_title)
+                            if wmf_event.wikipedia_page is not None:
+                                self.total_number_of_missing_dois += wmf_event.wikipedia_page.number_of_missing_dois
+                                self.total_number_of_dois += wmf_event.wikipedia_page.number_of_dois
+                                missing_dois = wmf_event.wikipedia_page.missing_dois
+                                if missing_dois is not None and len(missing_dois) > 0:
+                                    self.missing_dois.extend(missing_dois)
+                                self.__print_statistics__()
+                                self.event_count += 1
+                        else:
+                            logger.debug("Skipping page already processed earlier")
                     else:
-                        logger.info("Skipping page already processed earlier")
+                        logger.error("page title was None")
                     if (
-                            self.total_number_of_missing_dois #+
-                            #self.total_number_of_missing_isbn
+                            self.total_number_of_missing_dois  # +
+                            # self.total_number_of_missing_isbn
                     ) >= self.missing_identitifier_limit:
                         print(f"Reached missing identifier limit of {self.missing_identitifier_limit}. Exiting")
                         self.__print_missing_dois__()
@@ -88,7 +94,7 @@ class EventStream:
         loop.run_until_complete(self.__get_events__())
 
     def __instantiate_pywikibot__(self):
-        return pywikibot.Site(self.language_code, 'wikipedia')
+        return pywikibot.Site(code=self.language_code, fam=self.event_site.value)
 
     def __print_missing_dois__(self):
         for doi in self.missing_dois:
@@ -96,8 +102,14 @@ class EventStream:
 
     def __print_sourcemd_link__(self):
         quoted_newline = quote("\r\n")
-        doi_string = quoted_newline.join([str(doi) for doi in self.missing_dois])
-        print(f"https://sourcemd.toolforge.org/index_old.php?id={doi_string}&doit=Check+source")
+        doi_string = "\n".join([str(doi) for doi in self.missing_dois])
+        url = URL.from_string("https://sourcemd.toolforge.org/index_old.php")
+        url = url.query_params(dict(
+            id=doi_string,
+            doit="Check+source"
+        ))
+        print(url.as_string())
+        # print(f"?id={quote(doi_string)}&doit=Check+source")
 
     def __print_statistics__(self):
         if self.total_number_of_dois > 0:

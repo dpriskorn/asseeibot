@@ -10,7 +10,9 @@ ask_before_lookup = False
 max_events = 0
 missing_identitifier_limit = 15
 username = "So9q"
-loglevel = logging.WARNING
+loglevel = logging.INFO
+excluded_wikis = ["ceb", "zh", "ja"]
+trust_url_file_endings = True
 
 version = "0.2-alpha0"
 user_agent = f"Asynchronous Server Side Events External Identifier Bot/v{version} " \

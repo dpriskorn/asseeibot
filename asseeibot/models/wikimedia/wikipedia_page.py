@@ -1,17 +1,14 @@
-from __future__ import annotations
+import json
 import logging
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Any
 
 import pywikibot
 from pywikibot import Page
 
-from asseeibot import config, wikidata
 from asseeibot.models.identifiers.doi import Doi
 from asseeibot.models.wikimedia.templates.enwp.cite_journal import CiteJournal
 from asseeibot.models.wikimedia.wikipedia_page_reference import WikipediaPageReference
 
-if TYPE_CHECKING:
-    from asseeibot.models.wikimedia.wikimedia_event import WikimediaEvent
 
 
 class WikipediaPage:
@@ -24,13 +21,14 @@ class WikipediaPage:
     pywikibot_page: Page = None
     references: List[WikipediaPageReference] = None
     title: str = None
-    wikimedia_event: WikimediaEvent = None
+    # We can't type this with WikimediaEvent because of pydantic
+    wikimedia_event: Any = None
     missing_dois: List[Doi] = None
     dois: List[Doi] = None
 
     def __init__(
             self,
-            wikimedia_event: WikimediaEvent = None
+            wikimedia_event: Any = None
     ):
         """Get the page from Wikipedia"""
         logger = logging.getLogger(__name__)
@@ -57,26 +55,42 @@ class WikipediaPage:
         for template_name, content in raw:
             logger.debug(f"working on {template_name}")
             if template_name.lower() == "cite journal":
-                logger.debug(f"content:{content}")
-                cite_journal = CiteJournal(content)
+                # logger.debug(f"content:{content}")
+                # Workaround from https://stackoverflow.com/questions/56494304/how-can-i-do-to-convert-ordereddict-to-dict
+                # First we convert to a normal dict
+                content_as_dict = json.loads(json.dumps(content))
+                # Then we add the dict to the "doi" key that pydantic exspects
+                logger.debug(f"content_dict:{content_as_dict}")
+                if "doi" in content_as_dict:
+                    doi = content_as_dict["doi"]
+                else:
+                    doi = None
+                content_as_dict["doi"] = dict(
+                    value=doi
+                )
+                cite_journal = CiteJournal(**content_as_dict)
                 self.references.append(cite_journal)
                 if cite_journal.doi is not None:
                     self.number_of_dois += 1
                     self.dois.append(cite_journal.doi)
                 else:
                     # We ignore cultural magazines for now
-                    if cite_journal.journal_title is not None and not "magazine" in cite_journal.journal_title:
-                        logger.warning(f"An article titled {cite_journal.article_title} "
+                    if cite_journal.journal_title is not None and "magazine" not in cite_journal.journal_title:
+                        logger.warning(f"An article titled {cite_journal.title} "
                                        f"in the journal_title {cite_journal.journal_title} "
                                        f"was found but no DOI. "
                                        f"(pmid:{cite_journal.pmid} jstor:{cite_journal.jstor})")
         # exit()
 
     def __populate_missing_dois__(self):
-        # logger = logging.getLogger(__name__)
+        logger = logging.getLogger(__name__)
         self.missing_dois = []
         if self.dois is not None and len(self.dois) > 0:
-            missing_dois = wikidata.lookup_dois(dois=self.dois)
+            logger.info(f"Looking up {self.number_of_dois} DOIs in Wikidata")
+            [doi.lookup_in_wikidata() for doi in self.dois]
+            logger.info(f"Looking up {self.number_of_dois} DOIs in Crossref")
+            [doi.lookup_in_crossref() for doi in self.dois]
+            missing_dois = [doi for doi in self.dois if not doi.found_in_wikidata]
             if missing_dois is not None and len(missing_dois) > 0:
                 self.missing_dois.extend(missing_dois)
 
