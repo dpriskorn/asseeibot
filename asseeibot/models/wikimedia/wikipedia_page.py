@@ -38,6 +38,8 @@ class WikipediaPage:
             raise ValueError("wikimedia_event was None")
         self.wikimedia_event = wikimedia_event
         self.title = self.wikimedia_event.page_title
+        if self.title is None or self.title == "":
+            raise ValueError("title not set correctly")
         logger.info("Fetching the wikitext")
         self.pywikibot_page = pywikibot.Page(self.wikimedia_event.event_stream.pywikibot_site, self.title)
         self.page_id = int(self.pywikibot_page.pageid)

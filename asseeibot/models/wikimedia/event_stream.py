@@ -28,7 +28,7 @@ class EventStream:
     total_number_of_missing_isbn: int = 0
     total_number_of_isbn: int = 0
     event_count: int = 0
-    earlier_events: set = set(str)
+    earlier_events: set = set()
 
     async def __get_events__(self):
         """Get events from the event stream until missing identifier limit"""

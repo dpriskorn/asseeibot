@@ -38,27 +38,27 @@ class WikimediaEvent:
         self.__parse__()
 
     def __parse__(self):
-        logger = logging.getLogger(__name__)
         # meta = data["meta"]
         self.server_name = self.event_data['server_name']
         self.namespace = int(self.event_data['namespace'])
         self.language_code = self.server_name.replace(f".{self.event_stream.event_site.value}.org", "")
         # for exclude in excluded_wikis:
         # if language_code == exclude:
+
+    def process(self):
+        logger = logging.getLogger(__name__)
         if self.language_code != "en":
             return
-        # We only want the article namespace which is ns=0
+        # We only want the article namespace (0)
         if self.server_name.find(self.event_stream.event_site.value) != -1 and self.namespace == 0:
             logger.info("Found enwp article edit")
             self.page_title = self.event_data['title']
             self.bot_edit = bool(self.event_data['bot'])
             self.edit_type = WikimediaEditType(self.event_data['type'])
+            self.__print_progress__()
+            self.wikipedia_page = WikipediaPage(wikimedia_event=self)
         else:
             logger.debug(f"Skipping event from {self.server_name}")
-
-    def process(self):
-        self.__print_progress__()
-        self.wikipedia_page = WikipediaPage(wikimedia_event=self)
 
     def url(self):
         return f"http://{self.server_name}/wiki/{quote(self.page_title)}"
