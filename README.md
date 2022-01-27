@@ -47,6 +47,14 @@ Then install the dependencies:
 Please don't hold me accountable if the dependecies eat your dog. Look at their
 sources and decide for yourself whether to trust their authors and the code.
 
+## Configuration
+Edit the config.py file in the asseeibot/ directory and add your WMF username there.
+
+## Kubernetes
+It is possible to run the tool in the WMC Kubernetes cluster if you want. 
+Follow the guide I wrote for ItemSubjector to set it up and run `./create_job.sh 1` 
+to start a job.
+
 ## Get DOIs for use in other tools (Linux)
 Make sure you have `jq` installed and run the following command line in a Linux terminal.
 

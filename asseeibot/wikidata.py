@@ -8,6 +8,7 @@ from wikibaseintegrator import wbi_config
 from wikibaseintegrator.wbi_helpers import execute_sparql_query
 
 from asseeibot import config
+from asseeibot.models.identifiers.doi import Doi
 
 wbi_config.config['USER_AGENT'] = config.user_agent
 
@@ -27,14 +28,13 @@ def wikidata_query(sparql_query):
 
 
 def lookup_dois(
-        dois: List[str] = None,
-        in_wikipedia: bool = False,
-) -> List[str]:
+        dois: List[Doi] = None,
+) -> List[Doi]:
     if dois is None:
         raise ValueError("dois was None")
     missing_dois = []
     if config.lookup_dois:
-        logging.info(f"dois found:{dois}")
+        logging.debug(f"dois found:{dois}")
         if config.ask_before_lookup:
             input('Press enter to lookup if any of these are missing in Wikidata: ')
         print(f"Looking up {len(dois)} DOIs on WD")
@@ -49,11 +49,11 @@ def lookup_dois(
             WHERE 
             {{
             {{
-            ?item wdt:P356 "{doi}".
+            ?item wdt:P356 "{doi.string}".
             }} union {{
-            ?item wdt:P356 "{doi.lower()}".
+            ?item wdt:P356 "{doi.string.lower()}".
             }} union {{
-            ?item wdt:P356 "{doi.upper()}".
+            ?item wdt:P356 "{doi.string.upper()}".
             }} 
             }}
             ''')

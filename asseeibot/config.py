@@ -8,6 +8,7 @@ lookup_dois = True
 ask_before_lookup = False
 # Max events to read. 0 = unlimited
 max_events = 0
+missing_identitifier_limit = 15
 username = "So9q"
 loglevel = logging.WARNING
 

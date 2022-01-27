@@ -1,13 +1,16 @@
 import logging
 from typing import OrderedDict
 
+from asseeibot.models.identifiers.doi import Doi
+from asseeibot.models.wikimedia.wikipedia_page_reference import WikipediaPageReference
 
-class CiteJournal:
-    journal: str = None
-    doi: str = None
+
+class CiteJournal(WikipediaPageReference):
+    """This models the template cite journal in English Wikipedia"""
+    article_title: str = None
+    journal_title: str = None
     jstor: str = None
     pmid: str = None
-    article_title: str = None
     scopus_id: str = None
 
     def __init__(self,
@@ -16,10 +19,12 @@ class CiteJournal:
         for key, value in content.items():
             if key == "doi":
                 logger.info(f"Found doi: {value}")
-                self.doi = value
-            if key == "journal":
-                logger.info(f"Found journal: {value}")
-                self.journal = value
+                self.doi = Doi(value)
+            if key == "journal_title":
+                logger.info(f"Found journal_title: {value}")
+                # Todo decide about how to handle the [[]] of this value
+                # Could we get the QID for the journal_title?
+                self.journal_title = value
             if key == "jstor":
                 logger.info(f"Found jstor: {value}")
                 self.jstor = value
