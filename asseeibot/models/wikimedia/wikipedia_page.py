@@ -6,6 +6,7 @@ import pywikibot
 from pywikibot import Page
 
 from asseeibot import config
+from asseeibot.helpers.console import console
 from asseeibot.models.identifiers.doi import Doi
 from asseeibot.models.wikimedia.templates.enwp.cite_journal import CiteJournal
 from asseeibot.models.wikimedia.wikipedia_page_reference import WikipediaPageReference
@@ -96,7 +97,11 @@ class WikipediaPage:
 
     def __upload_subject_qids_to_wikidata__(self):
         if config.match_subjects_to_qids_and_upload:
-            [doi.upload_subjects_to_wikidata() for doi in self.dois]
+            number_of_subject_qids = sum([doi.crossref_entry.subject_qids for doi in self.dois])
+            if number_of_subject_qids > 0:
+                console.print(f"Uploading {number_of_subject_qids} to Wikidata")
+                [doi.upload_subjects_to_wikidata() for doi in self.dois]
+                exit()
 
     def __calculate_statistics__(self):
         logger = logging.getLogger(__name__)
