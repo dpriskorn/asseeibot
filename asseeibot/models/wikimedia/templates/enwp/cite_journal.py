@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, Union
 
 from asseeibot.models.identifiers.doi import Doi
 from asseeibot.models.wikimedia.wikipedia_page_reference import WikipediaPageReference
@@ -8,18 +8,22 @@ from asseeibot.models.wikimedia.wikipedia_page_reference import WikipediaPageRef
 class CiteJournal(WikipediaPageReference):
     """This models the template cite journal in English Wikipedia"""
     doi: Optional[Doi]
-    title: str = None
     journal_title: str = None
     jstor: str = None
     pmid: str = None
     scopus_id: str = None
 
     def __post_init_post_parse__(self):
-        logger = logging.getLogger(__name__)
-        # Convert after pydantic finished parsing
-        # because it cannot parse into a Doi when given a string.
-        self.doi: Doi = Doi(self.doi)
-        logger.info("post init post parse was run")
+        pass
+        # logger = logging.getLogger(__name__)
+        # # uGlY hack
+        # # Convert after pydantic finished parsing
+        # # because it cannot parse into a Doi when given a string.
+        # if self.doi == "":
+        #     self.doi = None
+        # else:
+        #     self.doi: Doi = Doi(value=self.doi)
+        # logger.warning("post init post parse was run")
 
     # def __parse_template__(self):
     #     logger = logging.getLogger(__name__)

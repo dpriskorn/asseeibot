@@ -30,7 +30,7 @@ class NamedEntityRecognition:
     https://en.wikipedia.org/wiki/Levenshtein_distance
     """
     raw_subjects: Optional[List[str]]
-    subject_qids: Set[EntityId] = None
+    subject_qids: Set[str] = None  # Got "TypeError: unhashable type: 'EntityId'" so we use a str for now
     dataframe: Any = None
     threshold: int = 80
 
@@ -97,7 +97,9 @@ class NamedEntityRecognition:
         self.subject_qids = set()
         for subject in self.raw_subjects:
             result = self.__lookup_in_ontology__(subject)
-            if result is None:
+            if result is not None:
+                self.subject_qids.add(result.qid.value)
+            else:
                 logger.info("We try splitting the subject up along commas")
                 split_subject_parts = subject.split(",")
                 if len(split_subject_parts) > 1:
@@ -105,7 +107,7 @@ class NamedEntityRecognition:
                         result = self.__lookup_in_ontology__(split_subject)
                         if result is not None:
                             # print(result)
-                            self.subject_qids.add(result.qid)
+                            self.subject_qids.add(result.qid.value)
                 logger.info("We try splitting the subject up along 'and'")
                 split_subject_parts = subject.split(" and ")
                 if len(split_subject_parts) > 1:
@@ -113,7 +115,7 @@ class NamedEntityRecognition:
                         result = self.__lookup_in_ontology__(split_subject)
                         if result is not None:
                             # print(result)
-                            self.subject_qids.add(result.qid)
+                            self.subject_qids.add(result.qid.value)
                 # print("debug split exit")
                 # exit()
             # if result is not None:

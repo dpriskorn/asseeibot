@@ -8,5 +8,4 @@ from asseeibot.models.identifiers.isbn import Isbn
 
 class WikipediaPageReference(BaseModel):
     """This models a reference on a Wikipedia page"""
-    doi: Optional[Doi] = None
-    isbn: Optional[Isbn] = None
+    title: str = None

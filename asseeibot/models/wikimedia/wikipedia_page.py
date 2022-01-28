@@ -5,10 +5,10 @@ from typing import List, TYPE_CHECKING, Any
 import pywikibot
 from pywikibot import Page
 
+from asseeibot import config
 from asseeibot.models.identifiers.doi import Doi
 from asseeibot.models.wikimedia.templates.enwp.cite_journal import CiteJournal
 from asseeibot.models.wikimedia.wikipedia_page_reference import WikipediaPageReference
-
 
 
 class WikipediaPage:
@@ -43,6 +43,7 @@ class WikipediaPage:
         self.page_id = int(self.pywikibot_page.pageid)
         self.__parse_templates__()
         self.__populate_missing_dois__()
+        self.__upload_subject_qids_to_wikidata__()
         self.__calculate_statistics__()
 
     def __parse_templates__(self):
@@ -55,19 +56,18 @@ class WikipediaPage:
         for template_name, content in raw:
             logger.debug(f"working on {template_name}")
             if template_name.lower() == "cite journal":
-                # logger.debug(f"content:{content}")
                 # Workaround from https://stackoverflow.com/questions/56494304/how-can-i-do-to-convert-ordereddict-to-dict
-                # First we convert to a normal dict
+                # First we convert the list of tuples to a normal dict
                 content_as_dict = json.loads(json.dumps(content))
-                # Then we add the dict to the "doi" key that pydantic exspects
+                # Then we add the dict to the "doi" key that pydantic expects
                 logger.debug(f"content_dict:{content_as_dict}")
                 if "doi" in content_as_dict:
                     doi = content_as_dict["doi"]
+                    content_as_dict["doi"] = dict(
+                        value=doi
+                    )
                 else:
-                    doi = None
-                content_as_dict["doi"] = dict(
-                    value=doi
-                )
+                    content_as_dict["doi"] = None
                 cite_journal = CiteJournal(**content_as_dict)
                 self.references.append(cite_journal)
                 if cite_journal.doi is not None:
@@ -93,6 +93,10 @@ class WikipediaPage:
             missing_dois = [doi for doi in self.dois if not doi.found_in_wikidata]
             if missing_dois is not None and len(missing_dois) > 0:
                 self.missing_dois.extend(missing_dois)
+
+    def __upload_subject_qids_to_wikidata__(self):
+        if config.match_subjects_to_qids_and_upload:
+            [doi.upload_subjects_to_wikidata() for doi in self.dois]
 
     def __calculate_statistics__(self):
         logger = logging.getLogger(__name__)

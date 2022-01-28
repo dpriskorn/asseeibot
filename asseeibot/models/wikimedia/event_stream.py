@@ -49,7 +49,7 @@ class EventStream:
                     if wmf_event.page_title is not None:
                         logger.debug(f"Page title found: {wmf_event.page_title}")
                         if wmf_event.page_title not in self.earlier_events:
-                            logger.info("Processing new event")
+                            logger.debug("Processing new event")
                             wmf_event.process()
                             self.earlier_events.add(wmf_event.page_title)
                             if wmf_event.wikipedia_page is not None:

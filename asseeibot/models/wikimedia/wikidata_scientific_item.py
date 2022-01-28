@@ -42,7 +42,7 @@ class WikidataScientificItem(BaseModel):
             if len(df) == 1:
                 self.found_in_wikidata = True
                 self.qid = EntityId(raw_entity_id=df["item"][0])
-                #exit()
+                # exit()
             elif len(df) > 1:
                 print(repr(df))
                 logger.error(f"Got more than one match on {self.doi.value} in WD. "

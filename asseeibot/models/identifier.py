@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
 
 
-#@dataclass
+# @dataclass
 class Identifier(BaseModel):
     """Base model for an identifier"""
     value: str

@@ -13,6 +13,7 @@ username = "So9q"
 loglevel = logging.INFO
 excluded_wikis = ["ceb", "zh", "ja"]
 trust_url_file_endings = True
+match_subjects_to_qids_and_upload = True
 
 version = "0.2-alpha0"
 user_agent = f"Asynchronous Server Side Events External Identifier Bot/v{version} " \

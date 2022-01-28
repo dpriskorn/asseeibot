@@ -12,6 +12,7 @@ class WikimediaEditType(Enum):
     CATEGORIZE = "categorize"
     UNKNOWN = "142"
 
+
 class WikidataNamespaceLetters(Enum):
     PROPERTY = "P"
     ITEM = "Q"

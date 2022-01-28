@@ -38,6 +38,10 @@ class EntityId:
     def url(self):
         return f"{config.wd_prefix}{str(self)}"
 
+    @property
+    def value(self):
+        return f"{self.letter.value}{self.rest}"
+
     def __str__(self):
         return f"{self.letter.value}{self.rest}"
 
