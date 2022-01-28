@@ -53,7 +53,7 @@ class Doi(Identifier):
         if (
                 self.found_in_wikidata and
                 self.found_in_crossref and
-                self.crossref_entry.subject_qids > 0
+                len(self.crossref_entry.subject_qids) > 0
         ):
             # pseudo
             for qid in self.crossref_entry.subject_qids:
