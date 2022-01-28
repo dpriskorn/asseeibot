@@ -35,7 +35,7 @@ class CrossrefEngine:
         # result = cr.works(doi=doi)
         try:
             self.result = cr.works(ids=self.doi.value)
-        except HTTPError as e:
+        except (HTTPError, ConnectionError) as e:
             logger.error(f"Got error from Crossref: {e}")
         work = self.__parse_habanero_data__()
         if config.match_subjects_to_qids_and_upload and work is not None:
