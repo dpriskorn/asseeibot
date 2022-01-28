@@ -1,14 +1,15 @@
 import logging
 import re
 
-from asseeibot.helpers.console import console
 from asseeibot.models.crossref_engine import CrossrefEngine
 from asseeibot.models.crossref_work import CrossrefWork
 from asseeibot.models.identifier import Identifier
-from asseeibot.models.wikimedia.wikidata_scientific_item import WikidataScientificItem
 
 
 # @dataclass
+from asseeibot.models.wikimedia.wikidata.scientific_item import WikidataScientificItem
+
+
 class Doi(Identifier):
     """Models a DOI"""
     crossref_entry: CrossrefWork = None

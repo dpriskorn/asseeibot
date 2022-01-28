@@ -1,5 +1,4 @@
-import logging
-from typing import Optional, Union
+from typing import Optional
 
 from asseeibot.models.identifiers.doi import Doi
 from asseeibot.models.wikimedia.wikipedia_page_reference import WikipediaPageReference

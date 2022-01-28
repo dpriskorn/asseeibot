@@ -101,7 +101,6 @@ class EventStream:
             print(doi)
 
     def __print_sourcemd_link__(self):
-        quoted_newline = quote("\r\n")
         doi_string = "\n".join([str(doi) for doi in self.missing_dois])
         url = URL.from_string("https://sourcemd.toolforge.org/index_old.php")
         url = url.query_params(dict(

@@ -1,12 +1,12 @@
 import logging
 from time import sleep
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from urllib.parse import quote
 
 from pydantic import BaseModel
 
 from asseeibot.helpers.wikidata import wikidata_query
-from asseeibot.models.wikimedia.wikidata_entity import EntityId
+from asseeibot.models.wikimedia.wikidata.entity import EntityId
 
 
 class WikidataScientificItem(BaseModel):
