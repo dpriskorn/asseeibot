@@ -173,7 +173,10 @@ class CrossrefWork(BaseModel):
 
     @property
     def number_of_subject_qids(self):
-        return len(self.subject_qids)
+        if self.subject_qids is not None:
+            return len(self.subject_qids)
+        else:
+            return 0
 
     @property
     def references(self):

@@ -1,5 +1,4 @@
 import logging
-from copy import deepcopy
 from typing import Optional, Any, Dict
 
 from caseconverter import snakecase
@@ -21,8 +20,6 @@ class CrossrefEngine:
 
     def __post_init_post_parse__(self):
         logger = logging.getLogger(__name__)
-        logger.debug(f"Looking up work {self.doi.value} in Crossref")
-        work = self.lookup_work()
 
     def lookup_work(self) -> Optional[CrossrefWork]:
         """Lookup data and populate the object"""
@@ -30,7 +27,8 @@ class CrossrefEngine:
         # https://www.crossref.org/education/retrieve-metadata/rest-api/
         # async client here https://github.com/izihawa/aiocrossref but only 1 contributor
         # https://github.com/sckott/habanero >6 contributors not async
-        logging.info("Looking up from Crossref")
+        logger.debug(f"Looking up work {self.doi.value} in Crossref")
+        # logging.info("Looking up from Crossref")
         cr = Crossref()
         # result = cr.works(doi=doi)
         try:
@@ -40,7 +38,7 @@ class CrossrefEngine:
         work = self.__parse_habanero_data__()
         if config.match_subjects_to_qids_and_upload and work is not None:
             work.match_subjects_to_qids()
-            if len(work.subject_qids) > 0:
+            if work.number_of_subject_qids > 0:
                 console.print(f"The following main subjects can "
                               f"be uploaded to the Wikidata item: "
                               f"{work.subject_qids}")
