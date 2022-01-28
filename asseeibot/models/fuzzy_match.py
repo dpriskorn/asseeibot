@@ -1,12 +1,14 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
-from asseeibot.models.wikimedia.wikidata_entity import EntityId
+from asseeibot.models.wikimedia.wikidata.entity import EntityId
 
 
 class FuzzyMatch(BaseModel):
     qid: EntityId
-    label: str
-    description: str
+    label: Optional[str]
+    description: Optional[str]
 
     def __str__(self):
         return (f"{self.label}: {self.description} "

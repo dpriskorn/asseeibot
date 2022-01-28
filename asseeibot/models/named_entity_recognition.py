@@ -7,8 +7,9 @@ from fuzzywuzzy import fuzz
 from pydantic.dataclasses import dataclass
 
 from asseeibot.helpers.util import yes_no_question
+from asseeibot.models.cache import Cache
 from asseeibot.models.fuzzy_match import FuzzyMatch
-from asseeibot.models.wikimedia.wikidata_entity import EntityId
+from asseeibot.models.wikimedia.wikidata.entity import EntityId
 
 
 @dataclass
@@ -47,6 +48,7 @@ class NamedEntityRecognition:
 
     def __prepare_the_dataframe__(self):
         # This pickle is ~3MB in size and takes less than a second to load.
+        # noinspection PyUnresolvedReferences
         self.dataframe: Dataset["item", "itemLabel", "alias"] = pd.read_pickle("ontology.pkl")
         # This is needed for the fuzzymatching to work properly
         self.dataframe = self.dataframe.fillna('')
@@ -73,13 +75,22 @@ class NamedEntityRecognition:
                 answer = yes_no_question("Does this match?\n"
                                          f"{str(match)}")
                 if answer:
+                    cache_instance = Cache()
+                    cache_instance.add(label=subject, qid=match.qid.value)
                     return match
             return None
 
         logger = logging.getLogger(__name__)
-        if subject is None or subject is "":
+        if subject is None or subject == "":
             return
-        print(f"NER matching on {subject}")
+        cache = Cache()
+        qid = cache.read(label=subject)
+        if qid is not None:
+            logger.info("Already matched QID found in the cache")
+            return FuzzyMatch(
+                qid=EntityId(raw_entity_id=qid)
+            )
+        print(f"NER matching on '{subject}'")
         # This code is inspired by Nikhil VJ
         # https://stackoverflow.com/questions/38577332/apply-fuzzy-matching-across-a-dataframe-column-and-save-results-in-a-new-column
         self.dataframe["label_score"] = self.dataframe.itemLabel.apply(lambda x: fuzz.ratio(x, subject))
