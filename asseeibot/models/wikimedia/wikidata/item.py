@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class Item(BaseModel):
 
+    @staticmethod
     def string_search_url(string: str) -> str:
         if string is not None and string != "":
             # quote to guard against äöå and the like
