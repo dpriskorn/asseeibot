@@ -58,13 +58,6 @@ class Doi(Identifier):
                 self.crossref_entry.number_of_subject_qids > 0
         ):
             # pseudo
-            for qid in self.crossref_entry.subject_qids:
-                # prepare WBI claim
-                pass
-            # do upload to WD
-            # we care if they are already present,
-            # so we setup WBI to abort if found
-            raise NotImplementedError
-            # console.print("Upload done")
+            self.wikidata_scientific_item.add_subjects(self.crossref_entry.subject_qids)
         else:
             logger.debug("No subject Q-items matched for this DOI")

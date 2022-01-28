@@ -1,7 +1,6 @@
 import asyncio
 import logging
 from typing import List, Set
-from urllib.parse import quote
 
 import pywikibot
 from aiohttp import ClientPayloadError

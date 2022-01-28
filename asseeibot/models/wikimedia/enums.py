@@ -19,3 +19,11 @@ class WikidataNamespaceLetters(Enum):
     LEXEME = "L"
     # FORM = "F"
     # SENSE = "S"
+
+
+class DataFrameColumns(Enum):
+    """These are special to our ontology"""
+    ALIAS = "alias"
+    DESCRIPTION = "description"
+    ITEM = "item"
+    LABEL = "itemLabel"

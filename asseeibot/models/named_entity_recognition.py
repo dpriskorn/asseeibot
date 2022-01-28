@@ -4,12 +4,16 @@ from typing import Optional, Set, List, Any
 import pandas as pd
 from dataenforce import Dataset
 from fuzzywuzzy import fuzz
+from pydantic import PositiveInt
 from pydantic.dataclasses import dataclass
 
+from asseeibot import config
 from asseeibot.helpers.util import yes_no_question
 from asseeibot.models.cache import Cache
 from asseeibot.models.fuzzy_match import FuzzyMatch
+from asseeibot.models.wikimedia.enums import DataFrameColumns
 from asseeibot.models.wikimedia.wikidata.entity import EntityId
+from asseeibot.models.wikimedia.wikidata.item import Item
 
 
 @dataclass
@@ -33,7 +37,8 @@ class NamedEntityRecognition:
     raw_subjects: Optional[List[str]]
     subject_qids: Set[str] = None  # Got "TypeError: unhashable type: 'EntityId'" so we use a str for now
     dataframe: Any = None
-    threshold: int = 80
+    __alias_threshold: int = 85
+    __label_threshold: int = 82
 
     class Config:
         arbitrary_types_allowed = True
@@ -56,52 +61,91 @@ class NamedEntityRecognition:
     def __lookup_in_ontology__(self, subject: str) -> Optional[FuzzyMatch]:
         """Looks up the subject in the ontology and triy to fuzzymatch it to a QID"""
 
-        def extract_top_match() -> Optional[FuzzyMatch]:
-            # Extract the match with the highest score
-            top_match = None
+        def extract_top_match_row():
+            """Get the first row"""
             for row in self.dataframe.itertuples(index=False):
                 # This is a NamedTuple
-                top_match = row
-                break
-            if top_match.label_score > top_match.alias_score:
-                logger.warning("Alias score is higher than the label score")
-            if top_match.label_score > self.threshold:
-                # present the match
-                match = FuzzyMatch(**dict(
-                    qid=EntityId(top_match.item),
-                    label=top_match.itemLabel,
-                    description=top_match.description
-                ))
+                return row
+
+        def extract_top_match_score(column: DataFrameColumns) -> PositiveInt:
+            if not (column == DataFrameColumns.ALIAS or column == DataFrameColumns.LABEL):
+                raise ValueError("did not get a column we support")
+            row = extract_top_match_row()
+            if column == DataFrameColumns.LABEL:
+                return row.label_score
+            else:
+                return row.alias_score
+
+        def get_top_match():
+            row = extract_top_match_row()
+            # present the match
+            return FuzzyMatch(**dict(
+                qid=EntityId(row.item),
+                label=row.itemLabel,
+                description=row.description
+            ))
+
+        def lookup_in_cache(subject: str):
+            if subject is None or subject == "":
+                return
+            cache = Cache()
+            qid = cache.read(label=subject)
+            if qid is not None:
+                logger.info("Already matched QID found in the cache")
+                return FuzzyMatch(
+                    qid=EntityId(raw_entity_id=qid)
+                )
+
+        def calculate_scores(subject: str):
+            print(f"NER matching on '{subject}'")
+            # This code is inspired by Nikhil VJ
+            # https://stackoverflow.com/questions/38577332/apply-fuzzy-matching-across-a-dataframe-column-and-save-results-in-a-new-column
+            self.dataframe["label_score"] = self.dataframe.itemLabel.apply(lambda x: fuzz.ratio(x, subject))
+            self.dataframe["alias_score"] = self.dataframe.alias.apply(lambda x: fuzz.ratio(x, subject))
+            # print(self.dataframe.head())
+
+        def print_dataframe_head():
+            print(self.dataframe.head(2))
+
+        if not isinstance(subject, str):
+            raise TypeError(f"subject was '{subject}' which is not a string")
+        logger = logging.getLogger(__name__)
+        match = lookup_in_cache(subject)
+        if match is not None:
+            return match
+        calculate_scores(subject)
+        self.dataframe = self.dataframe.sort_values("label_score", ascending=False)
+        label_score = extract_top_match_score(column=DataFrameColumns.LABEL)
+        if config.loglevel == logging.INFO or config.loglevel == logging.DEBUG:
+            print_dataframe_head()
+        top_label_match = get_top_match()
+        self.dataframe = self.dataframe.sort_values("alias_score", ascending=False)
+        alias_score = extract_top_match_score(column=DataFrameColumns.ALIAS)
+        if config.loglevel == logging.INFO or config.loglevel == logging.DEBUG:
+            print_dataframe_head()
+        top_alias_match = get_top_match()
+        if label_score > alias_score:
+            if label_score > self.__label_threshold:
                 answer = yes_no_question("Does this match?\n"
-                                         f"{str(match)}")
+                                         f"{str(top_label_match)}")
                 if answer:
                     cache_instance = Cache()
                     cache_instance.add(label=subject, qid=match.qid.value)
-                    return match
-            return None
-
-        logger = logging.getLogger(__name__)
-        if subject is None or subject == "":
-            return
-        cache = Cache()
-        qid = cache.read(label=subject)
-        if qid is not None:
-            logger.info("Already matched QID found in the cache")
-            return FuzzyMatch(
-                qid=EntityId(raw_entity_id=qid)
-            )
-        print(f"NER matching on '{subject}'")
-        # This code is inspired by Nikhil VJ
-        # https://stackoverflow.com/questions/38577332/apply-fuzzy-matching-across-a-dataframe-column-and-save-results-in-a-new-column
-        self.dataframe["label_score"] = self.dataframe.itemLabel.apply(lambda x: fuzz.ratio(x, subject))
-        self.dataframe["alias_score"] = self.dataframe.alias.apply(lambda x: fuzz.ratio(x, subject))
-        # print(self.dataframe.head())
-        self.dataframe = self.dataframe.sort_values("alias_score", ascending=False)
-        print(self.dataframe.head(2))
-        self.dataframe = self.dataframe.sort_values("label_score", ascending=False)
-        print(self.dataframe.head(2))
-        # exit()
-        return extract_top_match()
+                    return top_label_match
+        if alias_score > self.__alias_threshold:
+            answer = yes_no_question("Does this match?\n"
+                                     f"{str(top_label_match)}")
+            if answer:
+                cache_instance = Cache()
+                cache_instance.add(label=subject, qid=match.qid.value)
+                return top_label_match
+        # None of the ratios reached the threshold
+        # We probably have either a gap in our ontology or in Wikidata
+        item = Item()
+        logger.warning(f"No match with a sufficient rating found. "
+                       f"Search for the subject on Wikidata: "
+                       f"{item.string_search_url(string=subject)}")
+        exit()
 
     def __lookup_subjects__(self):
         logger = logging.getLogger(__name__)

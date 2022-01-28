@@ -18,8 +18,8 @@ class CrossrefEngine:
     doi: Any
     result: Any = None
 
-    def __post_init_post_parse__(self):
-        logger = logging.getLogger(__name__)
+    # def __post_init_post_parse__(self):
+    #     logger = logging.getLogger(__name__)
 
     def lookup_work(self) -> Optional[CrossrefWork]:
         """Lookup data and populate the object"""
