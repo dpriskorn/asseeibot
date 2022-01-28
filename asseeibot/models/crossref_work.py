@@ -172,6 +172,10 @@ class CrossrefWork(BaseModel):
         raise NotImplementedError("resolve the license url before returning")
 
     @property
+    def number_of_subject_qids(self):
+        return len(self.subject_qids)
+
+    @property
     def references(self):
         return self.reference
         # raise NotImplementedError("resolve the license url before returning")

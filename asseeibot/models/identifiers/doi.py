@@ -50,10 +50,11 @@ class Doi(Identifier):
         self.found_in_wikidata = self.wikidata_scientific_item.found_in_wikidata
 
     def upload_subjects_to_wikidata(self):
+        logger = logging.getLogger(__name__)
         if (
                 self.found_in_wikidata and
                 self.found_in_crossref and
-                len(self.crossref_entry.subject_qids) > 0
+                self.crossref_entry.number_of_subject_qids > 0
         ):
             # pseudo
             for qid in self.crossref_entry.subject_qids:
@@ -62,6 +63,7 @@ class Doi(Identifier):
             # do upload to WD
             # we care if they are already present,
             # so we setup WBI to abort if found
-            console.print("Upload done")
+            raise NotImplementedError
+            # console.print("Upload done")
         else:
-            console.print("No subject Q-items matched for this DOI")
+            logger.debug("No subject Q-items matched for this DOI")
