@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import List, TYPE_CHECKING, Any
+from typing import List, Any
 
 import pywikibot
 from pywikibot import Page
@@ -57,8 +57,8 @@ class WikipediaPage:
         for template_name, content in raw:
             logger.debug(f"working on {template_name}")
             if template_name.lower() == "cite journal":
-                # Workaround from https://stackoverflow.com/questions/56494304/how-can-i-do-to-convert-ordereddict-to-dict
-                # First we convert the list of tuples to a normal dict
+                # Workaround from https://stackoverflow.com/questions/56494304/how-can-i-do-to-convert-ordereddict-to
+                # -dict First we convert the list of tuples to a normal dict
                 content_as_dict = json.loads(json.dumps(content))
                 # Then we add the dict to the "doi" key that pydantic expects
                 logger.debug(f"content_dict:{content_as_dict}")
@@ -104,7 +104,7 @@ class WikipediaPage:
                 exit()
 
     def __calculate_statistics__(self):
-        logger = logging.getLogger(__name__)
+        # logger = logging.getLogger(__name__)
         self.number_of_dois = len(self.dois)
         self.number_of_missing_dois = len(self.missing_dois)
         print(f"Found {self.number_of_missing_dois}/{self.number_of_dois} missing DOIs on this page")
