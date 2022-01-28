@@ -76,11 +76,25 @@ class NamedEntityRecognition:
             else:
                 return row.alias_score
 
+        def extract_top_matches():
+            self.dataframe = self.dataframe.sort_values("label_score", ascending=False)
+            label_score = extract_top_match_score(column=DataFrameColumns.LABEL)
+            if config.loglevel == logging.INFO or config.loglevel == logging.DEBUG:
+                print_dataframe_head()
+            top_label_match = get_top_match()
+            self.dataframe = self.dataframe.sort_values("alias_score", ascending=False)
+            alias_score = extract_top_match_score(column=DataFrameColumns.ALIAS)
+            if config.loglevel == logging.INFO or config.loglevel == logging.DEBUG:
+                print_dataframe_head()
+            top_alias_match = get_top_match()
+            return label_score, alias_score, top_label_match, top_alias_match
+
         def get_top_match():
             row = extract_top_match_row()
             # present the match
             return FuzzyMatch(**dict(
                 qid=EntityId(row.item),
+                alias=row.alias,
                 label=row.itemLabel,
                 description=row.description
             ))
@@ -114,38 +128,29 @@ class NamedEntityRecognition:
         if match is not None:
             return match
         calculate_scores(subject)
-        self.dataframe = self.dataframe.sort_values("label_score", ascending=False)
-        label_score = extract_top_match_score(column=DataFrameColumns.LABEL)
-        if config.loglevel == logging.INFO or config.loglevel == logging.DEBUG:
-            print_dataframe_head()
-        top_label_match = get_top_match()
-        self.dataframe = self.dataframe.sort_values("alias_score", ascending=False)
-        alias_score = extract_top_match_score(column=DataFrameColumns.ALIAS)
-        if config.loglevel == logging.INFO or config.loglevel == logging.DEBUG:
-            print_dataframe_head()
-        top_alias_match = get_top_match()
-        if label_score > alias_score:
-            if label_score > self.__label_threshold:
+        label_score, alias_score, top_label_match, top_alias_match = extract_top_matches()
+        if label_score >= alias_score:
+            if label_score >= self.__label_threshold:
                 answer = yes_no_question("Does this match?\n"
                                          f"{str(top_label_match)}")
                 if answer:
                     cache_instance = Cache()
-                    cache_instance.add(label=subject, qid=match.qid.value)
+                    cache_instance.add(label=subject, qid=top_label_match.qid.value)
                     return top_label_match
-        if alias_score > self.__alias_threshold:
+        if alias_score >= self.__alias_threshold:
             answer = yes_no_question("Does this match?\n"
-                                     f"{str(top_label_match)}")
+                                     f"{str(top_alias_match)}")
             if answer:
                 cache_instance = Cache()
-                cache_instance.add(label=subject, qid=match.qid.value)
-                return top_label_match
+                cache_instance.add(label=subject, qid=top_alias_match.qid.value)
+                return top_alias_match
         # None of the ratios reached the threshold
         # We probably have either a gap in our ontology or in Wikidata
         item = Item()
         logger.warning(f"No match with a sufficient rating found. "
                        f"Search for the subject on Wikidata: "
                        f"{item.string_search_url(string=subject)}")
-        exit()
+        # exit()
 
     def __lookup_subjects__(self):
         logger = logging.getLogger(__name__)

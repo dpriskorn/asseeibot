@@ -7,9 +7,10 @@ from asseeibot.models.wikimedia.wikidata.entity import EntityId
 
 class FuzzyMatch(BaseModel):
     qid: EntityId
+    alias: Optional[str]
     label: Optional[str]
     description: Optional[str]
 
     def __str__(self):
-        return (f"{self.label}: {self.description} "
+        return (f"{self.label} ({self.alias}): {self.description} "
                 f"{self.qid.url()}")
