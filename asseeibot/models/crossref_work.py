@@ -95,6 +95,114 @@ class CrossrefWork(BaseModel):
             ner = NamedEntityRecognition(raw_subjects=self.subject)
             self.subject_qids = ner.subject_qids
 
+    def __str__(self):
+        return f"<{self.doi} {self.first_title}>"
+
+    @property
+    def first_title(self):
+        return self.title[0].replace('\n', '').strip()
+
+    @property
+    def isbn_list(self):
+        isbns = []
+        for isbn in self.__isbn:
+            isbns.append(Isbn(value=isbn))
+        return isbns
+
+    @property
+    def license_qid(self):
+        raise NotImplementedError("resolve the license url before returning")
+
+    @property
+    def number_of_subject_qids(self):
+        if self.subject_qids is not None:
+            return len(self.subject_qids)
+        else:
+            return 0
+
+    @property
+    def references(self):
+        return self.reference
+        # raise NotImplementedError("resolve the license url before returning")
+
+    # def handle_references(
+    #         references: List[Dict[str, str]],
+    # ):
+    #     """Handles references and look up any DOIs found"""
+    #     # print(references)
+    #     # if not in_wikipedia:
+    #     #     print("Skipping adding references since this DOI was not found in "+
+    #     #           "any Wikipedia yet")
+    #     # else:
+    #     print("First we add all the references of the DOI found i Wikipedia " +
+    #           "so we can link to it.")
+    #     dois = []
+    #     for ref in references:
+    #         key = ref["key"]
+    #         if ref.get("DOI"):
+    #             doi = ref["DOI"]
+    #             if doi is not None:
+    #                 dois.append(doi)
+    #         else:
+    #             print(f"DOI missing for key:{key}")
+    #     if len(dois) > 0:
+    #         wikidata.lookup_dois(dois)
+
+    # def __parse__(self):
+    #     logger = logging.getLogger(__name__)
+    #     if self.data is None:
+    #         raise ValueError("data was None")
+    #     # Extract data
+    #     for key, value in self.data.items():
+    #         if key == "is-referenced-by-count":
+    #             self.is_referenced_by_count = value
+    #         elif key == "ISBN":
+    #             self.__isbn = Isbn(value=value)
+    #         elif key == "ISSN":
+    #             self.issn = value
+    #             # TODO lookup ISSN using hub.toolforge.org like Houcemeddine?
+    #             # if config.lookup_issn:
+    #             #     qid = wikidata.lookup_issn(self.issn)
+    #             #     if qid is not None:
+    #             #         self.issn_qid = qid
+    #         elif key == "published":
+    #             if "date-parts" in value:
+    #                 date_parts = value["date-parts"]
+    #                 if len(date_parts) == 2:
+    #                     # Assuming [%Y,%m]
+    #                     self.issued = datetime(year=date_parts[0],
+    #                                            month=date_parts[1])
+    #             else:
+    #                 pprint(value)
+    #                 raise ValueError("this length of date parts is not supported yet")
+    #                 # self.issued = datetime(value)
+    #         elif key == "publisher-location":
+    #             self.publisher_location = value
+    #         elif key == "publisher":
+    #             self.publisher = value
+    #         elif key == "references-count":
+    #             self.references_count = int(value)
+    #         elif key == "URL":
+    #             # This is the DOI url to the resolver.
+    #             self.url = value
+    #         elif key == "link":
+    #             # This is fulltext links
+    #             urls = None
+    #             self.raw_links: Dict = self.data["link"]
+    #             # Disabled for now
+    #             # self.__parse_links__()
+    #         elif key == "reference":
+    #             self.references: List[Dict[str, str]] = value
+    #         elif key == "license":
+    #             # TODO detect garbage license URLs like
+    #             # www.springer.com/tdm
+    #             self.__license_url = value
+    #             if self.__license_url is None:
+    #                 logger.info("No license found for this article")
+    #         elif key == "subject":
+    #             self.raw_subjects = value
+    #         else:
+    #             logger.info(f"Skipping key: {key} with data: {value}")
     # def __parse_links__(self) -> None:
     #     """Parses the links into attributes"""
     #     logger = logging.getLogger(__name__)
@@ -157,114 +265,3 @@ class CrossrefWork(BaseModel):
     #         if found is False:
     #             logger.info("No fulltext links found")
 
-    def __str__(self):
-        return f"<{self.doi} {self.title[0]}>"
-
-    @property
-    def isbn_list(self):
-        isbns = []
-        for isbn in self.__isbn:
-            isbns.append(Isbn(value=isbn))
-        return isbns
-
-    @property
-    def license_qid(self):
-        raise NotImplementedError("resolve the license url before returning")
-
-    @property
-    def number_of_subject_qids(self):
-        if self.subject_qids is not None:
-            return len(self.subject_qids)
-        else:
-            return 0
-
-    @property
-    def references(self):
-        return self.reference
-        # raise NotImplementedError("resolve the license url before returning")
-
-    # def handle_references(
-    #         references: List[Dict[str, str]],
-    # ):
-    #     """Handles references and look up any DOIs found"""
-    #     # print(references)
-    #     # if not in_wikipedia:
-    #     #     print("Skipping adding references since this DOI was not found in "+
-    #     #           "any Wikipedia yet")
-    #     # else:
-    #     print("First we add all the references of the DOI found i Wikipedia " +
-    #           "so we can link to it.")
-    #     dois = []
-    #     for ref in references:
-    #         key = ref["key"]
-    #         if ref.get("DOI"):
-    #             doi = ref["DOI"]
-    #             if doi is not None:
-    #                 dois.append(doi)
-    #         else:
-    #             print(f"DOI missing for key:{key}")
-    #     if len(dois) > 0:
-    #         wikidata.lookup_dois(dois)
-
-    # # TODO implement caching to disk
-    # def __call_wbi_search_entities__(self, subject):
-    #     return search_entities(search_string=subject,
-    #                                  language="en",
-    #                                  dict_result=True,
-    #                                  max_results=1)
-
-    # def __parse__(self):
-    #     logger = logging.getLogger(__name__)
-    #     if self.data is None:
-    #         raise ValueError("data was None")
-    #     # Extract data
-    #     for key, value in self.data.items():
-    #         if key == "is-referenced-by-count":
-    #             self.is_referenced_by_count = value
-    #         elif key == "ISBN":
-    #             self.__isbn = Isbn(value=value)
-    #         elif key == "ISSN":
-    #             self.issn = value
-    #             # TODO lookup ISSN using hub.toolforge.org like Houcemeddine?
-    #             # if config.lookup_issn:
-    #             #     qid = wikidata.lookup_issn(self.issn)
-    #             #     if qid is not None:
-    #             #         self.issn_qid = qid
-    #         elif key == "published":
-    #             if "date-parts" in value:
-    #                 date_parts = value["date-parts"]
-    #                 if len(date_parts) == 2:
-    #                     # Assuming [%Y,%m]
-    #                     self.issued = datetime(year=date_parts[0],
-    #                                            month=date_parts[1])
-    #             else:
-    #                 pprint(value)
-    #                 raise ValueError("this length of date parts is not supported yet")
-    #                 # self.issued = datetime(value)
-    #         elif key == "publisher-location":
-    #             self.publisher_location = value
-    #         elif key == "publisher":
-    #             self.publisher = value
-    #         elif key == "references-count":
-    #             self.references_count = int(value)
-    #         elif key == "URL":
-    #             # This is the DOI url to the resolver.
-    #             self.url = value
-    #         elif key == "link":
-    #             # This is fulltext links
-    #             urls = None
-    #             self.raw_links: Dict = self.data["link"]
-    #             # Disabled for now
-    #             # self.__parse_links__()
-    #         elif key == "reference":
-    #             self.references: List[Dict[str, str]] = value
-    #         elif key == "license":
-    #             # TODO detect garbage license URLs like
-    #             # www.springer.com/tdm
-    #             self.__license_url = value
-    #             if self.__license_url is None:
-    #                 logger.info("No license found for this article")
-    #         elif key == "subject":
-    #             self.raw_subjects = value
-    #         else:
-    #             logger.info(f"Skipping key: {key} with data: {value}")
