@@ -10,22 +10,23 @@ from asseeibot.helpers.console import console
 from asseeibot.helpers.util import yes_no_question
 from asseeibot.models.cache import Cache
 from asseeibot.models.fuzzy_match import FuzzyMatch
-from asseeibot.models.wikimedia.enums import DataFrameColumns
+from asseeibot.models.dataframe import DataframeColumns
 from asseeibot.models.wikimedia.wikidata.entity import EntityId
 from asseeibot.models.wikimedia.wikidata.search import string_search_url
 
 
 class Ontology(BaseModel):
+    """This models the domain ontology and performs lookups
+
+    :param subject: str
+    :param original_subject: str
+    """
     subject: str
     original_subject: str
     dataframe: DataFrame = None
 
     class Config:
         arbitrary_types_allowed = True
-
-    def get_the_dataframe_from_config(self):
-        # This has been populated by __prepare_the_dataframe__()
-        self.dataframe = config.ontology_dataframe
 
     def lookup_subject(self) -> Optional[FuzzyMatch]:
         """Looks up the subject in the ontology and triy to fuzzymatch it to a QID"""
@@ -34,7 +35,7 @@ class Ontology(BaseModel):
         if not isinstance(self.original_subject, str):
             raise TypeError(f"subject was '{self.original_subject}' which is not a string")
         logger = logging.getLogger(__name__)
-        self.get_the_dataframe_from_config()
+        self.__get_the_dataframe_from_config__()
         if self.subject != self.original_subject:
             console.print(f"Trying now to match [bold green]'{self.subject}'[/bold green] which comes "
                           f"from the string '{self.original_subject}' found in Crossref")
@@ -42,11 +43,11 @@ class Ontology(BaseModel):
             console.print(f"Trying now to match [bold green]'{self.subject}'[/bold green] which was found in Crossref")
         if self.subject is None or self.subject == "":
             return
-        cache_match = self.lookup_in_cache()
+        cache_match = self.__lookup_in_cache__()
         if cache_match is not None:
             return cache_match
-        self.calculate_scores()
-        label_score, alias_score, top_label_match, top_alias_match = self.extract_top_matches()
+        self.__calculate_scores__()
+        label_score, alias_score, top_label_match, top_alias_match = self.__extract_top_matches__()
         if label_score >= alias_score:
             if label_score >= config.label_threshold_ratio:
                 answer = yes_no_question("Does this match?\n"
@@ -69,40 +70,67 @@ class Ontology(BaseModel):
                        f"{string_search_url(string=self.subject)}")
         # exit()
 
-    def extract_top_match_row(self):
+    def __calculate_scores__(self):
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Calculating scores")
+        # This code is inspired by Nikhil VJ
+        # https://stackoverflow.com/questions/38577332/apply-fuzzy-matching-across-a-dataframe-column-and-save-results-in-a-new-column
+        # We lowercase the string to avoid having the same ratio
+        # on petrology->Petrology as petrology->metrology
+        self.dataframe["label_score"] = self.dataframe.label.apply(
+            lambda x: fuzz.ratio(x.lower(), self.subject.lower())
+        )
+        self.dataframe["alias_score"] = self.dataframe.alias.apply(
+            lambda x: fuzz.ratio(x.lower(), self.subject.lower())
+        )
+
+    def __extract_top_match_score__(self, column: DataframeColumns) -> PositiveInt:
+        if not (column == DataframeColumns.ALIAS or column == DataframeColumns.LABEL):
+            raise ValueError("did not get a column we support")
+        row = self.__get_first_row__()
+        if column == DataframeColumns.LABEL:
+            return row.label_score
+        else:
+            return row.alias_score
+
+    def __extract_top_label_match_and_score__(self):
+        self.__sort_dataframe__(DataframeColumns.LABEL_SCORE.value)
+        label_score = self.__extract_top_match_score__(column=DataframeColumns.LABEL)
+        if config.loglevel == logging.INFO or config.loglevel == logging.DEBUG:
+            self.__print_dataframe_head__()
+        return self.__get_top_match__(), label_score
+
+    def __extract_top_alias_match_and_score__(self):
+        self.__sort_dataframe__(DataframeColumns.ALIAS_SCORE.value)
+        alias_score = self.__extract_top_match_score__(column=DataframeColumns.ALIAS)
+        if config.loglevel == logging.INFO or config.loglevel == logging.DEBUG:
+            self.__print_dataframe_head__()
+        return self.__get_top_match__(), alias_score
+
+    def __extract_top_matches__(self):
+        if self.original_subject is None:
+            raise ValueError("self.original_subject was None")
+        top_label_match, label_score = self.__extract_top_label_match_and_score__()
+        top_alias_match, alias_score = self.__extract_top_alias_match_and_score__()
+        return label_score, alias_score, top_label_match, top_alias_match
+
+    def __get_first_row__(self):
         """Get the first row"""
         for row in self.dataframe.itertuples(index=False):
             # This is a NamedTuple
             return row
 
-    def extract_top_match_score(self, column: DataFrameColumns) -> PositiveInt:
-        if not (column == DataFrameColumns.ALIAS or column == DataFrameColumns.LABEL):
-            raise ValueError("did not get a column we support")
-        row = self.extract_top_match_row()
-        if column == DataFrameColumns.LABEL:
-            return row.label_score
+    def __get_the_dataframe_from_config__(self):
+        # This has been populated by __prepare_the_dataframe__()
+        if config.ontology_dataframe is not None:
+            self.dataframe = config.ontology_dataframe
         else:
-            return row.alias_score
+            raise RuntimeError("config.ontology_dataframe was None")
 
-    def extract_top_matches(self):
+    def __get_top_match__(self):
         if self.original_subject is None:
             raise ValueError("self.original_subject was None")
-        self.dataframe = self.dataframe.sort_values("label_score", ascending=False)
-        label_score = self.extract_top_match_score(column=DataFrameColumns.LABEL)
-        if config.loglevel == logging.INFO or config.loglevel == logging.DEBUG:
-            self.print_dataframe_head()
-        top_label_match = self.get_top_match()
-        self.dataframe = self.dataframe.sort_values("alias_score", ascending=False)
-        alias_score = self.extract_top_match_score(column=DataFrameColumns.ALIAS)
-        if config.loglevel == logging.INFO or config.loglevel == logging.DEBUG:
-            self.print_dataframe_head()
-        top_alias_match = self.get_top_match()
-        return label_score, alias_score, top_label_match, top_alias_match
-
-    def get_top_match(self):
-        if self.original_subject is None:
-            raise ValueError("self.original_subject was None")
-        row = self.extract_top_match_row()
+        row = self.__get_first_row__()
         # logger.debug(f"row:{row}")
 
         # present the match
@@ -114,7 +142,7 @@ class Ontology(BaseModel):
             original_subject=self.original_subject
         ))
 
-    def lookup_in_cache(self):
+    def __lookup_in_cache__(self):
         logger = logging.getLogger(__name__)
         cache = Cache()
         qid = cache.read(label=self.subject)
@@ -122,14 +150,14 @@ class Ontology(BaseModel):
             logger.info("Already matched QID found in the cache")
             # result = df.loc[df["label"] == label, "qid"][0]
             label = self.dataframe.loc[
-                self.dataframe[DataFrameColumns.ITEM.value] == f"{config.wd_prefix}{qid}",
-                DataFrameColumns.LABEL.value].head(1).values[0]
+                self.dataframe[DataframeColumns.ITEM.value] == f"{config.wd_prefix}{qid}",
+                DataframeColumns.LABEL.value].head(1).values[0]
             description = self.dataframe.loc[
-                self.dataframe[DataFrameColumns.ITEM.value] == f"{config.wd_prefix}{qid}",
-                DataFrameColumns.DESCRIPTION.value].head(1).values[0]
+                self.dataframe[DataframeColumns.ITEM.value] == f"{config.wd_prefix}{qid}",
+                DataframeColumns.DESCRIPTION.value].head(1).values[0]
             alias = self.dataframe.loc[
-                self.dataframe[DataFrameColumns.ITEM.value] == f"{config.wd_prefix}{qid}",
-                DataFrameColumns.ALIAS.value].head(1).values[0]
+                self.dataframe[DataframeColumns.ITEM.value] == f"{config.wd_prefix}{qid}",
+                DataframeColumns.ALIAS.value].head(1).values[0]
             return FuzzyMatch(
                 qid=EntityId(raw_entity_id=qid),
                 label=label,
@@ -138,14 +166,9 @@ class Ontology(BaseModel):
                 original_subject=self.original_subject
             )
 
-    def calculate_scores(self):
-        logger = logging.getLogger(__name__)
-        logger.debug(f"Calculating scores")
-        # This code is inspired by Nikhil VJ
-        # https://stackoverflow.com/questions/38577332/apply-fuzzy-matching-across-a-dataframe-column-and-save-results-in-a-new-column
-        self.dataframe["label_score"] = self.dataframe.label.apply(lambda x: fuzz.ratio(x, self.subject))
-        self.dataframe["alias_score"] = self.dataframe.alias.apply(lambda x: fuzz.ratio(x, self.subject))
-        # print(self.dataframe.head())
-
-    def print_dataframe_head(self):
+    def __print_dataframe_head__(self):
         print(self.dataframe.head(2))
+
+    def __sort_dataframe__(self, column):
+        self.dataframe = self.dataframe.sort_values(column.value, ascending=False)
+

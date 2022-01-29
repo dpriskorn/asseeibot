@@ -1,14 +1,6 @@
 from enum import Enum
 
 
-class DataFrameColumns(Enum):
-    """These are special to our ontology, but they are standard names in WDQS"""
-    ALIAS = "alias"
-    DESCRIPTION = "description"
-    ITEM = "item"
-    LABEL = "label"
-
-
 class DeterminationMethod(Enum):
     FUZZY_POWERED_NAMED_ENTITY_RECOGNITION_MATCHER = "Q110733873"
 

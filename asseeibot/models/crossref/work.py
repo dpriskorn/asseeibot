@@ -95,6 +95,7 @@ class CrossrefWork(BaseModel):
     def match_subjects_to_qids(self):
         if self.subject is not None:
             self.ner = NamedEntityRecognition(raw_subjects=self.subject)
+            self.ner.start()
 
     def __str__(self):
         return f"<{self.doi} {self.first_title}>"

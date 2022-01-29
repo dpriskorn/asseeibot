@@ -2,11 +2,9 @@ import logging
 from enum import Enum
 from typing import Optional, List, Any
 
-import pandas as pd
-from dataenforce import Dataset
-from pydantic.dataclasses import dataclass
+from pydantic import BaseModel
 
-import config
+from asseeibot.models.dataframe import Dataframe
 from asseeibot.models.fuzzy_match import FuzzyMatch
 from asseeibot.models.ontology import Ontology
 
@@ -16,8 +14,7 @@ class SupportedSplit(Enum):
     AND = " and "
 
 
-@dataclass
-class NamedEntityRecognition:
+class NamedEntityRecognition(BaseModel):
     """This models the science subject ontology
 
     It takes a list of subjects and returns supervised
@@ -54,22 +51,11 @@ class NamedEntityRecognition:
     class Config:
         arbitrary_types_allowed = True
 
-    def __download_the_ontology_pickle(self):
-        raise NotImplementedError
-
-    def __post_init_post_parse__(self):
+    def start(self):
         if self.raw_subjects is not None:
-            self.__prepare_the_dataframe__()
+            dataframe = Dataframe()
+            dataframe.prepare_the_dataframe()
             self.__lookup_subjects__()
-
-    @staticmethod
-    def __prepare_the_dataframe__():
-        if config.ontology_dataframe is None:
-            # This pickle is ~4MB in size and takes less than a second to load.
-            # noinspection PyUnresolvedReferences
-            dataframe: Dataset["item", "itemLabel", "alias"] = pd.read_pickle("ontology.pkl")
-            # This is needed for the fuzzymatching to work properly
-            config.ontology_dataframe = dataframe.fillna('')
 
     def __lookup_subjects__(self):
         """This function splits the subject string
