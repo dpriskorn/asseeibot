@@ -6,13 +6,13 @@ from urllib.parse import quote
 
 from wikibaseintegrator import wbi_login, wbi_config, WikibaseIntegrator
 from wikibaseintegrator.datatypes import Time, Item as WbiItemType, String
-from wikibaseintegrator.wbi_enums import ActionIfExists
 from wikibaseintegrator.entities.item import Item as WbiEntityItem
+from wikibaseintegrator.wbi_enums import ActionIfExists
 
 import config
 from asseeibot.helpers.console import console
 from asseeibot.helpers.wikidata import wikidata_query
-from asseeibot.models.crossref.work import CrossrefWork
+from asseeibot.models.crossref.engine import CrossrefEngine
 from asseeibot.models.fuzzy_match import FuzzyMatch
 from asseeibot.models.wikimedia.enums import StatedIn, Property, DeterminationMethod
 from asseeibot.models.wikimedia.wikidata.entity import EntityId
@@ -147,11 +147,12 @@ class WikidataScientificItem(Item):
             print("debug exit")
             exit()
 
-    def add_subjects(self, crossref_work: CrossrefWork):
+    def add_subjects(self, crossref: CrossrefEngine):
         logger = logging.getLogger(__name__)
-        if crossref_work is not None:
-            logger.info(f"Adding {crossref_work.number_of_subject_matches} now to {self.qid.url()}")
-            for match in crossref_work.ner.subject_matches:
+        if crossref.work is not None:
+            # print_match_table(crossref)
+            logger.info(f"Adding {crossref.work.number_of_subject_matches} now to {self.qid.url()}")
+            for match in crossref.work.ner.subject_matches:
                 self.__add_main_subject__(match=match)
 
     def wikidata_doi_search_url(self):

@@ -88,18 +88,6 @@ class CrossrefWork(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    def parse_into_objects(self):
-        # now we got the messy data from CrossRef
-        pass
-
-    def match_subjects_to_qids(self):
-        if self.subject is not None:
-            self.ner = NamedEntityRecognition(raw_subjects=self.subject)
-            self.ner.start()
-
-    def __str__(self):
-        return f"<{self.doi} {self.first_title}>"
-
     @property
     def first_title(self):
         if self.title is not None and len(self.title) > 0:
@@ -127,6 +115,24 @@ class CrossrefWork(BaseModel):
     def references(self):
         return self.reference
         # raise NotImplementedError("resolve the license url before returning")
+
+    def __str__(self):
+        return f"<{self.doi} {self.first_title} with {self.references_count} references>"
+
+    def match_subjects_to_qids(self):
+        if self.subject is not None:
+            self.ner = NamedEntityRecognition(raw_subjects=self.subject)
+            self.ner.start()
+
+    def parse_into_objects(self):
+        # now we got the messy data from CrossRef
+        pass
+
+    def pretty_print(self):
+        from asseeibot.helpers.console import console
+        console.print(f"<{self.doi} [bold orange]"
+                      f"{self.first_title}[/bold orange] "
+                      f"with {self.references_count} references>")
 
     # def handle_references(
     #         references: List[Dict[str, str]],

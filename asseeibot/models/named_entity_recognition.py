@@ -1,7 +1,8 @@
 import logging
 from enum import Enum
-from typing import Optional, List, Any
+from typing import Optional, List
 
+from pandas import DataFrame
 from pydantic import BaseModel
 
 from asseeibot.models.dataframe import Dataframe
@@ -43,10 +44,10 @@ class NamedEntityRecognition(BaseModel):
     https://query.wikidata.org/#%23%20Domain%20specific%20ontology%20for%20asseeibots%20fuzzy-powered%20NER-matcher%0ASELECT%20DISTINCT%20%3Fitem%20%3Flabel%20%3Falias%20%3Fdescription%0AWHERE%20%0A%7B%0A%20%20%7B%0A%20%20%3Fitem%20wdt%3AP2347%20%5B%5D%20%23%20YSO%0A%20%20%7D%20union%20%7B%0A%20%20%3Fitem%20wdt%3AP1149%20%5B%5D%20%23%20LC%20classification%0A%20%20%20%20%20%20%20%20%7Dunion%20%7B%0A%20%20values%20%3Fvalues%20%7B%0A%20%20%20%20wd%3AQ2465832%20%23%20branch%20of%20science%0A%20%20%20%20wd%3AQ11862829%20%23%20academic%20discipline%0A%20%20%7D%0A%20%20%3Fitem%20wdt%3AP31%2Fwdt%3AP279%2a%20%3Fvalues.%0A%20%20%20%20%20%20%20%20%7D%0A%20%20minus%7B%0A%20%20%20%20%3Fitem%20wdt%3AP31%20wd%3AQ41298%20%23%20journal%0A%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20optional%7B%0A%20%20%3Fitem%20skos%3AaltLabel%20%3Falias.%0A%20%20filter%28lang%28%3Falias%29%20%3D%20%22en%22%29%0A%20%20%20%20%7D%0A%20%20%23filter%20not%20exists%7B%0A%20%20%3Fitem%20rdfs%3Alabel%20%3Flabel.%0A%20%20filter%28lang%28%3Flabel%29%20%3D%20%22en%22%29%0A%20%20%23%7D%0A%20%20%23filter%20not%20exists%7B%0A%20%20%3Fitem%20schema%3Adescription%20%3Fdescription.%0A%20%20filter%28lang%28%3Fdescription%29%20%3D%20%22en%22%29%0A%20%20%23%7D%0A%7D%0Aoffset%200%0A%23limit%2020
     """
     raw_subjects: Optional[List[str]]
-    __ontology: Ontology = None
-    __already_matched_qids: List[str] = None
+    ontology: Ontology = None
+    already_matched_qids: List[str] = None
+    __dataframe: DataFrame = None
     subject_matches: List[FuzzyMatch] = None
-    __dataframe: Any = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -82,9 +83,9 @@ class NamedEntityRecognition(BaseModel):
                                      original_subject=original_subject,
                                      dataframe=self.__dataframe)
             match = self.ontology.lookup_subject()
-            if match is not None and match.qid.value not in self.__already_matched_qids:
+            if match is not None and match.qid.value not in self.already_matched_qids:
                 self.subject_matches.append(match)
-                self.__already_matched_qids.append(match.qid.value)
+                self.already_matched_qids.append(match.qid.value)
 
         def lookup_after_split(split_subject_parts, original_subject):
             """This looks up split subjects"""
@@ -94,13 +95,13 @@ class NamedEntityRecognition(BaseModel):
                     lookup(split_subject, original_subject)
 
         logger = logging.getLogger(__name__)
-        self.__already_matched_qids = []
+        self.already_matched_qids = []
         self.subject_matches = []
         for original_subject in self.raw_subjects:
             original_subject = original_subject.strip()
             # detect_comma_comma_and_formatting(subject)
             lookup(subject=original_subject, original_subject=original_subject)
-            if self.__already_matched_qids != 1:
+            if self.already_matched_qids != 1:
                 # We did not find a match on the whole string. Lets split it!
                 lookup_after_split(split(SupportedSplit.COMMA, original_subject), original_subject)
                 lookup_after_split(split(SupportedSplit.AND, original_subject), original_subject)

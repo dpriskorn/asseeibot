@@ -6,11 +6,10 @@ from pandas import DataFrame
 from pydantic import BaseModel, PositiveInt
 
 import config
-from asseeibot.helpers.console import console
 from asseeibot.helpers.util import yes_no_question
 from asseeibot.models.cache import Cache
 from asseeibot.models.fuzzy_match import FuzzyMatch
-from asseeibot.models.dataframe import DataframeColumns
+from asseeibot.models.dataframe import DataframeColumn
 from asseeibot.models.wikimedia.wikidata.entity import EntityId
 from asseeibot.models.wikimedia.wikidata.search import string_search_url
 
@@ -36,6 +35,7 @@ class Ontology(BaseModel):
             raise TypeError(f"subject was '{self.original_subject}' which is not a string")
         logger = logging.getLogger(__name__)
         self.__get_the_dataframe_from_config__()
+        from asseeibot.helpers.console import console
         if self.subject != self.original_subject:
             console.print(f"Trying now to match [bold green]'{self.subject}'[/bold green] which comes "
                           f"from the string '{self.original_subject}' found in Crossref")
@@ -84,25 +84,25 @@ class Ontology(BaseModel):
             lambda x: fuzz.ratio(x.lower(), self.subject.lower())
         )
 
-    def __extract_top_match_score__(self, column: DataframeColumns) -> PositiveInt:
-        if not (column == DataframeColumns.ALIAS or column == DataframeColumns.LABEL):
+    def __extract_top_match_score__(self, column: DataframeColumn) -> PositiveInt:
+        if not (column == DataframeColumn.ALIAS or column == DataframeColumn.LABEL):
             raise ValueError("did not get a column we support")
         row = self.__get_first_row__()
-        if column == DataframeColumns.LABEL:
+        if column == DataframeColumn.LABEL:
             return row.label_score
         else:
             return row.alias_score
 
     def __extract_top_label_match_and_score__(self):
-        self.__sort_dataframe__(DataframeColumns.LABEL_SCORE.value)
-        label_score = self.__extract_top_match_score__(column=DataframeColumns.LABEL)
+        self.__sort_dataframe__(DataframeColumn.LABEL_SCORE)
+        label_score = self.__extract_top_match_score__(column=DataframeColumn.LABEL)
         if config.loglevel == logging.INFO or config.loglevel == logging.DEBUG:
             self.__print_dataframe_head__()
         return self.__get_top_match__(), label_score
 
     def __extract_top_alias_match_and_score__(self):
-        self.__sort_dataframe__(DataframeColumns.ALIAS_SCORE.value)
-        alias_score = self.__extract_top_match_score__(column=DataframeColumns.ALIAS)
+        self.__sort_dataframe__(DataframeColumn.ALIAS_SCORE)
+        alias_score = self.__extract_top_match_score__(column=DataframeColumn.ALIAS)
         if config.loglevel == logging.INFO or config.loglevel == logging.DEBUG:
             self.__print_dataframe_head__()
         return self.__get_top_match__(), alias_score
@@ -150,14 +150,14 @@ class Ontology(BaseModel):
             logger.info("Already matched QID found in the cache")
             # result = df.loc[df["label"] == label, "qid"][0]
             label = self.dataframe.loc[
-                self.dataframe[DataframeColumns.ITEM.value] == f"{config.wd_prefix}{qid}",
-                DataframeColumns.LABEL.value].head(1).values[0]
+                self.dataframe[DataframeColumn.ITEM.value] == f"{config.wd_prefix}{qid}",
+                DataframeColumn.LABEL.value].head(1).values[0]
             description = self.dataframe.loc[
-                self.dataframe[DataframeColumns.ITEM.value] == f"{config.wd_prefix}{qid}",
-                DataframeColumns.DESCRIPTION.value].head(1).values[0]
+                self.dataframe[DataframeColumn.ITEM.value] == f"{config.wd_prefix}{qid}",
+                DataframeColumn.DESCRIPTION.value].head(1).values[0]
             alias = self.dataframe.loc[
-                self.dataframe[DataframeColumns.ITEM.value] == f"{config.wd_prefix}{qid}",
-                DataframeColumns.ALIAS.value].head(1).values[0]
+                self.dataframe[DataframeColumn.ITEM.value] == f"{config.wd_prefix}{qid}",
+                DataframeColumn.ALIAS.value].head(1).values[0]
             return FuzzyMatch(
                 qid=EntityId(raw_entity_id=qid),
                 label=label,
@@ -169,6 +169,8 @@ class Ontology(BaseModel):
     def __print_dataframe_head__(self):
         print(self.dataframe.head(2))
 
-    def __sort_dataframe__(self, column):
-        self.dataframe = self.dataframe.sort_values(column.value, ascending=False)
-
+    def __sort_dataframe__(self, column: DataframeColumn):
+        if isinstance(column, DataframeColumn):
+            self.dataframe = self.dataframe.sort_values(column.value, ascending=False)
+        else:
+            raise ValueError(f"{column} is not a DataframeColumns")

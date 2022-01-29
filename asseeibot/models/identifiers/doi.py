@@ -2,17 +2,14 @@ import logging
 import re
 
 from asseeibot.models.crossref.engine import CrossrefEngine
-from asseeibot.models.crossref.work import CrossrefWork
 from asseeibot.models.identifiers.identifier import Identifier
-
-
 # @dataclass
 from asseeibot.models.wikimedia.wikidata.scientific_item import WikidataScientificItem
 
 
 class Doi(Identifier):
     """Models a DOI"""
-    crossref_work: CrossrefWork = None
+    crossref: CrossrefEngine = None
     wikidata_scientific_item: WikidataScientificItem = None
     regex_validated: bool = True
     found_in_crossref: bool = False
@@ -41,9 +38,10 @@ class Doi(Identifier):
     def lookup_in_crossref(self):
         logger = logging.getLogger(__name__)
         logger.debug(f"Looking up {self.value} in Crossref")
-        crossref = CrossrefEngine(doi=self)
-        self.crossref_work = crossref.lookup_work()
-        if self.crossref_work is not None:
+        self.crossref = CrossrefEngine(doi=self)
+        self.crossref.lookup_work_and_match_subjects()
+        if self.crossref.work is not None:
+            # This helps us easily in WikipediaPage to get an overview
             self.found_in_crossref = True
 
     def lookup_in_wikidata(self):
@@ -59,10 +57,10 @@ class Doi(Identifier):
         ):
             logger.debug("Found in both WD and Crossref")
             if (
-                    self.crossref_work.number_of_subject_matches > 0
+                    self.crossref.work.number_of_subject_matches > 0
             ):
                 logger.info("Uploading now")
-                self.wikidata_scientific_item.add_subjects(self.crossref_work)
+                self.wikidata_scientific_item.add_subjects(self.crossref)
             else:
                 logger.debug("No subject Q-items matched for this DOI")
         else:
