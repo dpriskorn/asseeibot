@@ -285,7 +285,7 @@ def wikidata_query(sparql_query):
 #         # Authenticate with WikibaseIntegrator
 #         print("Logging in with Wikibase Integrator")
 #         config.login_instance = wbi_login.Login(
-#             user=config.username, pwd=config.password
+#             user=config.bot_username, pwd=config.password
 #         )
 #     result = item.write(
 #         config.login_instance,

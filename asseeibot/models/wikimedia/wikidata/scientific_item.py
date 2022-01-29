@@ -116,7 +116,7 @@ class WikidataScientificItem(Item):
                 with console.status("Logging in with WikibaseIntegrator..."):
                     config.login_instance = wbi_login.Login(
                         auth_method='login',
-                        user=config.username,
+                        user=config.bot_username,
                         password=config.password,
                         debug=False
                     )

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import logging
 
-username = "So9q@descriptionerbot"
+bot_username = "So9q@descriptionerbot"
 password = "7f5uivo395t30bfgjvrduvbtumts3equ"
 
 # User settings
 username = "So9q"  # This is good practice and used for the User-Agent.
-                   # We thus send it to WMF every time we interact with the APIs
+# We thus send it to WMF every time we interact with the APIs
 lookup_dois = True
 ask_before_lookup = False
 max_events = 0  # Max events to read. 0 = unlimited
@@ -20,6 +20,6 @@ cache_pickle_filename = "cache.pkl"
 # These should not be altered by users:
 version = "0.2-alpha0"
 user_agent = f"Asynchronous Server Side Events External Identifier Bot/v{version} " \
-           f"https://github.com/dpriskorn/asseeibot run by User:{username}"
+             f"https://github.com/dpriskorn/asseeibot run by User:{username}"
 wd_prefix = "http://www.wikidata.org/entity/"
 login_instance = None
