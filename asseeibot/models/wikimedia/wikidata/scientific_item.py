@@ -22,12 +22,9 @@ class WikidataScientificItem(Item):
     found_in_wikidata: bool = False
     qid: EntityId = None
 
-    def __post_init_post_parse__(self):
-        self.__lookup__()
-
-    def __lookup__(self):
+    def lookup(self):
         logger = logging.getLogger(__name__)
-        logger.info(f"looking up: {self.doi.value}")
+        logger.info(f"Looking up {self.doi.value} in Wikidata")
         # TODO use the cirrussearch API instead?
         df = wikidata_query(f'''
             SELECT DISTINCT ?item
@@ -48,6 +45,7 @@ class WikidataScientificItem(Item):
             # print(f"df length: {len(df)}")
             # exit()
             if len(df) == 1:
+                logger.debug("Found in Wikidata!")
                 self.found_in_wikidata = True
                 self.qid = EntityId(raw_entity_id=df["item"][0])
                 # exit()
@@ -59,6 +57,7 @@ class WikidataScientificItem(Item):
                 sleep(10)
                 self.found_in_wikidata = True
             else:
+                logger.debug("Not found in Wikidata")
                 self.found_in_wikidata = False
 
     def __add_main_subject__(

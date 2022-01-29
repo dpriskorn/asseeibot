@@ -48,6 +48,7 @@ class Doi(Identifier):
 
     def lookup_in_wikidata(self):
         self.wikidata_scientific_item = WikidataScientificItem(doi=self)
+        self.wikidata_scientific_item.lookup()
         self.found_in_wikidata = self.wikidata_scientific_item.found_in_wikidata
 
     def upload_subjects_to_wikidata(self):
