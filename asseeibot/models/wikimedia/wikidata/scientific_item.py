@@ -1,6 +1,6 @@
 import logging
-from datetime import datetime
-from time import sleep, timezone
+from datetime import datetime, timezone
+from time import sleep
 from typing import Any, Set
 from urllib.parse import quote
 
@@ -52,7 +52,8 @@ class WikidataScientificItem(Item):
             elif len(df) > 1:
                 print(repr(df))
                 logger.error(f"Got more than one match on {self.doi.value} in WD. "
-                             f"Please check if they are duplicates and should be merged. {self.wikidata_doi_search_url()}"
+                             f"Please check if they are duplicates and should be merged. "
+                             f"{self.wikidata_doi_search_url()}"
                              f"Sleeping for 10s.")
                 sleep(10)
                 self.found_in_wikidata = True
