@@ -131,7 +131,7 @@ class WikidataScientificItem(Item):
             item.add_claims(
                 [claim],
                 # This means that if the value already exist we will update it.
-                action_if_exists=ActionIfExists.REPLACE
+                action_if_exists=ActionIfExists.APPEND
             )
             # if config.debug_json:
             #     print(item.get_json_representation())
@@ -144,8 +144,8 @@ class WikidataScientificItem(Item):
                 console.print(f"[green]Uploaded '{match.label}' to[/green] {self.qid.url()}")
             else:
                 raise ValueError("Did not get an item back from WBI, something went wrong :/")
-            print("debug exit")
-            exit()
+            # print("debug exit")
+            # exit()
 
     def add_subjects(self, crossref: CrossrefEngine):
         logger = logging.getLogger(__name__)
