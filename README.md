@@ -1,5 +1,6 @@
 # Asynchronous Server Side Events External Identifier Bot
-![bild](https://user-images.githubusercontent.com/68460690/151193195-648d79c5-c6c2-4825-b3df-eea3727bf5e6.png)
+*Warning this is alpha software and EditGroups are not supported yet*
+
 *Example output from the tool.*
 
 This bot follows the Wikimedia Eventstream (from Kafka) and looks for Wikipedia pages with
@@ -7,12 +8,7 @@ DOI that are missing an item in Wikidata.
 
 The goal of this bot is to help improve the collection of scientific articles in
 Wikidata. Currently according to estimates based on 1000 random edits is that around 
-75% of all DOIs used in the English Wikipedia are currently missing in Wikidata. 
-
-
-Currently all it does is to collect DOIs in a json file (see details below). 
-These can be used with https://sourcemd.toolforge.org/index_old.php where they 
-can be added seamlessly.
+10-15% of all DOIs used in the English Wikipedia are currently missing in Wikidata. 
 
 The development was paused in 2021 because the Wikidata infrastructure is not 
 ready to handle all the new items and triples that this bot would create over time.
@@ -20,21 +16,15 @@ ready to handle all the new items and triples that this bot would create over ti
 As of december 2021 WMF is trying to fix the scaling issues surrounding BlazeGraph. 
 See https://phabricator.wikimedia.org/T206560
 
-## What I learned from this project
-This was the second time I dipped my toes in asynchronous programming. 
-It was fun and challanging thanks to the framework I used. 
-I ran into some issues with a library for parsing the Wikipedia page and reported the issue upstream. 
-Waiting for a solution there I hacked the library code locally and got it to work :)
+In january 2022 following interest from the Internet Archive the development was 
+resumed and it got new features like a 
+[fuzzy-powered named-entity recognition matcher with science ontology](https://www.wikidata.org/wiki/Q110733873) 
+and an upload function using the fantastic library WikibaseIntegrator.
 
-In this project I used pywikibot for the first time. It seems to do a good job of fetching data 
-from Wikipedia and parsing it so I can extract the templates.
-
-## TODO once WMF fixed the infrastructure
-*Support for ISBN
-*Import from Crossref.org and Worldcat.org if a non existing match is found.
-*When importing DOIs it also imports all references that have DOIs.
-*It saves a list of DOIs imported and checks if they have all the references
-before marking them done.
+## Features
+* Matching of Crossref subjects to Wikidata Entities with caching
+* Upload of the matches to Wikidata
+* Output of DOIs missing in Wikidata to the screen for use with other tools like SourceMD
 
 ## Installation
 First clone the repo
@@ -47,16 +37,38 @@ Then install the dependencies:
 Please don't hold me accountable if the dependecies eat your dog. Look at their
 sources and decide for yourself whether to trust their authors and the code.
 
-## Get DOIs for use in other tools (Linux)
-Make sure you have `jq` installed and run the following command line in a Linux terminal.
+## Configuration
+Edit the config.py file in the asseeibot/ directory and add your WMF username there.
 
- $ cat found_in_wikipedia.json | jq 'keys'| jq -r '.[]'
+## What I learned from this project
+* This was the second time I dipped my toes in asynchronous programming. 
+  It was fun and challenging thanks to the framework I used. 
+* I ran into some issues with a library for parsing the Wikipedia page and reported the issue upstream. 
+  Waiting for a solution there I hacked the library code locally and got it to work :)
+  Then I switched to pywikibot to get better support for template parsing.
+* I used pywikibot for the first time. It seems to do a good job of fetching data 
+  from Wikipedia and parsing it, so I can extract the templates.
+  Unfortunately it seems to be difficult to turn off the verbose logging, so I don't like it much.
+* I tried completely avoiding strings outside of variables in config and enums for the first time. 
+  It makes it easier to debug, read and refactor the code.
+* I used the imminent class validation library pydantic for the first time. What a wonderful tool!
+* I used Rich tables for better output to the console. 
 
-They will be raw strings because of the "-r" argument. 
+## TODO once WMF fixed the infrastructure or a proper Wikibase for all of science has been set up
+* Support for ISBN
+* Import from Crossref.org and Worldcat.org if a non existing match is found.
+* When importing DOIs it also imports all references that have DOIs.
+* It saves a list of DOIs imported and checks if they have all the references
+before marking them done.
 
-You can also follow them with 
+## Kubernetes
+*Note:At the moment it only outputs to screen and the matching requires user interaction, 
+so it does not make much sense to run it in k8s.*
 
-$ watch "cat found_in_wikipedia.json | jq 'keys'| jq -r '.[]'"
+It is possible to run the tool in the WMC Kubernetes cluster if you want. 
+Follow the guide I wrote for ItemSubjector to set it up and run `./create_job.sh 1` 
+to start a job.
+
 
 # License
 GPLv3 or later.

@@ -1,0 +1,39 @@
+# Domain specific ontology for asseeibots fuzzy-powered NER-matcher
+# This does not time out in WDQS
+SELECT DISTINCT ?item ?label ?alias ?description
+WHERE
+{
+  #{
+  #?item wdt:P101 [] # field of work
+  #} union{
+  #?item wdt:P2578 [] # studies
+  #} union
+  #{
+  ?item wdt:P2347 [] # YSO
+  } union {
+  ?item wdt:P1149 [] # LC classification
+        }union {
+  values ?values {
+    wd:Q2465832 # branch of science
+    wd:Q11862829 # academic discipline
+  }
+  ?item wdt:P31/wdt:P279* ?values.
+        }
+  minus{
+    ?item wdt:P31 wd:Q41298 # journal
+          }
+  optional{
+  ?item skos:altLabel ?alias.
+  filter(lang(?alias) = "en")
+  }
+  optional{
+  #filter not exists{
+  ?item rdfs:label ?label.
+  filter(lang(?label) = "en")
+  }
+  optional{
+  #filter not exists{
+  ?item schema:description ?description.
+  filter(lang(?description) = "en")
+  }
+}
