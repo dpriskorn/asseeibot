@@ -1,4 +1,5 @@
 import logging
+import re
 from typing import Optional, Set, List, Any
 
 import pandas as pd
@@ -155,9 +156,17 @@ class NamedEntityRecognition:
         # exit()
 
     def __lookup_subjects__(self):
+        def detect_comma_comma_and_formatting(subject: str):
+            if subject is None or subject == "":
+                raise ValueError
+            regex = "^(?:(\w+)[, ]*)+and (\w+)$"
+            match = re.search(regex, subject)
+            raise NotImplementedError
+
         logger = logging.getLogger(__name__)
         self.subject_qids = set()
         for subject in self.raw_subjects:
+            # detect_comma_comma_and_formatting(subject)
             result = self.__lookup_in_ontology__(subject)
             if result is not None:
                 self.subject_qids.add(result.qid.value)
