@@ -100,7 +100,8 @@ class CrossrefWork(BaseModel):
 
     @property
     def first_title(self):
-        return self.title[0].replace('\n', '').strip()
+        if self.title is not None and len(self.title) > 0:
+            return self.title[0].replace('\n', '').strip()
 
     @property
     def isbn_list(self):
