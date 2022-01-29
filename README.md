@@ -1,6 +1,7 @@
 # Asynchronous Server Side Events External Identifier Bot
 *Warning this is alpha software and EditGroups are not supported yet*
 
+![bild](https://user-images.githubusercontent.com/68460690/151681324-040de41b-bdea-488b-8c5b-be509e1163b1.png)
 *Example output from the tool.*
 
 This bot follows the Wikimedia Eventstream (from Kafka) and looks for Wikipedia pages with
