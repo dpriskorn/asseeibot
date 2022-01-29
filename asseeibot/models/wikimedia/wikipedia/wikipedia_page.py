@@ -8,8 +8,8 @@ from pywikibot import Page
 import config
 from asseeibot.helpers.console import console
 from asseeibot.models.identifiers.doi import Doi
-from asseeibot.models.wikimedia.templates.enwp.cite_journal import CiteJournal
-from asseeibot.models.wikimedia.wikipedia_page_reference import WikipediaPageReference
+from asseeibot.models.wikimedia.wikipedia.templates.enwp.cite_journal import CiteJournal
+from asseeibot.models.wikimedia.wikipedia.wikipedia_page_reference import WikipediaPageReference
 
 
 class WikipediaPage:
@@ -97,11 +97,13 @@ class WikipediaPage:
 
     def __upload_subject_qids_to_wikidata__(self):
         if config.match_subjects_to_qids_and_upload:
-            number_of_subject_qids = sum([doi.crossref_entry.number_of_subject_qids for doi in self.dois])
-            if number_of_subject_qids > 0:
-                console.print(f"Uploading {number_of_subject_qids} subjects to Wikidata")
+            number_of_subject_matches = sum(
+                [doi.crossref_work.number_of_subject_matches for doi in self.dois if doi.crossref_work is not None]
+            )
+            if number_of_subject_matches > 0:
+                console.print(f"Uploading {number_of_subject_matches} subjects to Wikidata")
                 [doi.upload_subjects_to_wikidata() for doi in self.dois]
-                print("debug here exit")
+                print("debug exit after uploads")
                 exit()
 
     def __calculate_statistics__(self):

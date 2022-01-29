@@ -1,6 +1,6 @@
 import logging
 
-from asseeibot.models.crossref_engine import CrossrefEngine
+from asseeibot.models.crossref.engine import CrossrefEngine
 from asseeibot.models.identifiers.doi import Doi
 
 logging.basicConfig(level=logging.DEBUG)

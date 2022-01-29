@@ -1,17 +1,19 @@
 import logging
 from datetime import datetime, timezone
 from time import sleep
-from typing import Any, Set
+from typing import Any
 from urllib.parse import quote
 
 from wikibaseintegrator import wbi_login, wbi_config, WikibaseIntegrator
-from wikibaseintegrator.datatypes import Time
-from wikibaseintegrator.entities import Item as WbiItem
+from wikibaseintegrator.datatypes import Time, Item as WbiItemType, String
 from wikibaseintegrator.wbi_enums import ActionIfExists
+from wikibaseintegrator.entities.item import Item as WbiEntityItem
 
 import config
 from asseeibot.helpers.console import console
 from asseeibot.helpers.wikidata import wikidata_query
+from asseeibot.models.crossref.work import CrossrefWork
+from asseeibot.models.fuzzy_match import FuzzyMatch
 from asseeibot.models.wikimedia.enums import StatedIn, Property, DeterminationMethod
 from asseeibot.models.wikimedia.wikidata.entity import EntityId
 from asseeibot.models.wikimedia.wikidata.item import Item
@@ -63,13 +65,13 @@ class WikidataScientificItem(Item):
 
     def __add_main_subject__(
             self,
-            qid: str
+            match: FuzzyMatch
     ) -> None:
         """This adds a main subject to the item
 
         It only has side effects"""
         logger = logging.getLogger(__name__)
-        if qid is None or qid == "":
+        if match.qid is None or match.qid == "":
             raise ValueError("qid was None or empty string")
         logger.info("Adding main subject with WBI")
         # Use WikibaseIntegrator aka wbi to upload the changes in one edit
@@ -83,16 +85,21 @@ class WikidataScientificItem(Item):
                 second=0,
             ).strftime("+%Y-%m-%dT%H:%M:%SZ")
         )
-        stated_in = WbiItem(
+        stated_in = WbiItemType(
             prop_nr="P248",
             value=StatedIn.CROSSREF.value
         )
-        determination_method = WbiItem(
+        stated_as = String(
+            prop_nr=Property.STATED_AS.value,
+            value=match.original_subject
+        )
+        determination_method = WbiItemType(
             prop_nr=Property.DETERMINATION_METHOD.value,
             value=DeterminationMethod.FUZZY_POWERED_NAMED_ENTITY_RECOGNITION_MATCHER.value
         )
         reference = [
             stated_in,
+            stated_as,
             retrieved_date,
             determination_method,
         ]
@@ -100,9 +107,9 @@ class WikidataScientificItem(Item):
             raise ValueError("No reference defined, cannot add usage example")
         else:
             # This is the usage example statement
-            claim = WbiItem(
+            claim = WbiItemType(
                 prop_nr=Property.MAIN_SUBJECT.value,
-                value=qid,
+                value=match.qid.value,
                 # Add qualifiers
                 qualifiers=[],
                 # Add reference
@@ -114,10 +121,8 @@ class WikidataScientificItem(Item):
                 # Authenticate with WikibaseIntegrator
                 with console.status("Logging in with WikibaseIntegrator..."):
                     config.login_instance = wbi_login.Login(
-                        auth_method='login',
                         user=config.bot_username,
-                        password=config.password,
-                        debug=False
+                        password=config.password
                     )
                     # Set User-Agent
                     wbi_config.config["USER_AGENT_DEFAULT"] = config.user_agent
@@ -130,21 +135,24 @@ class WikidataScientificItem(Item):
             )
             # if config.debug_json:
             #     print(item.get_json_representation())
+            # TODO match.label could be None, do we need to handle that?
             result = item.write(
-                summary=(f"Added main subject {{{{Q|{qid}}}}} " +
+                summary=(f"Added main subject [[{match.qid}|{match.label}]] " +
                          f"with [[Wikidata:Tools/asseeibot]] v{config.version}")
             )
-            # logging.debug(f"result from WBI:{result}")
-            # TODO add handling of result from WBI and return True == Success or False
+            if isinstance(result, WbiEntityItem):
+                console.print(f"[green]Uploaded '{match.label}' to[/green] {self.qid.url()}")
+            else:
+                raise ValueError("Did not get an item back from WBI, something went wrong :/")
             print("debug exit")
             exit()
-            return result
 
-    def add_subjects(self, subject_qids: Set[str]):
+    def add_subjects(self, crossref_work: CrossrefWork):
         logger = logging.getLogger(__name__)
-        logger.info(f"Adding {len(subject_qids)} now to {self.qid.url()}")
-        for qid in subject_qids:
-            self.__add_main_subject__(qid=qid)
+        if crossref_work is not None:
+            logger.info(f"Adding {crossref_work.number_of_subject_matches} now to {self.qid.url()}")
+            for match in crossref_work.ner.subject_matches:
+                self.__add_main_subject__(match=match)
 
     def wikidata_doi_search_url(self):
         # quote to guard against äöå and the like

@@ -12,7 +12,7 @@ import config
 from asseeibot.models.identifiers.doi import Doi
 from asseeibot.models.pywikibot import PywikibotSite
 from asseeibot.models.wikimedia.enums import WikimediaSite
-from asseeibot.models.wikimedia.wikimedia_event import WikimediaEvent
+from asseeibot.models.wikimedia.event import WikimediaEvent
 
 
 class EventStream:

@@ -1,4 +1,5 @@
 import logging
+from time import sleep
 from typing import Optional, Any, Dict
 
 from caseconverter import snakecase
@@ -8,8 +9,8 @@ from requests import HTTPError
 
 import config
 from asseeibot.helpers.console import console
-from asseeibot.models.crossref_enums import CrossrefEntryType
-from asseeibot.models.crossref_work import CrossrefWork
+from asseeibot.models.crossref.enums import CrossrefEntryType
+from asseeibot.models.crossref.work import CrossrefWork
 
 
 @dataclass
@@ -38,10 +39,13 @@ class CrossrefEngine:
         work = self.__parse_habanero_data__()
         if config.match_subjects_to_qids_and_upload and work is not None:
             work.match_subjects_to_qids()
-            if work.number_of_subject_qids > 0:
-                console.print(f"The following main subjects can "
-                              f"be uploaded to the Wikidata item: "
-                              f"{work.subject_qids}")
+            if work.number_of_subject_matches > 0:
+                console.print(f"The following matched main subjects can "
+                              f"be uploaded to the Wikidata item:")
+                # [match.qid.value for match in work.ner.subject_matches]
+                for match in work.ner.subject_matches:
+                    # TODO handle split subjects
+                    console.print(f"[green]{match.qid}: {match.label} == {match.original_subject}[/green]")
                 # exit()
         return work
 
@@ -52,33 +56,36 @@ class CrossrefEngine:
             if "message" in self.result:
                 self.data = self.result["message"]
                 # pprint(self.data)
-            # exit(0)
-            if "type" in self.data:
-                self.object_type = CrossrefEntryType(self.data["type"])
-                if self.object_type == "book":
-                    logger.info("Book detected, we exclude those for now.")
-                    return None
+                # exit(0)
+                if "type" in self.data:
+                    self.object_type = CrossrefEntryType(self.data["type"])
+                    if self.object_type == "book":
+                        logger.info("Book detected, we exclude those for now.")
+                        return None
+                    else:
+                        logger.debug(f"Parsing the following crossref data now")
+                        # if config.loglevel == logging.DEBUG:
+                        #     logger.debug("Data from Habanero")
+                        #     console.print(self.data)
+                        self.__convert_to_snake_case__()
+                        work = CrossrefWork(**self.data)
+                        if work is not None:
+                            if config.loglevel == logging.DEBUG:
+                                logger.debug("Finished model dict")
+                                console.print(work.dict())
+                            print(work)
+                            # references = work.reference
+                            # if references is not None:
+                            #     for reference in references:
+                            #         if reference.first_page is not None:
+                            #             int(reference.first_page)
+                        # exit(0)
+                        return work
                 else:
-                    logger.debug(f"Parsing the following crossref data now")
-                    # if config.loglevel == logging.DEBUG:
-                    #     logger.debug("Data from Habanero")
-                    #     console.print(self.data)
-                    self.__convert_to_snake_case__()
-                    work = CrossrefWork(**self.data)
-                    if work is not None:
-                        if config.loglevel == logging.DEBUG:
-                            logger.debug("Finished model dict")
-                            console.print(work.dict())
-                        print(work)
-                        # references = work.reference
-                        # if references is not None:
-                        #     for reference in references:
-                        #         if reference.first_page is not None:
-                        #             int(reference.first_page)
-                    # exit(0)
-                    return work
+                    raise ValueError("type not found")
             else:
-                raise ValueError("type not found")
+                logger.error("no message dict in result from Crossref")
+                sleep(10)
 
     def __convert_to_snake_case__(self):
         """This converts to snakecase 2 levels down in the dictionary

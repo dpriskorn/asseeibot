@@ -4,7 +4,7 @@ from typing import Any, Dict
 from urllib.parse import quote
 
 from asseeibot.models.wikimedia.enums import WikimediaEditType
-from asseeibot.models.wikimedia.wikipedia_page import WikipediaPage
+from asseeibot.models.wikimedia.wikipedia.wikipedia_page import WikipediaPage
 
 
 class WikimediaEvent:

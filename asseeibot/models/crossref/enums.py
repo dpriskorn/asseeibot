@@ -6,6 +6,7 @@ class CrossrefEntryType(Enum):
     JOURNAL_ARTICLE = "journal-article"
     PROCEEDINGS_ARTICLE = "proceedings-article"
     BOOK_CHAPTER = "book-chapter"
+    COMPONENT = "component"
 
 
 class CrossrefContentType(Enum):

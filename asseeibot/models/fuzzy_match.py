@@ -7,6 +7,7 @@ from asseeibot.models.wikimedia.wikidata.entity import EntityId
 
 class FuzzyMatch(BaseModel):
     qid: EntityId
+    original_subject: str
     alias: Optional[str]
     label: Optional[str]
     description: Optional[str]

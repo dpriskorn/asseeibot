@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 from datetime import datetime
-from typing import List, Any, Set, Optional, Union
+from typing import List, Any, Optional, Union
 
 from habanero import Crossref  # type: ignore
 from pydantic import BaseModel, PositiveInt, conint
 
-from asseeibot.models.crossref_enums import CrossrefEntryType, CrossrefContentType
+from asseeibot.models.crossref.enums import CrossrefEntryType, CrossrefContentType
 from asseeibot.models.identifiers.isbn import Isbn
 from asseeibot.models.named_entity_recognition import NamedEntityRecognition
 
@@ -32,7 +32,9 @@ class CrossrefAuthor(BaseModel):
 
 
 class CrossrefDateParts(BaseModel):
-    date_parts: Optional[List[List[conint(ge=0, lt=2023)]]]
+    """This model date-parts in the crossref API.
+    They contain None sometimes."""
+    date_parts: Optional[List[List[Union[conint(ge=0, lt=2023), None]]]]
     date_time: Optional[datetime]
 
 
@@ -64,6 +66,7 @@ class CrossrefWork(BaseModel):
     issued: Optional[CrossrefDateParts]
     __license_url: Optional[str]
     link: Optional[List[CrossrefLink]]
+    ner: NamedEntityRecognition = None
     object_type: Optional[CrossrefEntryType]
     original_title: Optional[List[str]]
     pdf_urls: Optional[List[str]]
@@ -76,7 +79,6 @@ class CrossrefWork(BaseModel):
     references_count: Optional[conint(ge=0)]
     score: str
     subject: Optional[List[str]]  # raw subjects
-    subject_qids: Optional[Set[str]]
     source: str
     subtitle: Optional[List[str]]
     title: Optional[List[Any]]
@@ -92,8 +94,7 @@ class CrossrefWork(BaseModel):
 
     def match_subjects_to_qids(self):
         if self.subject is not None:
-            ner = NamedEntityRecognition(raw_subjects=self.subject)
-            self.subject_qids = ner.subject_qids
+            self.ner = NamedEntityRecognition(raw_subjects=self.subject)
 
     def __str__(self):
         return f"<{self.doi} {self.first_title}>"
@@ -115,9 +116,9 @@ class CrossrefWork(BaseModel):
         raise NotImplementedError("resolve the license url before returning")
 
     @property
-    def number_of_subject_qids(self):
-        if self.subject_qids is not None:
-            return len(self.subject_qids)
+    def number_of_subject_matches(self):
+        if self.ner is not None:
+            return len(self.ner.subject_matches)
         else:
             return 0
 

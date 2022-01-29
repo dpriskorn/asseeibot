@@ -16,6 +16,7 @@ class DeterminationMethod(Enum):
 class Property(Enum):
     MAIN_SUBJECT = "P921"
     DETERMINATION_METHOD = "P459"
+    STATED_AS = "P1932"
 
 
 class StatedIn(Enum):
@@ -57,7 +58,3 @@ class WikimediaEditType(Enum):
     LOG = "log"
     CATEGORIZE = "categorize"
     UNKNOWN = "142"
-
-
-
-

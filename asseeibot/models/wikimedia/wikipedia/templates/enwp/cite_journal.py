@@ -1,7 +1,7 @@
 from typing import Optional
 
 from asseeibot.models.identifiers.doi import Doi
-from asseeibot.models.wikimedia.wikipedia_page_reference import WikipediaPageReference
+from asseeibot.models.wikimedia.wikipedia.wikipedia_page_reference import WikipediaPageReference
 
 
 class CiteJournal(WikipediaPageReference):
