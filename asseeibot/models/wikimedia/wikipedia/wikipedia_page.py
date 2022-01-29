@@ -103,8 +103,9 @@ class WikipediaPage:
             if number_of_subject_matches > 0:
                 console.print(f"Uploading {number_of_subject_matches} subjects to Wikidata")
                 [doi.upload_subjects_to_wikidata() for doi in self.dois]
-                print("debug exit after uploads")
-                exit()
+                if config.exit_after_uploads_on_one_page:
+                    print("debug exit after uploads")
+                    exit()
 
     def __calculate_statistics__(self):
         # logger = logging.getLogger(__name__)
