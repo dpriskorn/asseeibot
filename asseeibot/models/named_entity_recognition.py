@@ -91,6 +91,7 @@ class NamedEntityRecognition:
 
         def get_top_match():
             row = extract_top_match_row()
+            # logger.debug(f"row:{row}")
             # present the match
             return FuzzyMatch(**dict(
                 qid=EntityId(row.item),
@@ -124,9 +125,10 @@ class NamedEntityRecognition:
         if not isinstance(subject, str):
             raise TypeError(f"subject was '{subject}' which is not a string")
         logger = logging.getLogger(__name__)
-        match = lookup_in_cache(subject)
-        if match is not None:
-            return match
+        subject = subject.strip()
+        cache_match = lookup_in_cache(subject)
+        if cache_match is not None:
+            return cache_match
         calculate_scores(subject)
         label_score, alias_score, top_label_match, top_alias_match = extract_top_matches()
         if label_score >= alias_score:
