@@ -20,21 +20,10 @@ ready to handle all the new items and triples that this bot would create over ti
 As of december 2021 WMF is trying to fix the scaling issues surrounding BlazeGraph. 
 See https://phabricator.wikimedia.org/T206560
 
-## What I learned from this project
-This was the second time I dipped my toes in asynchronous programming. 
-It was fun and challanging thanks to the framework I used. 
-I ran into some issues with a library for parsing the Wikipedia page and reported the issue upstream. 
-Waiting for a solution there I hacked the library code locally and got it to work :)
-
-In this project I used pywikibot for the first time. It seems to do a good job of fetching data 
-from Wikipedia and parsing it so I can extract the templates.
-
-## TODO once WMF fixed the infrastructure
-*Support for ISBN
-*Import from Crossref.org and Worldcat.org if a non existing match is found.
-*When importing DOIs it also imports all references that have DOIs.
-*It saves a list of DOIs imported and checks if they have all the references
-before marking them done.
+In january 2022 following interest from the Internet Archive the development was 
+resumed and it got new features like a 
+[fuzzy-powered named-entity recognition matcher with science ontology](https://www.wikidata.org/wiki/Q110733873) 
+and an upload function using the fantastic library WikibaseIntegrator.
 
 ## Installation
 First clone the repo
@@ -50,21 +39,34 @@ sources and decide for yourself whether to trust their authors and the code.
 ## Configuration
 Edit the config.py file in the asseeibot/ directory and add your WMF username there.
 
+## What I learned from this project
+* This was the second time I dipped my toes in asynchronous programming. 
+  It was fun and challenging thanks to the framework I used. 
+* I ran into some issues with a library for parsing the Wikipedia page and reported the issue upstream. 
+  Waiting for a solution there I hacked the library code locally and got it to work :)
+  Then I switched to pywikibot to get better support for template parsing.
+* I used pywikibot for the first time. It seems to do a good job of fetching data 
+  from Wikipedia and parsing it, so I can extract the templates.
+  Unfortunately it seems to be difficult to turn off the verbose logging, so I don't like it much.
+* I tried completely avoiding strings outside of variables in config and enums for the first time. 
+  It makes it easier to debug, read and refactor the code.
+* I used the imminent class validation library pydantic for the first time. What a wonderful tool!
+
+## TODO once WMF fixed the infrastructure or a proper Wikibase for all of science has been set up
+* Support for ISBN
+* Import from Crossref.org and Worldcat.org if a non existing match is found.
+* When importing DOIs it also imports all references that have DOIs.
+* It saves a list of DOIs imported and checks if they have all the references
+before marking them done.
+
 ## Kubernetes
+*Note:At the moment it only outputs to screen and the matching requires user interaction, 
+so it does not make much sense to run it in k8s.*
+
 It is possible to run the tool in the WMC Kubernetes cluster if you want. 
 Follow the guide I wrote for ItemSubjector to set it up and run `./create_job.sh 1` 
 to start a job.
 
-## Get DOIs for use in other tools (Linux)
-Make sure you have `jq` installed and run the following command line in a Linux terminal.
-
- $ cat found_in_wikipedia.json | jq 'keys'| jq -r '.[]'
-
-They will be raw strings because of the "-r" argument. 
-
-You can also follow them with 
-
-$ watch "cat found_in_wikipedia.json | jq 'keys'| jq -r '.[]'"
 
 # License
 GPLv3 or later.
