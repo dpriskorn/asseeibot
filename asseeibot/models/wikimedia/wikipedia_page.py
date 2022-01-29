@@ -101,6 +101,7 @@ class WikipediaPage:
             if number_of_subject_qids > 0:
                 console.print(f"Uploading {number_of_subject_qids} subjects to Wikidata")
                 [doi.upload_subjects_to_wikidata() for doi in self.dois]
+                print("debug here exit")
                 exit()
 
     def __calculate_statistics__(self):
