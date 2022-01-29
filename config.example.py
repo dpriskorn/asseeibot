@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import logging
 
-bot_username = "So9q@descriptionerbot"
-password = "7f5uivo395t30bfgjvrduvbtumts3equ"
+bot_username = ""
+password = ""
 
 # User settings
 username = "So9q"  # This is good practice and used for the User-Agent.
