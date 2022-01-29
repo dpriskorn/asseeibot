@@ -8,7 +8,7 @@ from fuzzywuzzy import fuzz
 from pydantic import PositiveInt
 from pydantic.dataclasses import dataclass
 
-from asseeibot import config
+import config
 from asseeibot.helpers.util import yes_no_question
 from asseeibot.models.cache import Cache
 from asseeibot.models.fuzzy_match import FuzzyMatch

@@ -5,7 +5,7 @@ from typing import List, Any
 import pywikibot
 from pywikibot import Page
 
-from asseeibot import config
+import config
 from asseeibot.helpers.console import console
 from asseeibot.models.identifiers.doi import Doi
 from asseeibot.models.wikimedia.templates.enwp.cite_journal import CiteJournal

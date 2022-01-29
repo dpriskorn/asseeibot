@@ -6,7 +6,7 @@ from habanero import Crossref
 from pydantic.dataclasses import dataclass
 from requests import HTTPError
 
-from asseeibot import config
+import config
 from asseeibot.helpers.console import console
 from asseeibot.models.crossref_enums import CrossrefEntryType
 from asseeibot.models.crossref_work import CrossrefWork

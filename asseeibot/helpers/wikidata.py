@@ -5,7 +5,7 @@ import pandas as pd
 from wikibaseintegrator import wbi_config
 from wikibaseintegrator.wbi_helpers import execute_sparql_query
 
-from asseeibot import config
+import config
 
 wbi_config.config['USER_AGENT'] = config.user_agent
 

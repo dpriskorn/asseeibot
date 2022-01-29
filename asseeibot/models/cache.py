@@ -5,7 +5,7 @@ from typing import Optional
 import pandas as pd
 from pydantic import BaseModel
 
-from asseeibot import config
+import config
 
 logger = logging.getLogger(__name__)
 

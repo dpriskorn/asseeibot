@@ -8,7 +8,7 @@ from aiosseclient import aiosseclient
 from purl import URL
 from pywikibot import APISite
 
-from asseeibot import config
+import config
 from asseeibot.models.identifiers.doi import Doi
 from asseeibot.models.pywikibot import PywikibotSite
 from asseeibot.models.wikimedia.enums import WikimediaSite

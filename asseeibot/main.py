@@ -4,7 +4,7 @@ import logging
 from aiosseclient import aiosseclient  # type: ignore
 from rich import print
 
-from asseeibot import config
+import config
 from asseeibot.models.wikimedia.enums import WikimediaSite
 from asseeibot.models.wikimedia.event_stream import EventStream
 

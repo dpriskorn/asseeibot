@@ -3,7 +3,7 @@ import logging
 from pydantic.dataclasses import dataclass
 from wikibaseintegrator import wbi_config
 
-from asseeibot import config
+import config
 from asseeibot.models.wikimedia.enums import WikidataNamespaceLetters
 
 wbi_config.config['USER_AGENT'] = config.user_agent

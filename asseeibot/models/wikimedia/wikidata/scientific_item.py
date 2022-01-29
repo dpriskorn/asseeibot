@@ -5,6 +5,7 @@ from urllib.parse import quote
 
 from pydantic import BaseModel
 
+import config
 from asseeibot.helpers.wikidata import wikidata_query
 from asseeibot.models.wikimedia.wikidata.entity import EntityId
 from asseeibot.models.wikimedia.wikidata.item import Item
