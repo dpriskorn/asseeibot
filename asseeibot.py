@@ -1,3 +1,3 @@
-import asseeibot.main
+import asseeibot
 
-asseeibot.main.main()
+asseeibot.main()
