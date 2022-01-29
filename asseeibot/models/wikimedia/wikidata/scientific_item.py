@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 from time import sleep, timezone
-from typing import Any, List, Set
+from typing import Any, Set
 from urllib.parse import quote
 
 from wikibaseintegrator import wbi_login, wbi_config, WikibaseIntegrator
@@ -12,7 +12,6 @@ from wikibaseintegrator.wbi_enums import ActionIfExists
 import config
 from asseeibot.helpers.console import console
 from asseeibot.helpers.wikidata import wikidata_query
-from asseeibot.models.fuzzy_match import FuzzyMatch
 from asseeibot.models.wikimedia.enums import StatedIn, Property, DeterminationMethod
 from asseeibot.models.wikimedia.wikidata.entity import EntityId
 from asseeibot.models.wikimedia.wikidata.item import Item
@@ -142,6 +141,8 @@ class WikidataScientificItem(Item):
             return result
 
     def add_subjects(self, subject_qids: Set[str]):
+        logger = logging.getLogger(__name__)
+        logger.info(f"Adding {len(subject_qids)} now to {self.qid.url()}")
         for qid in subject_qids:
             self.__add_main_subject__(qid=qid)
 

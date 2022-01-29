@@ -54,10 +54,15 @@ class Doi(Identifier):
         logger = logging.getLogger(__name__)
         if (
                 self.found_in_wikidata and
-                self.found_in_crossref and
-                self.crossref_entry.number_of_subject_qids > 0
+                self.found_in_crossref
         ):
-            # pseudo
-            self.wikidata_scientific_item.add_subjects(self.crossref_entry.subject_qids)
+            logger.debug("Found in both WD and Crossref")
+            if (
+                    self.crossref_entry.number_of_subject_qids > 0
+            ):
+                logger.info("Uploading now")
+                self.wikidata_scientific_item.add_subjects(self.crossref_entry.subject_qids)
+            else:
+                logger.debug("No subject Q-items matched for this DOI")
         else:
-            logger.debug("No subject Q-items matched for this DOI")
+            logger.debug("Not found in both WD and Crossref")
