@@ -1,10 +1,12 @@
 import logging
 from datetime import datetime
 from enum import Enum
+from typing import Optional
 
 import pandas as pd
 
 import config
+from asseeibot import FuzzyMatch
 from asseeibot.models.cache import Cache
 
 logger = logging.getLogger(__name__)
@@ -24,6 +26,7 @@ class StatisticDataframeColumn(Enum):
 class StatisticDataframe(Cache):
     """This class stores all uploaded data to a dataframe
     It makes it easy to follow edits over time"""
+    match: Optional[FuzzyMatch]
     pickle: str = config.statistic_pickle_filename
 
     # def __init__(self):
@@ -40,6 +43,8 @@ class StatisticDataframe(Cache):
 
     def __append_to_the_dataframe__(self):
         logger.debug("Adding to cache")
+        if self.match is None:
+            raise ValueError("match was None")
         data = {
             StatisticDataframeColumn.EDITED_QID.value: self.match.edited_qid.value,
             StatisticDataframeColumn.SUBJECT_QID.value: self.match.qid.value,
