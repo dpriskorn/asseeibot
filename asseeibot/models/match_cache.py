@@ -64,8 +64,10 @@ class MatchCache(Cache):
             CacheDataframeColumn.ORIGINAL_SUBJECT.value: self.match.original_subject,
             CacheDataframeColumn.SPLIT_SUBJECT.value: self.match.split_subject,
         }
-        # We only give save the value once for now
-        self.dataframe = self.dataframe.append(pd.DataFrame(data=[data]))
+        if self.dataframe is None:
+            self.dataframe = pd.DataFrame(data=[data])
+        else:
+            self.dataframe = self.dataframe.append(pd.DataFrame(data=[data]))
 
     def __check_crossref_subject__(self):
         if self.match.crossref_subject is None:
@@ -111,8 +113,8 @@ class MatchCache(Cache):
                 self.dataframe[CacheDataframeColumn.CROSSREF_SUBJECT.value] == self.match.crossref_subject
             ]
             if isinstance(row, DataFrame):
-                print(row)
-                print(row[CacheDataframeColumn.QID.value].values[0])
+                # print(row)
+                # print(row[CacheDataframeColumn.QID.value].values[0])
                 # exit()
                 qid: EntityId = EntityId(row[CacheDataframeColumn.QID.value][0])
                 original_subject: str = row[CacheDataframeColumn.ORIGINAL_SUBJECT.value][0]
@@ -162,7 +164,7 @@ class MatchCache(Cache):
     def read(self) -> Optional[FuzzyMatch]:
         """Returns None or result from the cache"""
         self.__check_crossref_subject__()
-        self.__read_dataframe_from_disk__()
+        self.__verify_that_the_cache_file_exists_and_read__()
         self.__lookup_crossref_subject__()
         if self.crossref_subject_found:
             self.__extract_match__()
@@ -175,7 +177,7 @@ class MatchCache(Cache):
         :return: bool"""
         self.__check_crossref_subject__()
         self.__check_qid__()
-        self.__read_dataframe_from_disk__()
+        self.__verify_that_the_cache_file_exists_and_read__()
         self.__lookup_crossref_subject__()
         if not self.crossref_subject_found and not self.qid_found:
             self.__append_new_match_to_the_dataframe__()
@@ -189,6 +191,7 @@ class MatchCache(Cache):
         Returns True if success and False if not found"""
         self.__check_qid__()
         logger.debug("Deleting from the cache")
+        self.__verify_that_the_cache_file_exists_and_read__()
         self.__drop_qid_from_dataframe__()
         if self.qid_dropped:
             self.__save_dataframe_to_disk__()

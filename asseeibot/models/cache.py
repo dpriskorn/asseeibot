@@ -34,13 +34,13 @@ class Cache(BaseModel):
     #     self.__save_dataframe_to_disk__()
 
     def __read_dataframe_from_disk__(self):
-        self.__verify_that_the_cache_file_exists__()
         self.dataframe = pd.read_pickle(self.pickle)
 
     def __save_dataframe_to_disk__(self):
         self.dataframe.to_pickle(self.pickle)
 
-    def __verify_that_the_cache_file_exists__(self):
+    def __verify_that_the_cache_file_exists_and_read__(self):
         if not exists(self.pickle):
             logger.error(f"Pickle file {self.pickle} not found.")
-            exit()
+        else:
+            self.__read_dataframe_from_disk__()
