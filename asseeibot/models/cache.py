@@ -29,9 +29,9 @@ class Cache(BaseModel):
     #         description=description,
     #     )
 
-    def __create_dataframe__(self):
-        self.dataframe = pd.DataFrame()
-        self.__save_dataframe_to_disk__()
+    # def __create_dataframe__(self):
+    #     self.dataframe = pd.DataFrame()
+    #     self.__save_dataframe_to_disk__()
 
     def __read_dataframe_from_disk__(self):
         self.__verify_that_the_cache_file_exists__()
@@ -42,5 +42,5 @@ class Cache(BaseModel):
 
     def __verify_that_the_cache_file_exists__(self):
         if not exists(self.pickle):
-            logger.info(f"Pickle file {self.pickle} not found.")
-            self.__create_dataframe__()
+            logger.error(f"Pickle file {self.pickle} not found.")
+            exit()
