@@ -58,10 +58,10 @@ class MatchCache(Cache):
         logger.debug("Adding to cache")
         data = {
             CacheDataframeColumn.QID.value: self.match.qid.value,
-            CacheDataframeColumn.CROSSREF_SUBJECT: self.match.crossref_subject,
-            CacheDataframeColumn.MATCH_BASED_ON: self.match.match_based_on.value,
-            CacheDataframeColumn.ORIGINAL_SUBJECT: self.match.original_subject,
-            CacheDataframeColumn.SPLIT_SUBJECT: self.match.split_subject,
+            CacheDataframeColumn.CROSSREF_SUBJECT.value: self.match.crossref_subject,
+            CacheDataframeColumn.MATCH_BASED_ON.value: self.match.match_based_on.value,
+            CacheDataframeColumn.ORIGINAL_SUBJECT.value: self.match.original_subject,
+            CacheDataframeColumn.SPLIT_SUBJECT.value: self.match.split_subject,
         }
         # We only give save the value once for now
         self.dataframe = self.dataframe.append(pd.DataFrame(data=[data]))
