@@ -21,6 +21,8 @@ from asseeibot.models.wikimedia.enums import StatedIn, Property, DeterminationMe
 from asseeibot.models.wikimedia.wikidata.entity import EntityId
 from asseeibot.models.wikimedia.wikidata.item import Item
 
+logger = logging.getLogger(__name__)
+
 
 class WikidataScientificItem(Item):
     doi: Any
@@ -167,13 +169,14 @@ class WikidataScientificItem(Item):
             if isinstance(result, WbiEntityItem):
                 console.print(f"[green]Uploaded '{match.label}' to[/green] {self.qid.url()}")
                 match.edited_qid = self.qid
-                upload_dataframe = StatisticDataframe(match=match)
+                upload_dataframe = StatisticDataframe()
+                upload_dataframe.update_forward_refs()
+                upload_dataframe.match = match
                 upload_dataframe.add()
-                exit()
             else:
                 raise ValueError("Did not get an item back from WBI, something went wrong :/")
-            # print("debug exit")
-            # exit()
+            print("debug exit after adding to statistics")
+            exit()
 
     def add_subjects(self, crossref: CrossrefEngine):
         logger = logging.getLogger(__name__)
