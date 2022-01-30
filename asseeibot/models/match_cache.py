@@ -42,14 +42,16 @@ class MatchCache(Cache):
 
     def __check_variables__(self):
         logger.debug("Checking variables")
-        if (
-                self.match.qid is None or
-                self.match.edited_qid is None or
-                self.match.crossref_subject is None or
-                self.match.split_subject is None or
-                self.match.match_based_on
-        ):
-            raise ValueError("we did not get all we need")
+        if self.match.qid is None:
+            raise ValueError("match.qid was None")
+        if self.match.original_subject is None:
+            raise ValueError("match.original_subject was None")
+        if self.match.crossref_subject is None:
+            raise ValueError("match.crossref_subject was None")
+        if self.match.split_subject is None:
+            raise ValueError("match.split_subject was None")
+        if self.match.match_based_on is None:
+            raise ValueError("match.match_based_on was None")
 
     def __append_new_match_to_the_dataframe__(self):
         self.__check_variables__()
