@@ -118,9 +118,12 @@ class MatchCache(Cache):
             )
 
     def __lookup_crossref_subject__(self):
-        match = (self.dataframe[CacheDataframeColumn.CROSSREF_SUBJECT.value] == self.match.crossref_subject).any()
-        logger.debug(f"match:{match}")
-        self.crossref_subject_found = match
+        if len(self.dataframe) > 0:
+            match = (self.dataframe[CacheDataframeColumn.CROSSREF_SUBJECT.value] == self.match.crossref_subject).any()
+            logger.debug(f"match:{match}")
+            self.crossref_subject_found = match
+        else:
+            self.crossref_subject_found = False
 
     def __lookup_qid__(self):
         match = (self.dataframe[CacheDataframeColumn.QID.value] == self.match.qid.value).any()
