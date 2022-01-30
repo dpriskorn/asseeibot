@@ -1,4 +1,5 @@
 import logging
+from enum import Enum
 from os.path import exists
 from typing import Optional
 
@@ -6,13 +7,20 @@ import pandas as pd
 from pydantic import BaseModel
 
 import config
+from asseeibot.models.wikimedia.wikidata.entity import EntityId
 
 logger = logging.getLogger(__name__)
+
 
 # This code is adapted from https://github.com/dpriskorn/WikidataMLSuggester and LexUtils
 
 # lookups where inspired by
 # https://stackoverflow.com/questions/24761133/pandas-check-if-row-exists-with-certain-values
+
+
+class CacheDataframeColumn(Enum):
+    QID = "qid"
+    LABEL = "label"
 
 
 class Cache(BaseModel):
@@ -27,12 +35,14 @@ class Cache(BaseModel):
         if exists(config.cache_pickle_filename):
             df = pd.read_pickle(config.cache_pickle_filename)
             # This tests whether any row matches
-            match = (df['label'] == label).any()
+            match = (df[CacheDataframeColumn.LABEL.value] == label).any()
             logger.debug(f"match:{match}")
             if match:
                 # Here we find the row that matches and extract the
                 # result column and extract the value using any()
-                result = df.loc[df["label"] == label, "qid"][0]
+                result = df.loc[
+                    df[CacheDataframeColumn.LABEL.value] == label,
+                    CacheDataframeColumn.QID.value][0]
                 logger.debug(f"result:{result}")
                 if result is not None:
                     return result
@@ -50,7 +60,7 @@ class Cache(BaseModel):
         if exists(config.cache_pickle_filename):
             df = pd.read_pickle(config.cache_pickle_filename)
             # This tests whether any row matches
-            match = (df['label'] == label).any()
+            match = (df[CacheDataframeColumn.LABEL.value] == label).any()
             logger.debug(f"match:{match}")
             if not match:
                 # We only give save the value once for now
