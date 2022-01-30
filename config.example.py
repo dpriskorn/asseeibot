@@ -7,6 +7,7 @@ bot_username = ""
 password = ""
 
 # User settings
+crossref_polite_pool_email = None
 username = "So9q"  # This is good practice and used for the User-Agent.
 # We thus send it to WMF every time we interact with the APIs
 

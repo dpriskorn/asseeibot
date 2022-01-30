@@ -73,7 +73,7 @@ class CrossrefEngine:
         # https://github.com/sckott/habanero >6 contributors not async
         logger.debug(f"Looking up work {self.doi.value} in Crossref")
         # logging.info("Looking up from Crossref")
-        cr = Crossref()
+        cr = Crossref(mailto=config.crossref_polite_pool_email)
         # result = cr.works(doi=doi)
         try:
             self.result = cr.works(ids=self.doi.value)
