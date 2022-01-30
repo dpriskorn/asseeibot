@@ -11,6 +11,8 @@ from asseeibot.models.identifiers.doi import Doi
 from asseeibot.models.wikimedia.wikipedia.templates.enwp.cite_journal import CiteJournal
 from asseeibot.models.wikimedia.wikipedia.wikipedia_page_reference import WikipediaPageReference
 
+logger = logging.getLogger(__name__)
+
 
 class WikipediaPage:
     """Models a WMF Wikipedia page"""
@@ -108,10 +110,9 @@ class WikipediaPage:
                     exit()
 
     def __calculate_statistics__(self):
-        # logger = logging.getLogger(__name__)
         self.number_of_dois = len(self.dois)
         self.number_of_missing_dois = len(self.missing_dois)
-        print(f"Found {self.number_of_missing_dois}/{self.number_of_dois} missing DOIs on this page")
+        logger.info(f"Found {self.number_of_missing_dois}/{self.number_of_dois} missing DOIs on this page")
         # if len(missing_dois) > 0:
         #     input_output.save_to_wikipedia_list(missing_dois, language_code, title)
         # if config.import_mode:
