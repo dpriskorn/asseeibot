@@ -68,6 +68,6 @@ class StatisticDataframe(Cache):
 
     def add(self):
         """Add an uploaded match to the dataframe"""
-        self.__read_dataframe_from_disk__()
+        self.__verify_that_the_cache_file_exists_and_read__()
         self.__append_to_the_dataframe__()
         self.__save_dataframe_to_disk__()
