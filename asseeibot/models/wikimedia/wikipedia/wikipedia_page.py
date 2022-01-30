@@ -97,7 +97,8 @@ class WikipediaPage:
     def __upload_subject_qids_to_wikidata__(self):
         if config.match_subjects_to_qids_and_upload:
             number_of_subject_matches = sum(
-                [doi.crossref.work.number_of_subject_matches for doi in self.dois if doi.crossref.work is not None]
+                [doi.crossref.work.number_of_subject_matches for doi in self.dois
+                 if doi.crossref is not None and doi.crossref.work is not None]
             )
             if number_of_subject_matches > 0:
                 console.print(f"Uploading {number_of_subject_matches} subjects to Wikidata")
