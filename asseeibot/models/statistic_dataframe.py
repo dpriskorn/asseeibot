@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Optional
 
 import pandas as pd
+from pandas import DataFrame
 
 import config
 from asseeibot import FuzzyMatch
@@ -28,6 +29,7 @@ class StatisticDataframe(Cache):
     It makes it easy to follow edits over time"""
     match: Optional[FuzzyMatch]
     pickle: str = config.statistic_pickle_filename
+    dataframe: DataFrame = None
 
     # def __init__(self):
     #     self.match = FuzzyMatch(
@@ -40,6 +42,9 @@ class StatisticDataframe(Cache):
     #         label=label,
     #         description=description,
     #     )
+
+    class Config:
+        arbitrary_types_allowed = True
 
     def __append_to_the_dataframe__(self):
         logger.debug("Adding to cache")
@@ -56,7 +61,10 @@ class StatisticDataframe(Cache):
             StatisticDataframeColumn.ROLLED_BACK: False,
         }
         # We only give save the value once for now
-        self.dataframe = self.dataframe.append(pd.DataFrame(data=[data]))
+        if len(self.dataframe) == 0:
+            self.dataframe = pd.DataFrame(data=[data])
+        else:
+            self.dataframe = self.dataframe.append(pd.DataFrame(data=[data]))
 
     def add(self):
         """Add an uploaded match to the dataframe"""
