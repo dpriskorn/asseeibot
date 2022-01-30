@@ -35,7 +35,7 @@ class WikidataScientificItem(Item):
         https://hub.toolforge.org/doi:10.1111/j.1746-8361.1978.tb01321.x?site:wikidata?format=json"""
         logger.info("Looking up via Hub")
         url = f"https://hub.toolforge.org/doi:{self.doi.value}?site:wikidata?format=json"
-        response= requests.get(url, allow_redirects=False)
+        response = requests.get(url, allow_redirects=False)
         if response.status_code == 302:
             logger.debug("Found QID via Hub")
             self.found_in_wikidata = True
@@ -175,8 +175,8 @@ class WikidataScientificItem(Item):
                 upload_dataframe.add()
             else:
                 raise ValueError("Did not get an item back from WBI, something went wrong :/")
-            print("debug exit after adding to statistics")
-            exit()
+            # print("debug exit after adding to statistics")
+            # exit()
 
     def add_subjects(self, crossref: CrossrefEngine):
         logger = logging.getLogger(__name__)
