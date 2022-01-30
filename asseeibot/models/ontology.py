@@ -50,14 +50,13 @@ class Ontology(BaseModel):
         if self.subject is None or self.subject == "":
             return
 
-    def __check_match_and_return_it__(self):
+    def __validate_the_match__(self):
         if self.match is not None:
             # todo more checks
             if self.match.match_based_on is None:
                 raise ValueError("self.match.match_based_on was None")
-            return self.match
 
-    def lookup_subject(self) -> Optional[FuzzyMatch]:
+    def lookup_subject(self) -> None:
         """Looks up the subject in the ontology and try to fuzzymatch it to a QID"""
         # TODO split this up
         self.match = None
@@ -66,15 +65,15 @@ class Ontology(BaseModel):
         self.__check_subject__()
         self.__print_subject_information__()
         self.__lookup_in_cache__()
-        self.__check_match_and_return_it__()
-        # We proceed if not found in the cache
-        self.__calculate_scores__()
-        self.__lookup_scores_and_matches_in_the_ontology__()
-        # self.__check_match_and_return_it__()
+        if self.match is None:
+            # We proceed if not found in the cache
+            self.__calculate_scores__()
+            self.__lookup_scores_and_matches_in_the_ontology__()
+        self.__validate_the_match__()
 
     def __lookup_scores_and_matches_in_the_ontology__(self):
         label_score, alias_score, top_label_match, top_alias_match = self.__extract_top_matches__()
-        if label_score >= alias_score:
+        if self.match is None and label_score >= alias_score:
             if label_score >= config.label_threshold_ratio:
                 answer = yes_no_question("Does this match?\n"
                                          f"{str(top_label_match)}")
@@ -88,8 +87,7 @@ class Ontology(BaseModel):
                     )
                     cache_instance = MatchCache(match=self.match)
                     cache_instance.add()
-                    self.__check_match_and_return_it__()
-        if alias_score >= config.alias_threshold_ratio:
+        if self.match is None and alias_score >= config.alias_threshold_ratio:
             answer = yes_no_question("Does this match?\n"
                                      f"{str(top_alias_match)}")
             if answer:
@@ -102,7 +100,6 @@ class Ontology(BaseModel):
                 )
                 cache_instance = MatchCache(match=self.match)
                 cache_instance.add()
-                self.__check_match_and_return_it__()
         # None of the ratios reached the threshold
         # We probably have either a gap in our ontology or in Wikidata
         logger.warning(f"No match with a sufficient rating found. ")

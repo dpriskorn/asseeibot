@@ -5,9 +5,9 @@ from typing import Optional, List
 from pandas import DataFrame
 from pydantic import BaseModel
 
-from asseeibot.models.ontology_dataframe import Dataframe
 from asseeibot.models.fuzzy_match import FuzzyMatch
 from asseeibot.models.ontology import Ontology
+from asseeibot.models.ontology_dataframe import Dataframe
 
 
 class SupportedSplit(Enum):
@@ -65,10 +65,13 @@ class NamedEntityRecognition(BaseModel):
                                      original_subject=original_subject,
                                      dataframe=self.__dataframe,
                                      split_subject=split_subject)
-            match = self.ontology.lookup_subject()
-            if match is not None and match.qid.value not in self.already_matched_qids:
-                self.subject_matches.append(match)
-                self.already_matched_qids.append(match.qid.value)
+            self.ontology.lookup_subject()
+            if (
+                    self.ontology.match is not None and
+                    self.ontology.match.qid.value not in self.already_matched_qids
+            ):
+                self.subject_matches.append(self.ontology.match)
+                self.already_matched_qids.append(self.ontology.match.qid.value)
 
         def lookup_after_split(split_subject_parts, original_subject):
             """This looks up split subjects"""
