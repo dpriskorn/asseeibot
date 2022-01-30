@@ -21,7 +21,7 @@ class Cache(BaseModel):
         """Returns None or result from the cache"""
         if label is None:
             raise ValueError("did not get all we need")
-        if label is "":
+        if label == "":
             raise ValueError("label was empty string")
         logger.debug("Reading from the cache")
         if exists(config.cache_pickle_filename):
@@ -39,11 +39,11 @@ class Cache(BaseModel):
 
     @staticmethod
     def add(label: str, qid: str) -> None:
-        if label is "":
+        if label == "":
             raise ValueError("label was empty string")
         if qid is None:
             raise ValueError("qid was None")
-        if qid is "":
+        if qid == "":
             raise ValueError("qid was empty string")
         logger.debug("Adding to cache")
         data = dict(qid=qid, label=label)
