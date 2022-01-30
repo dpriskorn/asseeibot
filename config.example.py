@@ -29,7 +29,7 @@ cache_pickle_filename = "cache.pkl"
 # trust_url_file_endings = True
 
 # These should not be altered by users:
-version = "0.2-alpha0"
+version = "0.3-alpha1"
 user_agent = f"Asynchronous Server Side Events External Identifier Bot/v{version} " \
              f"https://github.com/dpriskorn/asseeibot run by User:{username}"
 wd_prefix = "http://www.wikidata.org/entity/"
