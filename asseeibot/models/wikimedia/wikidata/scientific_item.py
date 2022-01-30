@@ -9,6 +9,7 @@ from wikibaseintegrator.datatypes import Time, Item as WbiItemType, String
 from wikibaseintegrator.entities.item import Item as WbiEntityItem
 from wikibaseintegrator.wbi_enums import ActionIfExists
 
+import asseeibot.runtime_variables
 import config
 from asseeibot.helpers.console import console
 from asseeibot.helpers.wikidata import wikidata_query
@@ -117,16 +118,16 @@ class WikidataScientificItem(Item):
             )
             # if config.debug_json:
             #     logging.debug(f"claim:{claim.get_json_representation()}")
-            if config.login_instance is None:
+            if asseeibot.runtime_variables.login_instance is None:
                 # Authenticate with WikibaseIntegrator
                 with console.status("Logging in with WikibaseIntegrator..."):
-                    config.login_instance = wbi_login.Login(
+                    asseeibot.runtime_variables.login_instance = wbi_login.Login(
                         user=config.bot_username,
                         password=config.password
                     )
                     # Set User-Agent
                     wbi_config.config["USER_AGENT_DEFAULT"] = config.user_agent
-            wbi = WikibaseIntegrator(login=config.login_instance)
+            wbi = WikibaseIntegrator(login=asseeibot.runtime_variables.login_instance)
             item = wbi.item.get(self.qid.value)
             item.add_claims(
                 [claim],

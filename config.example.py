@@ -35,7 +35,3 @@ user_agent = f"Asynchronous Server Side Events External Identifier Bot/v{version
 wd_prefix = "http://www.wikidata.org/entity/"
 wd_prefixes = ["http://www.wikidata.org/entity/", "https://www.wikidata.org/entity/",
                "https://www.wikidata.org/wiki/", "http://www.wikidata.org/wiki/"]
-
-# These 2 variables are used to hold instances that we want to keep during the whole runtime
-login_instance = None
-ontology_dataframe = None

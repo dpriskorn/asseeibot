@@ -5,6 +5,7 @@ from fuzzywuzzy import fuzz
 from pandas import DataFrame
 from pydantic import BaseModel, PositiveInt
 
+import asseeibot.runtime_variables
 import config
 from asseeibot.helpers.util import yes_no_question
 from asseeibot.models.cache import Cache
@@ -122,8 +123,8 @@ class Ontology(BaseModel):
 
     def __get_the_dataframe_from_config__(self):
         # This has been populated by __prepare_the_dataframe__()
-        if config.ontology_dataframe is not None:
-            self.dataframe = config.ontology_dataframe
+        if asseeibot.runtime_variables.ontology_dataframe is not None:
+            self.dataframe = asseeibot.runtime_variables.ontology_dataframe
         else:
             raise RuntimeError("config.ontology_dataframe was None")
 
