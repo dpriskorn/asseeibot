@@ -158,7 +158,6 @@ class Ontology(BaseModel):
             label=row.label,
             description=row.description,
             original_subject=self.original_subject,
-            based_on=self.match_based_on,
             split_subject=self.split_subject
         ))
 
@@ -166,26 +165,26 @@ class Ontology(BaseModel):
         cache = MatchCache(match=FuzzyMatch(
             crossref_subject=self.subject
         ))
-        qid = cache.read()
-        if qid is not None:
+        match = cache.read()
+        if match is not None:
             logger.info("Already matched QID found in the cache")
             label = self.dataframe.loc[
-                self.dataframe[OntologyDataframeColumn.ITEM.value] == qid.url(),
+                self.dataframe[OntologyDataframeColumn.ITEM.value] == match.qid.url(),
                 OntologyDataframeColumn.LABEL.value].head(1).values[0]
             description = self.dataframe.loc[
-                self.dataframe[OntologyDataframeColumn.ITEM.value] == qid.url(),
+                self.dataframe[OntologyDataframeColumn.ITEM.value] == match.qid.url(),
                 OntologyDataframeColumn.DESCRIPTION.value].head(1).values[0]
             alias = self.dataframe.loc[
-                self.dataframe[OntologyDataframeColumn.ITEM.value] == qid.url(),
+                self.dataframe[OntologyDataframeColumn.ITEM.value] == match.qid.url(),
                 OntologyDataframeColumn.ALIAS.value].head(1).values[0]
             return FuzzyMatch(
-                qid=qid,
+                qid=match.qid,
                 label=label,
                 alias=alias,
                 description=description,
-                original_subject=self.original_subject,
-                match_based_on=self.match_based_on,
-                split_subject=self.split_subject
+                original_subject=match.original_subject,
+                split_subject=match.split_subject,
+                match_based_on=match.match_based_on
             )
 
     def __print_dataframe_head__(self):

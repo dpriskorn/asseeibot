@@ -7,8 +7,8 @@ from pandas import DataFrame
 
 import config
 from asseeibot.models.cache import Cache
-from asseeibot.models.ontology_dataframe import OntologyDataframeColumn
 from asseeibot.models.fuzzy_match import FuzzyMatch, MatchBasedOn
+from asseeibot.models.ontology_dataframe import OntologyDataframeColumn
 from asseeibot.models.wikimedia.wikidata.entity import EntityId
 
 logger = logging.getLogger(__name__)
@@ -40,7 +40,19 @@ class MatchCache(Cache):
         # Because of DataFrame
         arbitrary_types_allowed = True
 
+    def __check_variables__(self):
+        logger.debug("Checking variables")
+        if (
+                self.match.qid is None or
+                self.match.edited_qid is None or
+                self.match.crossref_subject is None or
+                self.match.split_subject is None or
+                self.match.match_based_on
+        ):
+            raise ValueError("we did not get all we need")
+
     def __append_new_match_to_the_dataframe__(self):
+        self.__check_variables__()
         logger.debug("Adding to cache")
         data = {
             CacheDataframeColumn.QID.value: self.match.qid.value,
@@ -130,13 +142,14 @@ class MatchCache(Cache):
         logger.debug(f"match:{match}")
         self.qid_found = match
 
-    def read(self) -> Optional[EntityId]:
+    def read(self) -> Optional[FuzzyMatch]:
         """Returns None or result from the cache"""
         self.__check_crossref_subject__()
         self.__read_dataframe_from_disk__()
         self.__lookup_crossref_subject__()
         if self.crossref_subject_found:
-            return self.__extract_match__()
+            self.__extract_match__()
+            return self.match
 
     def add(self) -> bool:
         """Add a match to the cache
