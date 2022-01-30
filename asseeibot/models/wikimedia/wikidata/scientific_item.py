@@ -4,6 +4,7 @@ from time import sleep
 from typing import Any
 from urllib.parse import quote
 
+import requests
 from wikibaseintegrator import wbi_login, wbi_config, WikibaseIntegrator
 from wikibaseintegrator.datatypes import Time, Item as WbiItemType, String
 from wikibaseintegrator.entities.item import Item as WbiEntityItem
@@ -26,8 +27,29 @@ class WikidataScientificItem(Item):
     found_in_wikidata: bool = False
     qid: EntityId = None
 
-    def lookup(self):
-        logger = logging.getLogger(__name__)
+    def __lookup_via_hub__(self) -> None:
+        """Lookup via hub.toolforge.org
+        It is way faster than WDQS
+        https://hub.toolforge.org/doi:10.1111/j.1746-8361.1978.tb01321.x?site:wikidata?format=json"""
+        logger.info("Looking up via Hub")
+        url = f"https://hub.toolforge.org/doi:{self.doi.value}?site:wikidata?format=json"
+        response= requests.get(url, allow_redirects=False)
+        if response.status_code == 302:
+            logger.debug("Found QID via Hub")
+            self.found_in_wikidata = True
+            self.qid = EntityId(response.headers['Location'])
+        elif response.status_code == 400:
+            logger.debug("DOI not found via Hub")
+            self.found_in_wikidata = False
+        else:
+            logger.error(f"Got {response.status_code} from Hub")
+            console.print(response.json())
+            exit()
+
+    def lookup(self) -> None:
+        self.__lookup_via_hub__()
+
+    def __lookup_via_sparql__(self):
         logger.info(f"Looking up {self.doi.value} in Wikidata")
         # TODO use the cirrussearch API instead?
         df = wikidata_query(f'''
