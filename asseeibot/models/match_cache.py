@@ -6,6 +6,7 @@ import pandas as pd
 from pandas import DataFrame
 
 import config
+from asseeibot import runtime_variables
 from asseeibot.models.cache import Cache
 from asseeibot.models.fuzzy_match import FuzzyMatch, MatchBasedOn
 from asseeibot.models.ontology_dataframe import OntologyDataframeColumn
@@ -100,36 +101,50 @@ class MatchCache(Cache):
         """Here we find the row that matches and extract the
         result column and extract the value using any()
         """
+        logger.info("Extracting match from cache")
         found_match = self.dataframe.loc[
             self.dataframe[CacheDataframeColumn.CROSSREF_SUBJECT.value] == self.match.crossref_subject].any()
         logger.debug(f"result:{found_match}")
         if found_match is not None:
             logger.info("Already matched QID found in the cache")
-            row = self.dataframe[CacheDataframeColumn.CROSSREF_SUBJECT.value] == self.match.crossref_subject
-            qid: EntityId = EntityId(row[CacheDataframeColumn.QID.value].value[0])
-            original_subject: str = row[CacheDataframeColumn.ORIGINAL_SUBJECT.value].value[0]
-            crossref_subject: str = row[CacheDataframeColumn.ORIGINAL_SUBJECT.value].value[0]
-            match_based_on = MatchBasedOn(row[CacheDataframeColumn.MATCH_BASED_ON.value].value[0])
-            split_subject: bool = bool(row[CacheDataframeColumn.SPLIT_SUBJECT.value].value[0])
-            label = self.dataframe.loc[
-                self.dataframe[OntologyDataframeColumn.ITEM.value] == qid.url(),
-                OntologyDataframeColumn.LABEL.value].head(1).values[0]
-            description = self.dataframe.loc[
-                self.dataframe[OntologyDataframeColumn.ITEM.value] == qid.url(),
-                OntologyDataframeColumn.DESCRIPTION.value].head(1).values[0]
-            alias = self.dataframe.loc[
-                self.dataframe[OntologyDataframeColumn.ITEM.value] == qid.url(),
-                OntologyDataframeColumn.ALIAS.value].head(1).values[0]
-            self.match = FuzzyMatch(
-                qid=qid,
-                original_subject=original_subject,
-                match_based_on=match_based_on,
-                split_subject=split_subject,
-                crossref_subject=crossref_subject,
-                alias=alias,
-                label=label,
-                description=description,
-            )
+            row: DataFrame = self.dataframe[
+                self.dataframe[CacheDataframeColumn.CROSSREF_SUBJECT.value] == self.match.crossref_subject
+            ]
+            if isinstance(row, DataFrame):
+                print(row)
+                print(row[CacheDataframeColumn.QID.value].values[0])
+                # exit()
+                qid: EntityId = EntityId(row[CacheDataframeColumn.QID.value][0])
+                original_subject: str = row[CacheDataframeColumn.ORIGINAL_SUBJECT.value][0]
+                crossref_subject: str = row[CacheDataframeColumn.ORIGINAL_SUBJECT.value][0]
+                match_based_on = MatchBasedOn(row[CacheDataframeColumn.MATCH_BASED_ON.value][0])
+                split_subject: bool = bool(row[CacheDataframeColumn.SPLIT_SUBJECT.value][0])
+                ontology_dataframe = runtime_variables.ontology_dataframe
+                label = ontology_dataframe.loc[
+                    ontology_dataframe[OntologyDataframeColumn.ITEM.value] == qid.url(),
+                    OntologyDataframeColumn.LABEL.value].head(1).values[0]
+                description = ontology_dataframe.loc[
+                    ontology_dataframe[OntologyDataframeColumn.ITEM.value] == qid.url(),
+                    OntologyDataframeColumn.DESCRIPTION.value].head(1).values[0]
+                alias = ontology_dataframe.loc[
+                    ontology_dataframe[OntologyDataframeColumn.ITEM.value] == qid.url(),
+                    OntologyDataframeColumn.ALIAS.value].head(1).values[0]
+                self.match = FuzzyMatch(
+                    qid=qid,
+                    original_subject=original_subject,
+                    match_based_on=match_based_on,
+                    split_subject=split_subject,
+                    crossref_subject=crossref_subject,
+                    alias=alias,
+                    label=label,
+                    description=description,
+                )
+                # print(self.match)
+                # exit()
+            else:
+                logger.error("Did not get pandas dataframe, got")
+                print(row)
+                exit()
 
     def __lookup_crossref_subject__(self):
         if len(self.dataframe) > 0:
