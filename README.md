@@ -1,5 +1,6 @@
 # Asynchronous Server Side Events External Identifier Bot
-*Warning this is alpha software and EditGroups are not supported yet*
+*Warning this is alpha software and EditGroups are not supported yet. It can potentially make 
+thousands of bad edits in a short period*
 
 ![bild](https://user-images.githubusercontent.com/68460690/151681324-040de41b-bdea-488b-8c5b-be509e1163b1.png)
 *Example output from the tool.*
@@ -11,21 +12,43 @@ The goal of this bot is to help improve the collection of scientific articles in
 Wikidata. Currently according to estimates based on 1000 random edits is that around 
 10-15% of all DOIs used in the English Wikipedia are currently missing in Wikidata. 
 
-The development was paused in 2021 because the Wikidata infrastructure is not 
-ready to handle all the new items and triples that this bot would create over time.
-
-As of december 2021 WMF is trying to fix the scaling issues surrounding BlazeGraph. 
-See https://phabricator.wikimedia.org/T206560
-
-In january 2022 following interest from the Internet Archive the development was 
-resumed and it got new features like a 
-[fuzzy-powered named-entity recognition matcher with science ontology](https://www.wikidata.org/wiki/Q110733873) 
-and an upload function using the fantastic library WikibaseIntegrator.
-
 ## Features
-* Matching of Crossref subjects to Wikidata Entities with caching
+* Matching of Crossref subjects to Wikidata Entities with caching using a custom domain ontology
 * Upload of the matches to Wikidata
 * Output of DOIs missing in Wikidata to the screen for use with other tools like SourceMD
+* Delete a match from the cache
+
+### Delete a match
+The tool support deleting matches from the cache. That makes it easier for 
+the user to avoid uploading garbage matches 
+if a match has been approved in error.
+
+### Domain-ontology-based fuzzy-powered named-entity recognition matcher
+This is a fancy new algorithm I invented inspired by reading a few papers 
+about topic modeling, ontology-based relation extraction, named-entity recognition
+and use of machine learning methods in these fields.
+
+It does not use ML, but instead a Levenshtein distance and a "hand crafted" ontology. 
+The result is surprisingly accurate and the matches on labels are often dead on.
+
+This is all thanks to the thousands of volunteers in Wikidata who have worked on the 
+4 subgraphs that comprise the ontology:
+* academic disciplines
+* branches of science
+* YSO links
+* Library of congress classification links
+
+Version 3 of the ontology has ~26k Wikidata items out of which ~23k
+have a description and ~13k have at least one alias
+
+You can generate/download it using the queries in `queries/` simply paste them in WDQS.
+See https://www.wikidata.org/wiki/Q110733873
+
+Inclusion of two more subgraphs are also planned but not done because of timeouts:
+* field of study/studies
+* field of work
+
+See queries/big_ontology_query.sparql
 
 ## Installation
 First clone the repo
@@ -40,6 +63,18 @@ sources and decide for yourself whether to trust their authors and the code.
 
 ## Configuration
 Edit the config.py file in the asseeibot/ directory and add your WMF username there.
+
+## History
+The development was paused in 2021 because the Wikidata infrastructure is not 
+ready to handle all the new items and triples that this bot would create over time.
+
+As of december 2021 WMF is trying to fix the scaling issues surrounding BlazeGraph. 
+See https://phabricator.wikimedia.org/T206560
+
+In january 2022 following interest from the Internet Archive the development was 
+resumed and it got new features like a 
+[fuzzy-powered named-entity recognition matcher with science ontology](https://www.wikidata.org/wiki/Q110733873) 
+and an upload function using the fantastic library WikibaseIntegrator.
 
 ## What I learned from this project
 * This was the second time I dipped my toes in asynchronous programming. 
@@ -69,7 +104,6 @@ so it does not make much sense to run it in k8s.*
 It is possible to run the tool in the WMC Kubernetes cluster if you want. 
 Follow the guide I wrote for ItemSubjector to set it up and run `./create_job.sh 1` 
 to start a job.
-
 
 # License
 GPLv3 or later.
