@@ -29,8 +29,8 @@ def main():
     # logger = logging.getLogger(__name__)
     # print("Running main")
     args = setup_argparse_and_return_args()
-    console.print(args)
-    # exit()
+    if config.loglevel == logging.DEBUG:
+        console.print(args)
     if args.delete_match:
         delete_match(args)
     else:
