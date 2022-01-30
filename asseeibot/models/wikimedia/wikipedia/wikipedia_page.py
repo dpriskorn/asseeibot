@@ -87,10 +87,9 @@ class WikipediaPage:
         logger = logging.getLogger(__name__)
         self.missing_dois = []
         if self.dois is not None and len(self.dois) > 0:
-            logger.info(f"Looking up {self.number_of_dois} DOIs in Wikidata")
-            [doi.lookup_in_wikidata() for doi in self.dois]
-            logger.info(f"Looking up {self.number_of_dois} DOIs in Crossref")
-            [doi.lookup_in_crossref() for doi in self.dois]
+            logger.info(f"Looking up {self.number_of_dois} DOIs in "
+                        f"Wikidata and if found also in Crossref")
+            [doi.lookup_and_match_subjects() for doi in self.dois]
             missing_dois = [doi for doi in self.dois if not doi.found_in_wikidata]
             if missing_dois is not None and len(missing_dois) > 0:
                 self.missing_dois.extend(missing_dois)
