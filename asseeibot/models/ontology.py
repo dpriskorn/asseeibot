@@ -149,16 +149,16 @@ class Ontology(BaseModel):
         if qid is not None:
             logger.info("Already matched QID found in the cache")
             label = self.dataframe.loc[
-                self.dataframe[DataframeColumn.ITEM.value] == f"{config.wd_prefix}{qid}",
+                self.dataframe[DataframeColumn.ITEM.value] == qid.url(),
                 DataframeColumn.LABEL.value].head(1).values[0]
             description = self.dataframe.loc[
-                self.dataframe[DataframeColumn.ITEM.value] == f"{config.wd_prefix}{qid}",
+                self.dataframe[DataframeColumn.ITEM.value] == qid.url(),
                 DataframeColumn.DESCRIPTION.value].head(1).values[0]
             alias = self.dataframe.loc[
-                self.dataframe[DataframeColumn.ITEM.value] == f"{config.wd_prefix}{qid}",
+                self.dataframe[DataframeColumn.ITEM.value] == qid.url(),
                 DataframeColumn.ALIAS.value].head(1).values[0]
             return FuzzyMatch(
-                qid=EntityId(raw_entity_id=qid),
+                qid=qid,
                 label=label,
                 alias=alias,
                 description=description,

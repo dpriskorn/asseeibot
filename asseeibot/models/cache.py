@@ -24,7 +24,8 @@ class CacheDataframeColumn(Enum):
 
 
 class Cache(BaseModel):
-    qid: EntityId
+    """This models our cache of matches"""
+    qid: Optional[EntityId]
     crossref_subject: Optional[str]
     crossref_subject_found: bool = None
     matched_qid: EntityId = None
@@ -48,6 +49,10 @@ class Cache(BaseModel):
             raise ValueError("crossref_subject was None")
         if self.crossref_subject == "":
             raise ValueError("crossref_subject was empty string")
+
+    def __check_qid__(self):
+        if self.qid is None:
+            raise ValueError("qid was None")
 
     def __check_if_drop_was_successful__(self):
         if config.loglevel == logging.DEBUG:
@@ -116,6 +121,7 @@ class Cache(BaseModel):
         or the crossref subject was found in the cache.
         :return: bool"""
         self.__check_crossref_subject__()
+        self.__check_qid__()
         self.__read_dataframe_from_disk__()
         self.__lookup_crossref_subject__()
         if not self.crossref_subject_found and not self.qid_found:
@@ -128,6 +134,7 @@ class Cache(BaseModel):
     def delete(self) -> bool:
         """Delete from the cache.
         Returns True if success and False if not found"""
+        self.__check_qid__()
         logger.debug("Deleting from the cache")
         self.__drop_qid_from_dataframe__()
         if self.qid_dropped:
