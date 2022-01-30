@@ -53,15 +53,15 @@ class Ontology(BaseModel):
                 answer = yes_no_question("Does this match?\n"
                                          f"{str(top_label_match)}")
                 if answer:
-                    cache_instance = Cache()
-                    cache_instance.add(label=self.subject, qid=top_label_match.qid.value)
+                    cache_instance = Cache(crossref_subject=self.subject, qid=top_label_match.qid)
+                    cache_instance.add()
                     return top_label_match
         if alias_score >= config.alias_threshold_ratio:
             answer = yes_no_question("Does this match?\n"
                                      f"{str(top_alias_match)}")
             if answer:
-                cache_instance = Cache()
-                cache_instance.add(label=self.subject, qid=top_alias_match.qid.value)
+                cache_instance = Cache(crossref_subject=self.subject, qid=top_alias_match.qid)
+                cache_instance.add()
                 return top_alias_match
         # None of the ratios reached the threshold
         # We probably have either a gap in our ontology or in Wikidata
@@ -144,11 +144,10 @@ class Ontology(BaseModel):
 
     def __lookup_in_cache__(self):
         logger = logging.getLogger(__name__)
-        cache = Cache()
-        qid = cache.read(label=self.subject)
+        cache = Cache(crossref_subject=self.subject)
+        qid = cache.read()
         if qid is not None:
             logger.info("Already matched QID found in the cache")
-            # result = df.loc[df["label"] == label, "qid"][0]
             label = self.dataframe.loc[
                 self.dataframe[DataframeColumn.ITEM.value] == f"{config.wd_prefix}{qid}",
                 DataframeColumn.LABEL.value].head(1).values[0]
