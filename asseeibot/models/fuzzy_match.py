@@ -7,8 +7,8 @@ from asseeibot.models.wikimedia.wikidata.entity import EntityId
 
 
 class MatchBasedOn(Enum):
-    LABEL = auto()
-    ALIAS = auto()
+    LABEL = "label"
+    ALIAS = "alias"
 
 
 class FuzzyMatch(BaseModel):
