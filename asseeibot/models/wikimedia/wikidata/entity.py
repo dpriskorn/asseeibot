@@ -21,15 +21,14 @@ class EntityId:
         logger = logging.getLogger(__name__)
         if self.raw_entity_id is not None:
             # Remove prefix if found
-            if config.wd_prefix in self.raw_entity_id:
-                logger.debug("Removing prefix")
-                raw_entity_id = self.raw_entity_id.replace(config.wd_prefix, "")
-            else:
-                raw_entity_id = self.raw_entity_id
-            if len(raw_entity_id) > 1:
-                logger.debug(f"entity_id:{raw_entity_id}")
-                self.letter = WikidataNamespaceLetters(raw_entity_id[0:1])
-                self.rest = raw_entity_id[1:]
+            logger.debug("Removing prefixes")
+            for prefix in config.wd_prefixes:
+                if prefix in self.raw_entity_id:
+                    self.raw_entity_id = self.raw_entity_id.replace(prefix, "")
+            if len(self.raw_entity_id) > 1:
+                logger.debug(f"entity_id:{self.raw_entity_id}")
+                self.letter = WikidataNamespaceLetters(self.raw_entity_id[0:1])
+                self.rest = self.raw_entity_id[1:]
             else:
                 raise ValueError("Entity ID was too short.")
         else:
