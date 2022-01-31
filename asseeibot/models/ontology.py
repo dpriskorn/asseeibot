@@ -79,6 +79,9 @@ class Ontology(BaseModel):
                                          f"{str(top_label_match)}")
                 if answer:
                     self.match = FuzzyMatch(
+                        label=top_label_match.label,
+                        alias=top_label_match.alias,
+                        description=top_label_match.description,
                         crossref_subject=self.subject,
                         match_based_on=MatchBasedOn.LABEL,
                         original_subject=self.original_subject,
@@ -92,6 +95,9 @@ class Ontology(BaseModel):
                                      f"{str(top_alias_match)}")
             if answer:
                 self.match = FuzzyMatch(
+                    label=top_alias_match.label,
+                    alias=top_alias_match.alias,
+                    description=top_alias_match.description,
                     crossref_subject=self.subject,
                     match_based_on=MatchBasedOn.ALIAS,
                     original_subject=self.original_subject,
@@ -171,6 +177,8 @@ class Ontology(BaseModel):
         row = self.__get_first_row__()
         # logger.debug(f"row:{row}")
         # present the match
+        if row.label is None:
+            raise ValueError("row.label was None")
         return FuzzyMatch(**dict(
             qid=EntityId(row.item),
             alias=row.alias,
