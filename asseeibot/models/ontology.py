@@ -134,7 +134,8 @@ class Ontology(BaseModel):
                 description=description,
                 original_subject=match.original_subject,
                 split_subject=match.split_subject,
-                match_based_on=match.match_based_on
+                match_based_on=match.match_based_on,
+                crossref_subject=match.crossref_subject,
             )
 
     def __lookup_scores_and_matches_in_the_ontology__(self):
