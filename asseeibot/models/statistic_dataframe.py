@@ -53,7 +53,7 @@ class StatisticDataframe(Cache):
         data = {
             StatisticDataframeColumn.EDITED_QID.value: self.match.edited_qid.value,
             StatisticDataframeColumn.SUBJECT_QID.value: self.match.qid.value,
-            StatisticDataframeColumn.CROSSREF_SUBJECT: self.match.crossref_subject,
+            StatisticDataframeColumn.CROSSREF_SUBJECT.value: self.match.crossref_subject,
             StatisticDataframeColumn.MATCH_BASED_ON.value: self.match.match_based_on.value,
             StatisticDataframeColumn.ORIGINAL_SUBJECT.value: self.match.original_subject,
             StatisticDataframeColumn.SPLIT_SUBJECT.value: self.match.split_subject,
