@@ -50,6 +50,8 @@ class StatisticDataframe(Cache):
         logger.debug("Adding to cache")
         if self.match is None:
             raise ValueError("match was None")
+        if self.match.crossref_subject is None:
+            raise ValueError("match.crossref_subject was None")
         data = {
             StatisticDataframeColumn.EDITED_QID.value: self.match.edited_qid.value,
             StatisticDataframeColumn.SUBJECT_QID.value: self.match.qid.value,
