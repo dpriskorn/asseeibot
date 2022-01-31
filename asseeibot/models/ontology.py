@@ -208,7 +208,6 @@ class Ontology(BaseModel):
 
     def lookup_subject(self) -> None:
         """Looks up the subject in the ontology and try to fuzzymatch it to a QID"""
-        # TODO split this up
         self.match = None
         self.__check_subject_and_original_subject__()
         self.__get_the_dataframe_from_config__()
