@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime, timezone
-from time import sleep
 from typing import Any
 from urllib.parse import quote
 
@@ -13,7 +12,6 @@ from wikibaseintegrator.wbi_enums import ActionIfExists
 import asseeibot.runtime_variables
 import config
 from asseeibot.helpers.console import console
-from asseeibot.helpers.wikidata import wikidata_query
 from asseeibot.models.crossref.engine import CrossrefEngine
 from asseeibot.models.fuzzy_match import FuzzyMatch
 from asseeibot.models.statistic_dataframe import StatisticDataframe
@@ -118,8 +116,12 @@ class WikidataScientificItem(Item):
             # print("debug exit after adding to statistics")
             # exit()
 
-    def __call_the_hub_api__(self):
-        url = f"https://hub.toolforge.org/doi:{self.doi.value}?site:wikidata?format=json"
+    def __call_the_hub_api__(self, doi: str = None):
+        if doi is None:
+            raise ValueError("doi was None")
+        if doi == "":
+            raise ValueError("doi was empty string")
+        url = f"https://hub.toolforge.org/doi:{quote(doi)}?site:wikidata?format=json"
         response = requests.get(url, allow_redirects=False)
         if response.status_code == 302:
             logger.debug("Found QID via Hub")
@@ -137,11 +139,19 @@ class WikidataScientificItem(Item):
         It is way faster than WDQS
         https://hub.toolforge.org/doi:10.1111/j.1746-8361.1978.tb01321.x?site:wikidata?format=json"""
         logger.info("Looking up via Hub")
-        self.__call_the_hub_api__(self.doi.value)
+        if self.doi.found_in_crossref:
+            doi: str = self.doi.crossref.work.doi
+            logger.info("Using DOI from Crossref to lookup in Hub")
+            self.__call_the_hub_api__(doi)
         if not self.found_in_wikidata:
-            self.__call_the_hub_api__(self.doi.value.upper())
+            logger.info("Using DOI from Wikipedia to lookup in Hub")
+            self.__call_the_hub_api__(self.doi.value)
             if not self.found_in_wikidata:
-                self.__call_the_hub_api__(self.doi.value.lower())
+                logger.info("Using uppercase DOI from Wikipedia to lookup in Hub")
+                self.__call_the_hub_api__(self.doi.value.upper())
+                if not self.found_in_wikidata:
+                    logger.info("Using lowercase DOI from Wikipedia to lookup in Hub")
+                    self.__call_the_hub_api__(self.doi.value.lower())
         logger.info("DOI not found via Hub")
 
     def add_subjects(self, crossref: CrossrefEngine):
@@ -153,6 +163,9 @@ class WikidataScientificItem(Item):
                 self.__add_main_subject__(match=match)
 
     def lookup(self) -> None:
+        """This looks up first in Crossref to get the correct DOI-string
+        and then in Wikidata"""
+        self.doi.lookup_in_crossref()
         self.__lookup_via_hub__()
 
     def wikidata_doi_search_url(self):
@@ -201,4 +214,3 @@ class WikidataScientificItem(Item):
     #         else:
     #             logger.debug("Not found in Wikidata")
     #             self.found_in_wikidata = False
-
