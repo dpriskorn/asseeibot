@@ -23,7 +23,7 @@ class Ontology(BaseModel):
     :param subject: str
     :param original_subject: str
     """
-    subject: str
+    crossref_subject: str
     original_subject: str
     split_subject: bool
     dataframe: DataFrame = None
@@ -33,8 +33,8 @@ class Ontology(BaseModel):
         arbitrary_types_allowed = True
 
     def __check_subject_and_original_subject__(self):
-        if not isinstance(self.subject, str):
-            raise TypeError(f"subject was '{self.subject}' which is not a string")
+        if not isinstance(self.crossref_subject, str):
+            raise TypeError(f"subject was '{self.crossref_subject}' which is not a string")
         if not isinstance(self.original_subject, str):
             raise TypeError(f"subject was '{self.original_subject}' which is not a string")
 
@@ -45,10 +45,10 @@ class Ontology(BaseModel):
         # We lowercase the string to avoid having the same ratio
         # on petrology->Petrology as petrology->metrology
         self.dataframe["label_score"] = self.dataframe.label.apply(
-            lambda x: fuzz.ratio(x.lower(), self.subject.lower())
+            lambda x: fuzz.ratio(x.lower(), self.crossref_subject.lower())
         )
         self.dataframe["alias_score"] = self.dataframe.alias.apply(
-            lambda x: fuzz.ratio(x.lower(), self.subject.lower())
+            lambda x: fuzz.ratio(x.lower(), self.crossref_subject.lower())
         )
 
     def __extract_top_match_score__(self, column: OntologyDataframeColumn) -> PositiveInt:
@@ -113,7 +113,7 @@ class Ontology(BaseModel):
 
     def __lookup_in_cache__(self):
         cache = MatchCache(match=FuzzyMatch(
-            crossref_subject=self.subject
+            crossref_subject=self.crossref_subject
         ))
         match = cache.read()
         if match is not None:
@@ -138,7 +138,7 @@ class Ontology(BaseModel):
                 crossref_subject=match.crossref_subject,
             )
         else:
-            logger.info(f"No match in cache for {self.subject}")
+            logger.info(f"No match in cache for {self.crossref_subject}")
 
     def __lookup_scores_and_matches_in_the_ontology__(self):
         label_score, alias_score, top_label_match, top_alias_match = self.__extract_top_matches__()
@@ -151,7 +151,7 @@ class Ontology(BaseModel):
                         label=top_label_match.label,
                         alias=top_label_match.alias,
                         description=top_label_match.description,
-                        crossref_subject=self.subject,
+                        crossref_subject=self.crossref_subject,
                         match_based_on=MatchBasedOn.LABEL,
                         original_subject=self.original_subject,
                         qid=top_label_match.qid,
@@ -167,7 +167,7 @@ class Ontology(BaseModel):
                     label=top_alias_match.label,
                     alias=top_alias_match.alias,
                     description=top_alias_match.description,
-                    crossref_subject=self.subject,
+                    crossref_subject=self.crossref_subject,
                     match_based_on=MatchBasedOn.ALIAS,
                     original_subject=self.original_subject,
                     qid=top_alias_match.qid,
@@ -180,7 +180,7 @@ class Ontology(BaseModel):
         logger.warning(f"No match with a sufficient rating found. ")
         logger.info(
             f"Search for the subject on Wikidata: "
-            f"{string_search_url(string=self.subject)}"
+            f"{string_search_url(string=self.crossref_subject)}"
         )
         # exit()
 
@@ -189,11 +189,11 @@ class Ontology(BaseModel):
 
     def __print_subject_information__(self):
         from asseeibot.helpers.console import console
-        if self.subject != self.original_subject:
-            console.print(f"Trying now to match [bold green]'{self.subject}'[/bold green] which comes "
+        if self.crossref_subject != self.original_subject:
+            console.print(f"Trying now to match [bold green]'{self.crossref_subject}'[/bold green] which comes "
                           f"from the string '{self.original_subject}' found in Crossref")
         else:
-            console.print(f"Trying now to match [bold green]'{self.subject}'[/bold green] which was found in Crossref")
+            console.print(f"Trying now to match [bold green]'{self.crossref_subject}'[/bold green] which was found in Crossref")
 
     def __sort_dataframe__(self, column: OntologyDataframeColumn):
         if isinstance(column, OntologyDataframeColumn):

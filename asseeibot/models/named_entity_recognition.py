@@ -61,7 +61,7 @@ class NamedEntityRecognition(BaseModel):
 
         def lookup(subject, original_subject, split_subject: bool):
             """This perform one lookup and append to our lists if we find a match"""
-            self.ontology = Ontology(subject=subject,
+            self.ontology = Ontology(crossref_subject=subject,
                                      original_subject=original_subject,
                                      dataframe=self.__dataframe,
                                      split_subject=split_subject)
