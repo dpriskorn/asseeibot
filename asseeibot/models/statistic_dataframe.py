@@ -61,7 +61,7 @@ class StatisticDataframe(Cache):
             StatisticDataframeColumn.ROLLED_BACK.value: False,
         }
         # We only give save the value once for now
-        if len(self.dataframe) == 0:
+        if self.dataframe is None or len(self.dataframe) == 0:
             self.dataframe = pd.DataFrame(data=[data])
         else:
             self.dataframe = self.dataframe.append(pd.DataFrame(data=[data]))
