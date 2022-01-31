@@ -30,6 +30,7 @@ class NamedEntityRecognition(BaseModel):
     already_matched_qids: List[str] = None
     __dataframe: DataFrame = None
     subject_matches: List[FuzzyMatch] = None
+    match_found: bool = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -72,6 +73,9 @@ class NamedEntityRecognition(BaseModel):
             ):
                 self.subject_matches.append(self.ontology.match)
                 self.already_matched_qids.append(self.ontology.match.qid.value)
+                self.match_found = True
+            else:
+                self.match_found = False
 
         def lookup_after_split(split_subject_parts, original_subject):
             """This looks up split subjects"""
@@ -91,8 +95,8 @@ class NamedEntityRecognition(BaseModel):
             lookup(subject=original_subject,
                    original_subject=original_subject,
                    split_subject=False)
-            if self.already_matched_qids != 1:
-                # We did not find a match on the whole string. Lets split it!
+            if not self.match_found:
+                logger.info("We did not find a match on the whole string.")
                 lookup_after_split(split(SupportedSplit.COMMA, original_subject),
                                    original_subject)
                 lookup_after_split(split(SupportedSplit.AND,
