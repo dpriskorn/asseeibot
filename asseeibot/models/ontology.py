@@ -137,6 +137,8 @@ class Ontology(BaseModel):
                 match_based_on=match.match_based_on,
                 crossref_subject=match.crossref_subject,
             )
+        else:
+            logger.info(f"No match in cache for {self.subject}")
 
     def __lookup_scores_and_matches_in_the_ontology__(self):
         label_score, alias_score, top_label_match, top_alias_match = self.__extract_top_matches__()
