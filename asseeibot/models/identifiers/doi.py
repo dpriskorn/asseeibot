@@ -46,7 +46,7 @@ class Doi(Identifier):
                 # This helps us easily in WikipediaPage to get an overview
                 self.found_in_crossref = True
 
-    def lookup_in_wikidata(self):
+    def __lookup_in_crossref_and_then_wikidata__(self):
         self.wikidata_scientific_item = WikidataScientificItem(doi=self)
         self.wikidata_scientific_item.lookup()
         self.found_in_wikidata = self.wikidata_scientific_item.found_in_wikidata
