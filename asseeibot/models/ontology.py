@@ -46,15 +46,17 @@ class Ontology(BaseModel):
         else:
             console.print(f"Trying now to match [bold green]'{self.subject}'[/bold green] which was found in Crossref")
 
-    def __check_subject__(self):
-        if self.subject is None or self.subject == "":
-            return
+    # def __check_subject__(self):
+    #     if self.subject is None or self.subject == "":
+    #         return
 
     def __validate_the_match__(self):
         if self.match is not None:
             # todo more checks
             if self.match.match_based_on is None:
-                raise ValueError("self.match.match_based_on was None")
+                raise ValueError("match.match_based_on was None")
+            if self.match.crossref_subject is None:
+                raise ValueError("match.crossref_subject was None ")
 
     def lookup_subject(self) -> None:
         """Looks up the subject in the ontology and try to fuzzymatch it to a QID"""
@@ -62,7 +64,6 @@ class Ontology(BaseModel):
         self.match = None
         self.__check_subject_and_original_subject__()
         self.__get_the_dataframe_from_config__()
-        self.__check_subject__()
         self.__print_subject_information__()
         self.__lookup_in_cache__()
         if self.match is None:
