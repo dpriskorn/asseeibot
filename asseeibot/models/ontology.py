@@ -38,84 +38,6 @@ class Ontology(BaseModel):
         if not isinstance(self.original_subject, str):
             raise TypeError(f"subject was '{self.original_subject}' which is not a string")
 
-    def __print_subject_information__(self):
-        from asseeibot.helpers.console import console
-        if self.subject != self.original_subject:
-            console.print(f"Trying now to match [bold green]'{self.subject}'[/bold green] which comes "
-                          f"from the string '{self.original_subject}' found in Crossref")
-        else:
-            console.print(f"Trying now to match [bold green]'{self.subject}'[/bold green] which was found in Crossref")
-
-    # def __check_subject__(self):
-    #     if self.subject is None or self.subject == "":
-    #         return
-
-    def __validate_the_match__(self):
-        if self.match is not None:
-            # todo more checks
-            if self.match.match_based_on is None:
-                raise ValueError("match.match_based_on was None")
-            if self.match.crossref_subject is None:
-                raise ValueError("match.crossref_subject was None ")
-
-    def lookup_subject(self) -> None:
-        """Looks up the subject in the ontology and try to fuzzymatch it to a QID"""
-        # TODO split this up
-        self.match = None
-        self.__check_subject_and_original_subject__()
-        self.__get_the_dataframe_from_config__()
-        self.__print_subject_information__()
-        self.__lookup_in_cache__()
-        if self.match is None:
-            # We proceed if not found in the cache
-            self.__calculate_scores__()
-            self.__lookup_scores_and_matches_in_the_ontology__()
-        self.__validate_the_match__()
-
-    def __lookup_scores_and_matches_in_the_ontology__(self):
-        label_score, alias_score, top_label_match, top_alias_match = self.__extract_top_matches__()
-        if self.match is None and label_score >= alias_score:
-            if label_score >= config.label_threshold_ratio:
-                answer = yes_no_question("Does this match?\n"
-                                         f"{str(top_label_match)}")
-                if answer:
-                    self.match = FuzzyMatch(
-                        label=top_label_match.label,
-                        alias=top_label_match.alias,
-                        description=top_label_match.description,
-                        crossref_subject=self.subject,
-                        match_based_on=MatchBasedOn.LABEL,
-                        original_subject=self.original_subject,
-                        qid=top_label_match.qid,
-                        split_subject=self.split_subject,
-                    )
-                    cache_instance = MatchCache(match=self.match)
-                    cache_instance.add()
-        if self.match is None and alias_score >= config.alias_threshold_ratio:
-            answer = yes_no_question("Does this match?\n"
-                                     f"{str(top_alias_match)}")
-            if answer:
-                self.match = FuzzyMatch(
-                    label=top_alias_match.label,
-                    alias=top_alias_match.alias,
-                    description=top_alias_match.description,
-                    crossref_subject=self.subject,
-                    match_based_on=MatchBasedOn.ALIAS,
-                    original_subject=self.original_subject,
-                    qid=top_alias_match.qid,
-                    split_subject=self.split_subject,
-                )
-                cache_instance = MatchCache(match=self.match)
-                cache_instance.add()
-        # None of the ratios reached the threshold
-        # We probably have either a gap in our ontology or in Wikidata
-        logger.warning(f"No match with a sufficient rating found. ")
-        logger.info(
-            f"Search for the subject on Wikidata: "
-            f"{string_search_url(string=self.subject)}"
-        )
-        # exit()
-
     def __calculate_scores__(self):
         logger.debug(f"Calculating scores")
         # This code is inspired by Nikhil VJ
@@ -215,11 +137,86 @@ class Ontology(BaseModel):
                 match_based_on=match.match_based_on
             )
 
+    def __lookup_scores_and_matches_in_the_ontology__(self):
+        label_score, alias_score, top_label_match, top_alias_match = self.__extract_top_matches__()
+        if self.match is None and label_score >= alias_score:
+            if label_score >= config.label_threshold_ratio:
+                answer = yes_no_question("Does this match?\n"
+                                         f"{str(top_label_match)}")
+                if answer:
+                    self.match = FuzzyMatch(
+                        label=top_label_match.label,
+                        alias=top_label_match.alias,
+                        description=top_label_match.description,
+                        crossref_subject=self.subject,
+                        match_based_on=MatchBasedOn.LABEL,
+                        original_subject=self.original_subject,
+                        qid=top_label_match.qid,
+                        split_subject=self.split_subject,
+                    )
+                    cache_instance = MatchCache(match=self.match)
+                    cache_instance.add()
+        if self.match is None and alias_score >= config.alias_threshold_ratio:
+            answer = yes_no_question("Does this match?\n"
+                                     f"{str(top_alias_match)}")
+            if answer:
+                self.match = FuzzyMatch(
+                    label=top_alias_match.label,
+                    alias=top_alias_match.alias,
+                    description=top_alias_match.description,
+                    crossref_subject=self.subject,
+                    match_based_on=MatchBasedOn.ALIAS,
+                    original_subject=self.original_subject,
+                    qid=top_alias_match.qid,
+                    split_subject=self.split_subject,
+                )
+                cache_instance = MatchCache(match=self.match)
+                cache_instance.add()
+        # None of the ratios reached the threshold
+        # We probably have either a gap in our ontology or in Wikidata
+        logger.warning(f"No match with a sufficient rating found. ")
+        logger.info(
+            f"Search for the subject on Wikidata: "
+            f"{string_search_url(string=self.subject)}"
+        )
+        # exit()
+
     def __print_dataframe_head__(self):
         print(self.dataframe.head(2))
+
+    def __print_subject_information__(self):
+        from asseeibot.helpers.console import console
+        if self.subject != self.original_subject:
+            console.print(f"Trying now to match [bold green]'{self.subject}'[/bold green] which comes "
+                          f"from the string '{self.original_subject}' found in Crossref")
+        else:
+            console.print(f"Trying now to match [bold green]'{self.subject}'[/bold green] which was found in Crossref")
 
     def __sort_dataframe__(self, column: OntologyDataframeColumn):
         if isinstance(column, OntologyDataframeColumn):
             self.dataframe = self.dataframe.sort_values(column.value, ascending=False)
         else:
             raise ValueError(f"{column} is not a DataframeColumns")
+
+    def __validate_the_match__(self):
+        if self.match is not None:
+            # todo more checks
+            if self.match.match_based_on is None:
+                raise ValueError("match.match_based_on was None")
+            if self.match.crossref_subject is None:
+                raise ValueError("match.crossref_subject was None ")
+
+    def lookup_subject(self) -> None:
+        """Looks up the subject in the ontology and try to fuzzymatch it to a QID"""
+        # TODO split this up
+        self.match = None
+        self.__check_subject_and_original_subject__()
+        self.__get_the_dataframe_from_config__()
+        self.__print_subject_information__()
+        self.__lookup_in_cache__()
+        if self.match is None:
+            # We proceed if not found in the cache
+            self.__calculate_scores__()
+            self.__lookup_scores_and_matches_in_the_ontology__()
+        self.__validate_the_match__()
+
