@@ -51,44 +51,6 @@ class WikidataScientificItem(Item):
     def lookup(self) -> None:
         self.__lookup_via_hub__()
 
-    def __lookup_via_sparql__(self):
-        logger.info(f"Looking up {self.doi.value} in Wikidata")
-        # TODO use the cirrussearch API instead?
-        df = wikidata_query(f'''
-            SELECT DISTINCT ?item
-            WHERE 
-            {{
-            {{
-            ?item wdt:P356 "{self.doi.value}".
-            }} union {{
-            ?item wdt:P356 "{self.doi.value.lower()}".
-            }} union {{
-            ?item wdt:P356 "{self.doi.value.upper()}".
-            }} 
-            }}
-            ''')
-        # print(df)
-        if df is not None:
-            # print(df.info())
-            # print(f"df length: {len(df)}")
-            # exit()
-            if len(df) == 1:
-                logger.debug("Found in Wikidata!")
-                self.found_in_wikidata = True
-                self.qid = EntityId(raw_entity_id=df["item"][0])
-                # exit()
-            elif len(df) > 1:
-                print(repr(df))
-                logger.error(f"Got more than one match on {self.doi.value} in WD. "
-                             f"Please check if they are duplicates and should be merged. "
-                             f"{self.wikidata_doi_search_url()}"
-                             f"Sleeping for 10s.")
-                sleep(10)
-                self.found_in_wikidata = True
-            else:
-                logger.debug("Not found in Wikidata")
-                self.found_in_wikidata = False
-
     def __add_main_subject__(
             self,
             match: FuzzyMatch
@@ -194,3 +156,42 @@ class WikidataScientificItem(Item):
                 "profile=advanced&fulltext=0&" +
                 "advancedSearch-current=%7B%7D&ns0=1"
         )
+
+    # def __lookup_via_sparql__(self):
+    #     logger.info(f"Looking up {self.doi.value} in Wikidata")
+    #     # TODO use the cirrussearch API instead?
+    #     df = wikidata_query(f'''
+    #         SELECT DISTINCT ?item
+    #         WHERE
+    #         {{
+    #         {{
+    #         ?item wdt:P356 "{self.doi.value}".
+    #         }} union {{
+    #         ?item wdt:P356 "{self.doi.value.lower()}".
+    #         }} union {{
+    #         ?item wdt:P356 "{self.doi.value.upper()}".
+    #         }}
+    #         }}
+    #         ''')
+    #     # print(df)
+    #     if df is not None:
+    #         # print(df.info())
+    #         # print(f"df length: {len(df)}")
+    #         # exit()
+    #         if len(df) == 1:
+    #             logger.debug("Found in Wikidata!")
+    #             self.found_in_wikidata = True
+    #             self.qid = EntityId(raw_entity_id=df["item"][0])
+    #             # exit()
+    #         elif len(df) > 1:
+    #             print(repr(df))
+    #             logger.error(f"Got more than one match on {self.doi.value} in WD. "
+    #                          f"Please check if they are duplicates and should be merged. "
+    #                          f"{self.wikidata_doi_search_url()}"
+    #                          f"Sleeping for 10s.")
+    #             sleep(10)
+    #             self.found_in_wikidata = True
+    #         else:
+    #             logger.debug("Not found in Wikidata")
+    #             self.found_in_wikidata = False
+
