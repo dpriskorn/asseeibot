@@ -7,6 +7,7 @@ bot_username = ""
 password = ""
 
 # User settings
+crossref_polite_pool_email = None
 username = "So9q"  # This is good practice and used for the User-Agent.
 # We thus send it to WMF every time we interact with the APIs
 
@@ -24,7 +25,7 @@ ask_before_lookup = False
 max_events = 0  # Max events to read. 0 = unlimited
 missing_identitifier_limit = 2  # How many DOIs to stop after. 0 = unlimited
 loglevel = logging.WARNING
-cache_pickle_filename = "cache.pkl"
+cache_pickle_filename = "old_cache.pkl"
 # excluded_wikis = ["ceb", "zh", "ja"]
 # trust_url_file_endings = True
 

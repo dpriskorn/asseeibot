@@ -4,6 +4,7 @@ from time import sleep
 from typing import Any
 from urllib.parse import quote
 
+import requests
 from wikibaseintegrator import wbi_login, wbi_config, WikibaseIntegrator
 from wikibaseintegrator.datatypes import Time, Item as WbiItemType, String
 from wikibaseintegrator.entities.item import Item as WbiEntityItem
@@ -15,9 +16,12 @@ from asseeibot.helpers.console import console
 from asseeibot.helpers.wikidata import wikidata_query
 from asseeibot.models.crossref.engine import CrossrefEngine
 from asseeibot.models.fuzzy_match import FuzzyMatch
+from asseeibot.models.statistic_dataframe import StatisticDataframe
 from asseeibot.models.wikimedia.enums import StatedIn, Property, DeterminationMethod
 from asseeibot.models.wikimedia.wikidata.entity import EntityId
 from asseeibot.models.wikimedia.wikidata.item import Item
+
+logger = logging.getLogger(__name__)
 
 
 class WikidataScientificItem(Item):
@@ -25,44 +29,27 @@ class WikidataScientificItem(Item):
     found_in_wikidata: bool = False
     qid: EntityId = None
 
-    def lookup(self):
-        logger = logging.getLogger(__name__)
-        logger.info(f"Looking up {self.doi.value} in Wikidata")
-        # TODO use the cirrussearch API instead?
-        df = wikidata_query(f'''
-            SELECT DISTINCT ?item
-            WHERE 
-            {{
-            {{
-            ?item wdt:P356 "{self.doi.value}".
-            }} union {{
-            ?item wdt:P356 "{self.doi.value.lower()}".
-            }} union {{
-            ?item wdt:P356 "{self.doi.value.upper()}".
-            }} 
-            }}
-            ''')
-        # print(df)
-        if df is not None:
-            # print(df.info())
-            # print(f"df length: {len(df)}")
-            # exit()
-            if len(df) == 1:
-                logger.debug("Found in Wikidata!")
-                self.found_in_wikidata = True
-                self.qid = EntityId(raw_entity_id=df["item"][0])
-                # exit()
-            elif len(df) > 1:
-                print(repr(df))
-                logger.error(f"Got more than one match on {self.doi.value} in WD. "
-                             f"Please check if they are duplicates and should be merged. "
-                             f"{self.wikidata_doi_search_url()}"
-                             f"Sleeping for 10s.")
-                sleep(10)
-                self.found_in_wikidata = True
-            else:
-                logger.debug("Not found in Wikidata")
-                self.found_in_wikidata = False
+    def __lookup_via_hub__(self) -> None:
+        """Lookup via hub.toolforge.org
+        It is way faster than WDQS
+        https://hub.toolforge.org/doi:10.1111/j.1746-8361.1978.tb01321.x?site:wikidata?format=json"""
+        logger.info("Looking up via Hub")
+        url = f"https://hub.toolforge.org/doi:{self.doi.value}?site:wikidata?format=json"
+        response = requests.get(url, allow_redirects=False)
+        if response.status_code == 302:
+            logger.debug("Found QID via Hub")
+            self.found_in_wikidata = True
+            self.qid = EntityId(response.headers['Location'])
+        elif response.status_code == 400:
+            logger.debug("DOI not found via Hub")
+            self.found_in_wikidata = False
+        else:
+            logger.error(f"Got {response.status_code} from Hub")
+            console.print(response.json())
+            exit()
+
+    def lookup(self) -> None:
+        self.__lookup_via_hub__()
 
     def __add_main_subject__(
             self,
@@ -142,10 +129,15 @@ class WikidataScientificItem(Item):
                          f"with [[Wikidata:Tools/asseeibot]] v{config.version}")
             )
             if isinstance(result, WbiEntityItem):
-                console.print(f"[green]Uploaded '{match.label}' to[/green] {self.qid.url()}")
+                console.print(f"[green]Uploaded '{match.label}' to[/green] {self.qid.history_url()}")
+                match.edited_qid = self.qid
+                upload_dataframe = StatisticDataframe()
+                upload_dataframe.update_forward_refs()
+                upload_dataframe.match = match
+                upload_dataframe.add()
             else:
                 raise ValueError("Did not get an item back from WBI, something went wrong :/")
-            # print("debug exit")
+            # print("debug exit after adding to statistics")
             # exit()
 
     def add_subjects(self, crossref: CrossrefEngine):
@@ -164,3 +156,42 @@ class WikidataScientificItem(Item):
                 "profile=advanced&fulltext=0&" +
                 "advancedSearch-current=%7B%7D&ns0=1"
         )
+
+    # def __lookup_via_sparql__(self):
+    #     logger.info(f"Looking up {self.doi.value} in Wikidata")
+    #     # TODO use the cirrussearch API instead?
+    #     df = wikidata_query(f'''
+    #         SELECT DISTINCT ?item
+    #         WHERE
+    #         {{
+    #         {{
+    #         ?item wdt:P356 "{self.doi.value}".
+    #         }} union {{
+    #         ?item wdt:P356 "{self.doi.value.lower()}".
+    #         }} union {{
+    #         ?item wdt:P356 "{self.doi.value.upper()}".
+    #         }}
+    #         }}
+    #         ''')
+    #     # print(df)
+    #     if df is not None:
+    #         # print(df.info())
+    #         # print(f"df length: {len(df)}")
+    #         # exit()
+    #         if len(df) == 1:
+    #             logger.debug("Found in Wikidata!")
+    #             self.found_in_wikidata = True
+    #             self.qid = EntityId(raw_entity_id=df["item"][0])
+    #             # exit()
+    #         elif len(df) > 1:
+    #             print(repr(df))
+    #             logger.error(f"Got more than one match on {self.doi.value} in WD. "
+    #                          f"Please check if they are duplicates and should be merged. "
+    #                          f"{self.wikidata_doi_search_url()}"
+    #                          f"Sleeping for 10s.")
+    #             sleep(10)
+    #             self.found_in_wikidata = True
+    #         else:
+    #             logger.debug("Not found in Wikidata")
+    #             self.found_in_wikidata = False
+

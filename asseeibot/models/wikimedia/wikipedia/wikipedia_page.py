@@ -11,6 +11,8 @@ from asseeibot.models.identifiers.doi import Doi
 from asseeibot.models.wikimedia.wikipedia.templates.enwp.cite_journal import CiteJournal
 from asseeibot.models.wikimedia.wikipedia.wikipedia_page_reference import WikipediaPageReference
 
+logger = logging.getLogger(__name__)
+
 
 class WikipediaPage:
     """Models a WMF Wikipedia page"""
@@ -87,10 +89,9 @@ class WikipediaPage:
         logger = logging.getLogger(__name__)
         self.missing_dois = []
         if self.dois is not None and len(self.dois) > 0:
-            logger.info(f"Looking up {self.number_of_dois} DOIs in Wikidata")
-            [doi.lookup_in_wikidata() for doi in self.dois]
-            logger.info(f"Looking up {self.number_of_dois} DOIs in Crossref")
-            [doi.lookup_in_crossref() for doi in self.dois]
+            logger.info(f"Looking up {self.number_of_dois} DOIs in "
+                        f"Wikidata and if found also in Crossref")
+            [doi.lookup_and_match_subjects() for doi in self.dois]
             missing_dois = [doi for doi in self.dois if not doi.found_in_wikidata]
             if missing_dois is not None and len(missing_dois) > 0:
                 self.missing_dois.extend(missing_dois)
@@ -98,7 +99,8 @@ class WikipediaPage:
     def __upload_subject_qids_to_wikidata__(self):
         if config.match_subjects_to_qids_and_upload:
             number_of_subject_matches = sum(
-                [doi.crossref.work.number_of_subject_matches for doi in self.dois if doi.crossref.work is not None]
+                [doi.crossref.work.number_of_subject_matches for doi in self.dois
+                 if doi.crossref is not None and doi.crossref.work is not None]
             )
             if number_of_subject_matches > 0:
                 console.print(f"Uploading {number_of_subject_matches} subjects to Wikidata")
@@ -108,10 +110,9 @@ class WikipediaPage:
                     exit()
 
     def __calculate_statistics__(self):
-        # logger = logging.getLogger(__name__)
         self.number_of_dois = len(self.dois)
         self.number_of_missing_dois = len(self.missing_dois)
-        print(f"Found {self.number_of_missing_dois}/{self.number_of_dois} missing DOIs on this page")
+        logger.info(f"Found {self.number_of_missing_dois}/{self.number_of_dois} missing DOIs on this page")
         # if len(missing_dois) > 0:
         #     input_output.save_to_wikipedia_list(missing_dois, language_code, title)
         # if config.import_mode:

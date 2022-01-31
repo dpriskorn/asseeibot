@@ -64,5 +64,5 @@ class WikimediaEvent:
                 bot = "(bot)"
             else:
                 bot = "(!bot)"
-            print(f"Working on '{self.page_title}'")
+            logger.info(f"Working on '{self.page_title}'")
             logger.info(f"({self.edit_type.value})\t{self.server_name}\t{bot}\t\"{self.url()}\"")

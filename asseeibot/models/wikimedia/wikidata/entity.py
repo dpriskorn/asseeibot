@@ -37,6 +37,9 @@ class EntityId:
     def url(self):
         return f"{config.wd_prefix}{str(self)}"
 
+    def history_url(self):
+        return f"https://www.wikidata.org/w/index.php?title={self.value}&action=history"
+
     @property
     def value(self):
         return f"{self.letter.value}{self.rest}"

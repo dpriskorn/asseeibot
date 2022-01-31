@@ -5,9 +5,9 @@ from typing import Optional, List
 from pandas import DataFrame
 from pydantic import BaseModel
 
-from asseeibot.models.dataframe import Dataframe
 from asseeibot.models.fuzzy_match import FuzzyMatch
 from asseeibot.models.ontology import Ontology
+from asseeibot.models.ontology_dataframe import Dataframe
 
 
 class SupportedSplit(Enum):
@@ -30,6 +30,7 @@ class NamedEntityRecognition(BaseModel):
     already_matched_qids: List[str] = None
     __dataframe: DataFrame = None
     subject_matches: List[FuzzyMatch] = None
+    match_found: bool = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -59,22 +60,31 @@ class NamedEntityRecognition(BaseModel):
                 logger.info("We try splitting the subject up along 'and'")
                 return original_subject.split(" and ")
 
-        def lookup(subject, original_subject):
+        def lookup(subject, original_subject, split_subject: bool):
             """This perform one lookup and append to our lists if we find a match"""
-            self.ontology = Ontology(subject=subject,
+            self.ontology = Ontology(crossref_subject=subject,
                                      original_subject=original_subject,
-                                     dataframe=self.__dataframe)
-            match = self.ontology.lookup_subject()
-            if match is not None and match.qid.value not in self.already_matched_qids:
-                self.subject_matches.append(match)
-                self.already_matched_qids.append(match.qid.value)
+                                     dataframe=self.__dataframe,
+                                     split_subject=split_subject)
+            self.ontology.lookup_subject()
+            if (
+                    self.ontology.match is not None and
+                    self.ontology.match.qid.value not in self.already_matched_qids
+            ):
+                self.subject_matches.append(self.ontology.match)
+                self.already_matched_qids.append(self.ontology.match.qid.value)
+                self.match_found = True
+            else:
+                self.match_found = False
 
         def lookup_after_split(split_subject_parts, original_subject):
             """This looks up split subjects"""
             if len(split_subject_parts) > 1:
                 for split_subject in split_subject_parts:
                     split_subject = split_subject.strip()
-                    lookup(split_subject, original_subject)
+                    lookup(split_subject,
+                           original_subject,
+                           split_subject=True)
 
         logger = logging.getLogger(__name__)
         self.already_matched_qids = []
@@ -82,8 +92,13 @@ class NamedEntityRecognition(BaseModel):
         for original_subject in self.raw_subjects:
             original_subject = original_subject.strip()
             # detect_comma_comma_and_formatting(subject)
-            lookup(subject=original_subject, original_subject=original_subject)
-            if self.already_matched_qids != 1:
-                # We did not find a match on the whole string. Lets split it!
-                lookup_after_split(split(SupportedSplit.COMMA, original_subject), original_subject)
-                lookup_after_split(split(SupportedSplit.AND, original_subject), original_subject)
+            lookup(subject=original_subject,
+                   original_subject=original_subject,
+                   split_subject=False)
+            if not self.match_found:
+                logger.info("We did not find a match on the whole string.")
+                lookup_after_split(split(SupportedSplit.COMMA, original_subject),
+                                   original_subject)
+                lookup_after_split(split(SupportedSplit.AND,
+                                         original_subject),
+                                   original_subject)

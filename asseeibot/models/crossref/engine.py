@@ -73,7 +73,7 @@ class CrossrefEngine:
         # https://github.com/sckott/habanero >6 contributors not async
         logger.debug(f"Looking up work {self.doi.value} in Crossref")
         # logging.info("Looking up from Crossref")
-        cr = Crossref()
+        cr = Crossref(mailto=config.crossref_polite_pool_email)
         # result = cr.works(doi=doi)
         try:
             self.result = cr.works(ids=self.doi.value)
@@ -122,11 +122,14 @@ class CrossrefEngine:
         if self.work.number_of_subject_matches > 0:
             print_match_table(self.work)
 
-    def lookup_work_and_match_subjects(self):
+    def lookup_work(self):
         """Lookup, parse and match subjects and store the
         CrossrefWork in the attribute self.work"""
         self.__lookup_work__()
         self.__parse_habanero_data__()
+
+    def match_subjects(self):
+        """Match subjects"""
         if config.match_subjects_to_qids_and_upload and self.work is not None:
             self.work.match_subjects_to_qids()
             self.__print_matches_found__()

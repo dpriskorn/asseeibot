@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel
@@ -5,9 +6,18 @@ from pydantic import BaseModel
 from asseeibot.models.wikimedia.wikidata.entity import EntityId
 
 
+class MatchBasedOn(Enum):
+    LABEL = "label"
+    ALIAS = "alias"
+
+
 class FuzzyMatch(BaseModel):
-    qid: EntityId
-    original_subject: str
+    crossref_subject: Optional[str]
+    qid: Optional[EntityId]
+    edited_qid: Optional[EntityId]
+    match_based_on: Optional[MatchBasedOn]
+    original_subject: Optional[str]
+    split_subject: Optional[bool]
     alias: Optional[str]
     label: Optional[str]
     description: Optional[str]

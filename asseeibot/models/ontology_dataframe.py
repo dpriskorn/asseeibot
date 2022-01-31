@@ -3,10 +3,9 @@ from enum import Enum
 import pandas as pd
 
 import asseeibot.runtime_variables
-import config
 
 
-class DataframeColumn(Enum):
+class OntologyDataframeColumn(Enum):
     """These are special to our ontology, but they are standard names in WDQS"""
     ALIAS = "alias"
     DESCRIPTION = "description"

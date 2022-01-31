@@ -37,17 +37,25 @@ class Doi(Identifier):
 
     def lookup_in_crossref(self):
         logger = logging.getLogger(__name__)
-        logger.debug(f"Looking up {self.value} in Crossref")
-        self.crossref = CrossrefEngine(doi=self)
-        self.crossref.lookup_work_and_match_subjects()
-        if self.crossref.work is not None:
-            # This helps us easily in WikipediaPage to get an overview
-            self.found_in_crossref = True
+        # We don't bother looking up if not found in WD
+        if self.found_in_wikidata:
+            logger.debug(f"Looking up {self.value} in Crossref")
+            self.crossref = CrossrefEngine(doi=self)
+            self.crossref.lookup_work()
+            if self.crossref.work is not None:
+                # This helps us easily in WikipediaPage to get an overview
+                self.found_in_crossref = True
 
     def lookup_in_wikidata(self):
         self.wikidata_scientific_item = WikidataScientificItem(doi=self)
         self.wikidata_scientific_item.lookup()
         self.found_in_wikidata = self.wikidata_scientific_item.found_in_wikidata
+
+    def lookup_and_match_subjects(self):
+        self.lookup_in_wikidata()
+        self.lookup_in_crossref()
+        if self.crossref is not None:
+            self.crossref.match_subjects()
 
     def upload_subjects_to_wikidata(self):
         logger = logging.getLogger(__name__)
