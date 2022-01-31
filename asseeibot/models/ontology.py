@@ -206,6 +206,14 @@ class Ontology(BaseModel):
                 raise ValueError("match.match_based_on was None")
             if self.match.crossref_subject is None:
                 raise ValueError("match.crossref_subject was None ")
+            if self.match.qid is None:
+                raise ValueError("match.qid was None ")
+            if self.match.split_subject is None:
+                raise ValueError("match.split_subject was None ")
+            if self.match.original_subject is None:
+                raise ValueError("match.original_subject was None ")
+            if self.match.label is None:
+                raise ValueError("match.label was None ")
 
     def lookup_subject(self) -> None:
         """Looks up the subject in the ontology and try to fuzzymatch it to a QID"""
