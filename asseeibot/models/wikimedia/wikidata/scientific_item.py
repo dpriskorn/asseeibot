@@ -167,7 +167,7 @@ class WikidataScientificItem(Item):
                          f"with [[Wikidata:Tools/asseeibot]] v{config.version}")
             )
             if isinstance(result, WbiEntityItem):
-                console.print(f"[green]Uploaded '{match.label}' to[/green] {self.qid.url()}")
+                console.print(f"[green]Uploaded '{match.label}' to[/green] {self.qid.history_url()}")
                 match.edited_qid = self.qid
                 upload_dataframe = StatisticDataframe()
                 upload_dataframe.update_forward_refs()
