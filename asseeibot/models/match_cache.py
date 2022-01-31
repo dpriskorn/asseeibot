@@ -131,6 +131,8 @@ class MatchCache(Cache):
                 alias = ontology_dataframe.loc[
                     ontology_dataframe[OntologyDataframeColumn.ITEM.value] == qid.url(),
                     OntologyDataframeColumn.ALIAS.value].head(1).values[0]
+                if label is None:
+                    raise ValueError("label was None")
                 self.match = FuzzyMatch(
                     qid=qid,
                     original_subject=original_subject,
