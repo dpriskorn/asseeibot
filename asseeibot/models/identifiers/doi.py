@@ -59,7 +59,7 @@ class Doi(Identifier):
             self.crossref.match_subjects()
 
     def upload_subjects_to_wikidata(self):
-        logger = logging.getLogger(__name__)
+        """Upload all the matched subjects to Wikidata"""
         if (
                 self.found_in_wikidata and
                 self.found_in_crossref
