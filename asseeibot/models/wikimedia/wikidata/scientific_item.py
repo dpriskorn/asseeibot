@@ -29,28 +29,6 @@ class WikidataScientificItem(Item):
     found_in_wikidata: bool = False
     qid: EntityId = None
 
-    def __lookup_via_hub__(self) -> None:
-        """Lookup via hub.toolforge.org
-        It is way faster than WDQS
-        https://hub.toolforge.org/doi:10.1111/j.1746-8361.1978.tb01321.x?site:wikidata?format=json"""
-        logger.info("Looking up via Hub")
-        url = f"https://hub.toolforge.org/doi:{self.doi.value}?site:wikidata?format=json"
-        response = requests.get(url, allow_redirects=False)
-        if response.status_code == 302:
-            logger.debug("Found QID via Hub")
-            self.found_in_wikidata = True
-            self.qid = EntityId(response.headers['Location'])
-        elif response.status_code == 400:
-            logger.debug("DOI not found via Hub")
-            self.found_in_wikidata = False
-        else:
-            logger.error(f"Got {response.status_code} from Hub")
-            console.print(response.json())
-            exit()
-
-    def lookup(self) -> None:
-        self.__lookup_via_hub__()
-
     def __add_main_subject__(
             self,
             match: FuzzyMatch
@@ -140,6 +118,32 @@ class WikidataScientificItem(Item):
             # print("debug exit after adding to statistics")
             # exit()
 
+    def __call_the_hub_api__(self):
+        url = f"https://hub.toolforge.org/doi:{self.doi.value}?site:wikidata?format=json"
+        response = requests.get(url, allow_redirects=False)
+        if response.status_code == 302:
+            logger.debug("Found QID via Hub")
+            self.found_in_wikidata = True
+            self.qid = EntityId(response.headers['Location'])
+        elif response.status_code == 400:
+            self.found_in_wikidata = False
+        else:
+            logger.error(f"Got {response.status_code} from Hub")
+            console.print(response.json())
+            exit()
+
+    def __lookup_via_hub__(self) -> None:
+        """Lookup via hub.toolforge.org
+        It is way faster than WDQS
+        https://hub.toolforge.org/doi:10.1111/j.1746-8361.1978.tb01321.x?site:wikidata?format=json"""
+        logger.info("Looking up via Hub")
+        self.__call_the_hub_api__(self.doi.value)
+        if not self.found_in_wikidata:
+            self.__call_the_hub_api__(self.doi.value.upper())
+            if not self.found_in_wikidata:
+                self.__call_the_hub_api__(self.doi.value.lower())
+        logger.info("DOI not found via Hub")
+
     def add_subjects(self, crossref: CrossrefEngine):
         logger = logging.getLogger(__name__)
         if crossref.work is not None:
@@ -147,6 +151,9 @@ class WikidataScientificItem(Item):
             logger.info(f"Adding {crossref.work.number_of_subject_matches} now to {self.qid.url()}")
             for match in crossref.work.ner.subject_matches:
                 self.__add_main_subject__(match=match)
+
+    def lookup(self) -> None:
+        self.__lookup_via_hub__()
 
     def wikidata_doi_search_url(self):
         # quote to guard against äöå and the like
