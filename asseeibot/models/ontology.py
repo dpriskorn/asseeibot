@@ -225,7 +225,8 @@ class Ontology(BaseModel):
         self.__print_subject_information__()
         self.__lookup_in_cache__()
         if self.match is None:
-            logger.info(f"We proceed because we could not a match for {self.crossref_subject} in the cache")
+            logger.info(f"We proceed to look up in the ontology "
+                        f"because we could not a match for {self.crossref_subject} in the cache")
             self.__calculate_scores__()
             self.__lookup_scores_and_matches_in_the_ontology__()
         self.__validate_the_match__()
