@@ -9,6 +9,7 @@ from purl import URL
 from pywikibot import APISite
 
 import config
+from asseeibot.helpers.console import console
 from asseeibot.models.identifiers.doi import Doi
 from asseeibot.models.pywikibot import PywikibotSite
 from asseeibot.models.wikimedia.enums import WikimediaSite
@@ -114,7 +115,8 @@ class EventStream:
             percentage = int(round(self.total_number_of_missing_dois * 100 / self.total_number_of_dois, 0))
         else:
             percentage = 0
-        print(f"Processed {self.event_count} events and found {self.total_number_of_dois}" +
-              f" DOIs. {self.total_number_of_missing_dois} "
-              f"({percentage}%) "
-              f"are missing in WD.")
+        if self.event_count % 10 == 0:
+            console.print(f"Processed {self.event_count} events and found {self.total_number_of_dois}" +
+                          f" DOIs. {self.total_number_of_missing_dois} "
+                          f"({percentage}%) "
+                          f"are missing in WD.")
