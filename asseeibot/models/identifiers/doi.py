@@ -6,6 +6,8 @@ from asseeibot.models.identifiers.identifier import Identifier
 # @dataclass
 from asseeibot.models.wikimedia.wikidata.scientific_item import WikidataScientificItem
 
+logger = logging.getLogger(__name__)
+
 
 class Doi(Identifier):
     """Models a DOI"""
@@ -16,7 +18,6 @@ class Doi(Identifier):
     found_in_wikidata: bool = False
 
     def __post_init_post_parse__(self):
-        logger = logging.getLogger(__name__)
         # todo test it with a regex on init
         doi_regex_pattern = "^10.\d{4,9}\/+.+$"
         if re.match(doi_regex_pattern, self.value) is None:
@@ -36,29 +37,29 @@ class Doi(Identifier):
         return self.value.upper()
 
     def lookup_in_crossref(self):
-        logger = logging.getLogger(__name__)
-        # We don't bother looking up if not found in WD
-        if self.found_in_wikidata:
-            logger.debug(f"Looking up {self.value} in Crossref")
-            self.crossref = CrossrefEngine(doi=self)
-            self.crossref.lookup_work()
-            if self.crossref.work is not None:
-                # This helps us easily in WikipediaPage to get an overview
-                self.found_in_crossref = True
+        """Lookup in Crossref and parse the whole result into an object we can use"""
+        logger.debug(f"Looking up {self.value} in Crossref")
+        self.crossref = CrossrefEngine(doi=self)
+        self.crossref.lookup_work()
+        if self.crossref.work is not None:
+            # This helps us easily in WikipediaPage to get an overview
+            self.found_in_crossref = True
+        else:
+            self.found_in_crossref = False
 
-    def lookup_in_wikidata(self):
+    def __lookup_in_crossref_and_then_wikidata__(self):
         self.wikidata_scientific_item = WikidataScientificItem(doi=self)
         self.wikidata_scientific_item.lookup()
         self.found_in_wikidata = self.wikidata_scientific_item.found_in_wikidata
 
     def lookup_and_match_subjects(self):
-        self.lookup_in_wikidata()
-        self.lookup_in_crossref()
+        """Looking up in Wikidata also entails looking"""
+        self.__lookup_in_crossref_and_then_wikidata__()
         if self.crossref is not None:
             self.crossref.match_subjects()
 
     def upload_subjects_to_wikidata(self):
-        logger = logging.getLogger(__name__)
+        """Upload all the matched subjects to Wikidata"""
         if (
                 self.found_in_wikidata and
                 self.found_in_crossref

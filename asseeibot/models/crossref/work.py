@@ -58,7 +58,7 @@ class CrossrefReference(BaseModel):
 
 class CrossrefWork(BaseModel):
     author: Optional[List[CrossrefAuthor]]
-    doi: Any  # typing it here does not work. We get an ugly " not yet prepared so type is still a ForwardRef" error
+    doi: str  # typing it here does not work. We get an ugly " not yet prepared so type is still a ForwardRef" error
     is_referenced_by_count: Optional[conint(ge=0)]
     __isbn: Optional[List[str]]
     issn: Optional[List[str]]
