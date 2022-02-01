@@ -16,6 +16,7 @@ class CrossrefSubject(BaseModel):
     original_subject: str
     subject: str = None
     match_status: MatchStatus = None
+    ontology: Ontology = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -74,7 +75,6 @@ class CrossrefSubject(BaseModel):
         """This function splits the subject string
         if no approved or declined match on the whole string is found"""
         self.__strip_original_subject__()
-        self.__prepare_the_ontology__()
         # detect_comma_comma_and_formatting(subject)
         self.__lookup_in_ontology__(subject=self.original_subject,
                                     split_subject=False)
