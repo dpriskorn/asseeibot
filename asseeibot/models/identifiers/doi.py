@@ -53,9 +53,9 @@ class Doi(Identifier):
         self.found_in_wikidata = self.wikidata_scientific_item.found_in_wikidata
 
     def lookup_and_match_subjects(self):
-        """Looking up in Wikidata also entails looking"""
+        """Looking up in Crossref, Wikidata and match subjects only if found in both"""
         self.__lookup_in_crossref_and_then_wikidata__()
-        if self.crossref is not None:
+        if self.crossref is not None and self.found_in_wikidata:
             self.crossref.match_subjects()
 
     def upload_subjects_to_wikidata(self):
