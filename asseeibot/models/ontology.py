@@ -105,7 +105,7 @@ class Ontology(BaseModel):
             return row
 
     def __get_the_dataframe_from_config__(self):
-        if asseeibot.runtime_variables.ontology_dataframe is not None:
+        if asseeibot.runtime_variables.ontology_dataframe is None:
             dataframe_setup = OntologyDataframeSetup()
             dataframe_setup.prepare_the_dataframe()
         self.dataframe = asseeibot.runtime_variables.ontology_dataframe
