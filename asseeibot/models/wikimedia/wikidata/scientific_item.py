@@ -140,8 +140,12 @@ class WikidataScientificItem(Item):
         logger.info("Looking up via Hub")
         if self.doi.found_in_crossref:
             doi: str = self.doi.crossref.work.doi
+            if doi == "":
+                raise ValueError("doi was empty string")
             logger.info("Using DOI from Crossref to lookup in Hub")
             self.__call_the_hub_api__(doi)
+        if self.doi == "":
+            raise ValueError("doi was empty string")
         if not self.found_in_wikidata:
             logger.info("Using DOI from Wikipedia to lookup in Hub")
             self.__call_the_hub_api__(self.doi.value)
