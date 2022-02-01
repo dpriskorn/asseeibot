@@ -155,7 +155,7 @@ class MatchCache(Cache):
                 exit()
 
     def __lookup_crossref_subject__(self):
-        if len(self.dataframe) > 0:
+        if self.dataframe is not None and len(self.dataframe) > 0:
             match = (self.dataframe[CacheDataframeColumn.CROSSREF_SUBJECT.value] == self.match.crossref_subject).any()
             logger.debug(f"match:{match}")
             self.crossref_subject_found = match
