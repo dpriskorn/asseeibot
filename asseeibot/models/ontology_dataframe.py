@@ -15,7 +15,7 @@ class OntologyDataframeColumn(Enum):
     ALIAS_SCORE = "alias_score"
 
 
-class Dataframe:
+class OntologyDataframeSetup:
     @staticmethod
     def prepare_the_dataframe():
         # self.__download_the_ontology_pickle__()

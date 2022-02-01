@@ -34,7 +34,6 @@ class WikidataScientificItem(Item):
         """This adds a main subject to the item
 
         It only has side effects"""
-        logger = logging.getLogger(__name__)
         if match.qid is None or match.qid == "":
             raise ValueError("qid was None or empty string")
         logger.info("Adding main subject with WBI")

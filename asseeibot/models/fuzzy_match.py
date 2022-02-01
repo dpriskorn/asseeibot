@@ -18,6 +18,7 @@ class FuzzyMatch(BaseModel):
     match_based_on: Optional[MatchBasedOn]
     original_subject: Optional[str]
     split_subject: Optional[bool]
+    approved: Optional[bool]
     alias: Optional[str]
     label: Optional[str]
     description: Optional[str]

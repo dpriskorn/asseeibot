@@ -27,6 +27,7 @@ class CacheDataframeColumn(Enum):
     MATCH_BASED_ON = "match_based_on"
     SPLIT_SUBJECT = "split_subject"
     ORIGINAL_SUBJECT = "original_subject"
+    APPROVED = "approved"
 
 
 class MatchCache(Cache):
@@ -54,7 +55,7 @@ class MatchCache(Cache):
         if self.match.match_based_on is None:
             raise ValueError("match.match_based_on was None")
 
-    def __append_new_match_to_the_dataframe__(self):
+    def __append_match_result_to_the_dataframe__(self):
         self.__check_variables__()
         logger.debug("Adding to cache")
         data = {
@@ -63,6 +64,7 @@ class MatchCache(Cache):
             CacheDataframeColumn.MATCH_BASED_ON.value: self.match.match_based_on.value,
             CacheDataframeColumn.ORIGINAL_SUBJECT.value: self.match.original_subject,
             CacheDataframeColumn.SPLIT_SUBJECT.value: self.match.split_subject,
+            CacheDataframeColumn.APPROVED.value: self.match.approved,
         }
         if self.dataframe is None:
             self.dataframe = pd.DataFrame(data=[data])
@@ -121,6 +123,7 @@ class MatchCache(Cache):
                 crossref_subject: str = row[CacheDataframeColumn.ORIGINAL_SUBJECT.value][0]
                 match_based_on = MatchBasedOn(row[CacheDataframeColumn.MATCH_BASED_ON.value][0])
                 split_subject: bool = bool(row[CacheDataframeColumn.SPLIT_SUBJECT.value][0])
+                approved: bool = bool(row[CacheDataframeColumn.APPROVED.value][0])
                 ontology_dataframe = runtime_variables.ontology_dataframe
                 label = ontology_dataframe.loc[
                     ontology_dataframe[OntologyDataframeColumn.ITEM.value] == qid.url(),
@@ -142,6 +145,7 @@ class MatchCache(Cache):
                     alias=alias,
                     label=label,
                     description=description,
+                    approved=approved,
                 )
                 # print(self.match)
                 # exit()
@@ -182,7 +186,7 @@ class MatchCache(Cache):
         self.__verify_that_the_cache_file_exists_and_read__()
         self.__lookup_crossref_subject__()
         if not self.crossref_subject_found and not self.qid_found:
-            self.__append_new_match_to_the_dataframe__()
+            self.__append_match_result_to_the_dataframe__()
             self.__save_dataframe_to_disk__()
             return True
         else:

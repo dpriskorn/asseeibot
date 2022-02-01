@@ -16,3 +16,8 @@ class CrossrefContentType(Enum):
     TEXT_XML = "text/xml"
     XML = "application/xml"
     PLAIN_TEXT = "text/plain"
+
+
+class SupportedSplit(Enum):
+    COMMA = ","
+    AND = " and "

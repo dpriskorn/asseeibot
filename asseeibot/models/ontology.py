@@ -10,7 +10,7 @@ import config
 from asseeibot.helpers.util import yes_no_question
 from asseeibot.models.fuzzy_match import FuzzyMatch, MatchBasedOn
 from asseeibot.models.match_cache import MatchCache
-from asseeibot.models.ontology_dataframe import OntologyDataframeColumn
+from asseeibot.models.ontology_dataframe import OntologyDataframeColumn, OntologyDataframeSetup
 from asseeibot.models.wikimedia.wikidata.entity import EntityId
 from asseeibot.models.wikimedia.wikidata.search import string_search_url
 
@@ -23,6 +23,7 @@ class Ontology(BaseModel):
     :param subject: str
     :param original_subject: str
     """
+    # TODO consider splitting this it up so it does not both handle cache and ontology lookups
     crossref_subject: str
     original_subject: str
     split_subject: bool
@@ -50,6 +51,20 @@ class Ontology(BaseModel):
         self.dataframe["alias_score"] = self.dataframe.alias.apply(
             lambda x: fuzz.ratio(x.lower(), self.crossref_subject.lower())
         )
+
+    def __enrich_cache_match__(self):
+        if self.match is not None:
+            logger.info("Already matched QID found in the cache")
+            # We enrich the match from the cache before returning it
+            self.match.label = self.dataframe.loc[
+                self.dataframe[OntologyDataframeColumn.ITEM.value] == self.match.qid.url(),
+                OntologyDataframeColumn.LABEL.value].head(1).values[0]
+            self.match.description = self.dataframe.loc[
+                self.dataframe[OntologyDataframeColumn.ITEM.value] == self.match.qid.url(),
+                OntologyDataframeColumn.DESCRIPTION.value].head(1).values[0]
+            self.match.alias = self.dataframe.loc[
+                self.dataframe[OntologyDataframeColumn.ITEM.value] == self.match.qid.url(),
+                OntologyDataframeColumn.ALIAS.value].head(1).values[0]
 
     def __extract_top_match_score__(self, column: OntologyDataframeColumn) -> PositiveInt:
         if not (column == OntologyDataframeColumn.ALIAS or column == OntologyDataframeColumn.LABEL):
@@ -88,11 +103,11 @@ class Ontology(BaseModel):
             return row
 
     def __get_the_dataframe_from_config__(self):
-        # This has been populated by __prepare_the_dataframe__()
         if asseeibot.runtime_variables.ontology_dataframe is not None:
-            self.dataframe = asseeibot.runtime_variables.ontology_dataframe
-        else:
-            raise RuntimeError("config.ontology_dataframe was None")
+            dataframe_setup = OntologyDataframeSetup()
+            dataframe_setup.prepare_the_dataframe()
+        self.dataframe = asseeibot.runtime_variables.ontology_dataframe
+        # raise RuntimeError("config.ontology_dataframe was None")
 
     def __get_top_match__(self):
         if self.original_subject is None:
@@ -115,30 +130,12 @@ class Ontology(BaseModel):
         cache = MatchCache(match=FuzzyMatch(
             crossref_subject=self.crossref_subject
         ))
-        match = cache.read()
-        if match is not None:
-            logger.info("Already matched QID found in the cache")
-            label = self.dataframe.loc[
-                self.dataframe[OntologyDataframeColumn.ITEM.value] == match.qid.url(),
-                OntologyDataframeColumn.LABEL.value].head(1).values[0]
-            description = self.dataframe.loc[
-                self.dataframe[OntologyDataframeColumn.ITEM.value] == match.qid.url(),
-                OntologyDataframeColumn.DESCRIPTION.value].head(1).values[0]
-            alias = self.dataframe.loc[
-                self.dataframe[OntologyDataframeColumn.ITEM.value] == match.qid.url(),
-                OntologyDataframeColumn.ALIAS.value].head(1).values[0]
-            self.match = FuzzyMatch(
-                qid=match.qid,
-                label=label,
-                alias=alias,
-                description=description,
-                original_subject=match.original_subject,
-                split_subject=match.split_subject,
-                match_based_on=match.match_based_on,
-                crossref_subject=match.crossref_subject,
-            )
-        else:
+        self.match = cache.read()
+        if self.match is None:
             logger.info(f"No match in cache for {self.crossref_subject}")
+        else:
+            if self.match.approved:
+                self.__enrich_cache_match__()
 
     def __lookup_scores_and_matches_in_the_ontology__(self):
         label_score, alias_score, top_label_match, top_alias_match = self.__extract_top_matches__()
@@ -147,34 +144,42 @@ class Ontology(BaseModel):
                 answer = yes_no_question("Does this match?\n"
                                          f"{str(top_label_match)}")
                 if answer:
-                    self.match = FuzzyMatch(
-                        label=top_label_match.label,
-                        alias=top_label_match.alias,
-                        description=top_label_match.description,
-                        crossref_subject=self.crossref_subject,
-                        match_based_on=MatchBasedOn.LABEL,
-                        original_subject=self.original_subject,
-                        qid=top_label_match.qid,
-                        split_subject=self.split_subject,
-                    )
-                    cache_instance = MatchCache(match=self.match)
-                    cache_instance.add()
+                    approved = True
+                else:
+                    approved = False
+                self.match = FuzzyMatch(
+                    label=top_label_match.label,
+                    alias=top_label_match.alias,
+                    description=top_label_match.description,
+                    crossref_subject=self.crossref_subject,
+                    match_based_on=MatchBasedOn.LABEL,
+                    original_subject=self.original_subject,
+                    qid=top_label_match.qid,
+                    split_subject=self.split_subject,
+                    approved=approved,
+                )
+                cache_instance = MatchCache(match=self.match)
+                cache_instance.add()
         if self.match is None and alias_score >= config.alias_threshold_ratio:
             answer = yes_no_question("Does this match?\n"
                                      f"{str(top_alias_match)}")
             if answer:
-                self.match = FuzzyMatch(
-                    label=top_alias_match.label,
-                    alias=top_alias_match.alias,
-                    description=top_alias_match.description,
-                    crossref_subject=self.crossref_subject,
-                    match_based_on=MatchBasedOn.ALIAS,
-                    original_subject=self.original_subject,
-                    qid=top_alias_match.qid,
-                    split_subject=self.split_subject,
-                )
-                cache_instance = MatchCache(match=self.match)
-                cache_instance.add()
+                approved = True
+            else:
+                approved = False
+            self.match = FuzzyMatch(
+                label=top_alias_match.label,
+                alias=top_alias_match.alias,
+                description=top_alias_match.description,
+                crossref_subject=self.crossref_subject,
+                match_based_on=MatchBasedOn.ALIAS,
+                original_subject=self.original_subject,
+                qid=top_alias_match.qid,
+                split_subject=self.split_subject,
+                approved=approved,
+            )
+            cache_instance = MatchCache(match=self.match)
+            cache_instance.add()
         # None of the ratios reached the threshold
         # We probably have either a gap in our ontology or in Wikidata
         logger.warning(f"No match with a sufficient rating found. ")
@@ -193,7 +198,8 @@ class Ontology(BaseModel):
             console.print(f"Trying now to match [bold green]'{self.crossref_subject}'[/bold green] which comes "
                           f"from the string '{self.original_subject}' found in Crossref")
         else:
-            console.print(f"Trying now to match [bold green]'{self.crossref_subject}'[/bold green] which was found in Crossref")
+            console.print(
+                f"Trying now to match [bold green]'{self.crossref_subject}'[/bold green] which was found in Crossref")
 
     def __sort_dataframe__(self, column: OntologyDataframeColumn):
         if isinstance(column, OntologyDataframeColumn):
@@ -202,20 +208,18 @@ class Ontology(BaseModel):
             raise ValueError(f"{column} is not a DataframeColumns")
 
     def __validate_the_match__(self):
-        if self.match is not None:
-            # todo more checks
-            if self.match.match_based_on is None:
-                raise ValueError("match.match_based_on was None")
-            if self.match.crossref_subject is None:
-                raise ValueError("match.crossref_subject was None ")
-            if self.match.qid is None:
-                raise ValueError("match.qid was None ")
-            if self.match.split_subject is None:
-                raise ValueError("match.split_subject was None ")
-            if self.match.original_subject is None:
-                raise ValueError("match.original_subject was None ")
-            if self.match.label is None:
-                raise ValueError("match.label was None ")
+        if self.match.match_based_on is None:
+            raise ValueError("match.match_based_on was None")
+        if self.match.crossref_subject is None:
+            raise ValueError("match.crossref_subject was None ")
+        if self.match.qid is None:
+            raise ValueError("match.qid was None ")
+        if self.match.split_subject is None:
+            raise ValueError("match.split_subject was None ")
+        if self.match.original_subject is None:
+            raise ValueError("match.original_subject was None ")
+        if self.match.label is None:
+            raise ValueError("match.label was None ")
 
     def lookup_subject(self) -> None:
         """Looks up the subject in the ontology and try to fuzzymatch it to a QID"""
@@ -229,5 +233,5 @@ class Ontology(BaseModel):
                         f"because we could not a match for {self.crossref_subject} in the cache")
             self.__calculate_scores__()
             self.__lookup_scores_and_matches_in_the_ontology__()
-        self.__validate_the_match__()
-
+        if self.match is not None:
+            self.__validate_the_match__()
