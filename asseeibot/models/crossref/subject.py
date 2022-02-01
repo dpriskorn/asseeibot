@@ -85,7 +85,7 @@ class CrossrefSubject(BaseModel):
         if self.match_status == MatchStatus.NO_MATCH:
             self.__split_subject_and_lookup__()
         else:
-            logger.info(f"This subject has already been {MatchStatus.name.lower()}")
+            logger.info(f"This subject has already been {self.match_status.name.lower()}")
 
     # def detect_comma_comma_and_formatting(subject: str):
     #     if subject is None or subject == "":
