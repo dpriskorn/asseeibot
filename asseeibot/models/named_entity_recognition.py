@@ -35,6 +35,14 @@ class NamedEntityRecognition(BaseModel):
             crossref_subject = CrossrefSubject(original_subject=original_subject)
             crossref_subject.lookup()
             if crossref_subject.match_status == MatchStatus.APPROVED:
+                logger.debug("Adding approved match to the list of matches")
+                if crossref_subject.ontology.match is None:
+                    raise ValueError("crossref_subject.ontology.match was wrong")
                 self.subject_matches.append(crossref_subject.ontology.match)
                 self.already_matched_qids.append(crossref_subject.ontology.match.qid.value)
-
+            elif crossref_subject.match_status == MatchStatus.DECLINED:
+                logger.debug("Ignoring declined match.")
+                # input("press enter")
+            else:
+                logger.debug("No match")
+                 # input("press enter")

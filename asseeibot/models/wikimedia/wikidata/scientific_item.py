@@ -34,6 +34,7 @@ class WikidataScientificItem(Item):
         """This adds a main subject to the item
 
         It only has side effects"""
+        logger.debug(f"Adding main subject now to {self.qid.value}")
         if match.qid is None or match.qid == "":
             raise ValueError("qid was None or empty string")
         logger.info("Adding main subject with WBI")
@@ -125,13 +126,15 @@ class WikidataScientificItem(Item):
         if response.status_code == 302:
             logger.debug("Found QID via Hub")
             self.found_in_wikidata = True
-            self.qid = EntityId(response.headers['Location'])
+            location = response.headers['Location']
+            logger.debug(f"location from hub: {location}")
+            self.qid = EntityId(location)
         elif response.status_code == 400:
             self.found_in_wikidata = False
         else:
             logger.error(f"Got {response.status_code} from Hub")
             console.print(response.json())
-            exit()
+            exit(0)
 
     def __lookup_via_hub__(self) -> None:
         """Lookup via hub.toolforge.org
@@ -142,16 +145,16 @@ class WikidataScientificItem(Item):
             doi: str = self.doi.crossref.work.doi
             if doi == "":
                 raise ValueError("doi was empty string")
-            logger.info("Using DOI from Crossref to lookup in Hub")
+            logger.debug("Using DOI from Crossref to lookup in Hub")
             self.__call_the_hub_api__(doi)
         if not self.found_in_wikidata:
-            logger.info("Using DOI from Wikipedia to lookup in Hub")
+            logger.debug("Using DOI from Wikipedia to lookup in Hub")
             self.__call_the_hub_api__(self.doi.value)
             if not self.found_in_wikidata:
-                logger.info("Using uppercase DOI from Wikipedia to lookup in Hub")
+                logger.debug("Using uppercase DOI from Wikipedia to lookup in Hub")
                 self.__call_the_hub_api__(self.doi.value.upper())
                 if not self.found_in_wikidata:
-                    logger.info("Using lowercase DOI from Wikipedia to lookup in Hub")
+                    logger.debug("Using lowercase DOI from Wikipedia to lookup in Hub")
                     self.__call_the_hub_api__(self.doi.value.lower())
         logger.info("DOI not found via Hub")
 
@@ -161,8 +164,10 @@ class WikidataScientificItem(Item):
             logger.info(f"Adding {crossref.work.number_of_subject_matches} now to {self.qid.url()}")
             for match in crossref.work.ner.subject_matches:
                 self.__add_main_subject__(match=match)
+            print("debug exit after upload to one item")
+            input("press enter")
 
-    def lookup(self) -> None:
+    def lookup_in_crossref_and_then_wikidata(self) -> None:
         """This looks up first in Crossref to get the correct DOI-string
         and then in Wikidata"""
         self.doi.lookup_in_crossref()

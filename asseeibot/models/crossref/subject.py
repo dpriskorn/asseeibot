@@ -32,7 +32,9 @@ class CrossrefSubject(BaseModel):
                                  split_subject=split_subject)
         self.ontology.lookup_subject()
         if self.ontology.match is not None:
-            if self.ontology.match == MatchStatus.APPROVED:
+            from asseeibot.helpers.console import console
+            console.print(self.ontology.match.dict())
+            if self.ontology.match.approved is True:
                 logger.info("This subject was approved")
                 self.match_status = MatchStatus.APPROVED
             else:

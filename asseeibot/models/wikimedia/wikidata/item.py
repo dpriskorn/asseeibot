@@ -7,10 +7,11 @@ from wikibaseintegrator.wbi_helpers import search_entities
 
 import config
 from asseeibot.models.wikimedia.enums import WikimediaLanguage
+from asseeibot.models.wikimedia.wikidata.entity import EntityId
 
 
 class Item(BaseModel):
-    qid: str
+    qid: EntityId
     __item: Optional[EntityItem]
     __aliases: Optional[List[str]]
     __description: Optional[str]

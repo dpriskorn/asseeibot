@@ -115,7 +115,11 @@ class EventStream:
             percentage = int(round(self.total_number_of_missing_dois * 100 / self.total_number_of_dois, 0))
         else:
             percentage = 0
-        if self.event_count % 10 == 0:
+        if config.loglevel == logging.DEBUG:
+            event_logging_threshold = 1
+        else:
+            event_logging_threshold = 10
+        if self.event_count % event_logging_threshold == 0:
             console.print(f"Processed {self.event_count} events and found {self.total_number_of_dois}" +
                           f" DOIs. {self.total_number_of_missing_dois} "
                           f"({percentage}%) "

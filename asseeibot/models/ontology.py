@@ -125,23 +125,26 @@ class Ontology(BaseModel):
             label=row.label,
             description=row.description,
             original_subject=self.original_subject,
-            split_subject=self.split_subject
+            split_subject=self.split_subject,
+            match_based_on=None
         ))
 
     def __lookup_in_cache__(self):
-        cache = MatchCache(match=FuzzyMatch(
-            crossref_subject=self.crossref_subject
-        ))
-        self.match = cache.read()
-        if self.match is None:
-            logger.info(f"No match in cache for {self.crossref_subject}")
-        else:
+        cache = MatchCache(crossref_subject=self.crossref_subject)
+        cache.read()
+        if cache.crossref_subject_found:
+            self.match = cache.match
+            # from asseeibot.helpers.console import console
+            # console.print(cache.dict())
             if self.match.approved:
                 self.__enrich_cache_match__()
+        else:
+            logger.info(f"No match in cache for {self.crossref_subject}")
 
     def __lookup_scores_and_matches_in_the_ontology__(self):
         label_score, alias_score, top_label_match, top_alias_match = self.__extract_top_matches__()
         if self.match is None and label_score >= alias_score:
+            logger.debug("Matching on original subject and label")
             if label_score >= config.label_threshold_ratio:
                 answer = yes_no_question("Does this match?\n"
                                          f"{str(top_label_match)}")
@@ -160,9 +163,11 @@ class Ontology(BaseModel):
                     split_subject=self.split_subject,
                     approved=approved,
                 )
-                cache_instance = MatchCache(match=self.match)
+                cache_instance = MatchCache(match=self.match,
+                                            crossref_subject=self.crossref_subject)
                 cache_instance.add()
-        if self.match is None and alias_score >= config.alias_threshold_ratio:
+        elif self.match is None and alias_score >= config.alias_threshold_ratio:
+            logger.debug("Matching on original subject and alias")
             answer = yes_no_question("Does this match?\n"
                                      f"{str(top_alias_match)}")
             if answer:
@@ -180,16 +185,18 @@ class Ontology(BaseModel):
                 split_subject=self.split_subject,
                 approved=approved,
             )
-            cache_instance = MatchCache(match=self.match)
+            cache_instance = MatchCache(match=self.match,
+                                        crossref_subject=self.crossref_subject)
             cache_instance.add()
-        # None of the ratios reached the threshold
-        # We probably have either a gap in our ontology or in Wikidata
-        logger.warning(f"No match with a sufficient rating found. ")
-        logger.info(
-            f"Search for the subject on Wikidata: "
-            f"{string_search_url(string=self.crossref_subject)}"
-        )
-        # exit()
+        else:
+            # None of the ratios reached the threshold
+            # We probably have either a gap in our ontology or in Wikidata
+            logger.warning(f"No match with a sufficient rating found.")
+            logger.info(
+                f"Search for the subject on Wikidata: "
+                f"{string_search_url(string=self.crossref_subject)}"
+            )
+            # exit()
 
     def __print_dataframe_head__(self):
         print(self.dataframe.head(2))
@@ -230,10 +237,12 @@ class Ontology(BaseModel):
         self.__get_the_dataframe_from_config__()
         self.__print_subject_information__()
         self.__lookup_in_cache__()
+        if self.match is not None:
+            self.__validate_the_match__()
         if self.match is None:
             logger.info(f"We proceed to look up in the ontology "
                         f"because we could not a match for {self.crossref_subject} in the cache")
             self.__calculate_scores__()
             self.__lookup_scores_and_matches_in_the_ontology__()
-        if self.match is not None:
-            self.__validate_the_match__()
+            if self.match is not None:
+                self.__validate_the_match__()

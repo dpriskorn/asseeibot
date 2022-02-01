@@ -34,7 +34,6 @@ class WikipediaPage:
             wikimedia_event: Any = None
     ):
         """Get the page from Wikipedia"""
-        logger = logging.getLogger(__name__)
         if wikimedia_event is None:
             raise ValueError("wikimedia_event was None")
         self.wikimedia_event = wikimedia_event
@@ -57,7 +56,7 @@ class WikipediaPage:
         self.references = []
         self.dois = []
         for template_name, content in raw:
-            logger.debug(f"working on {template_name}")
+            # logger.debug(f"working on {template_name}")
             if template_name.lower() == "cite journal":
                 # Workaround from https://stackoverflow.com/questions/56494304/how-can-i-do-to-convert-ordereddict-to
                 # -dict First we convert the list of tuples to a normal dict
@@ -86,7 +85,8 @@ class WikipediaPage:
         # exit()
 
     def __populate_missing_dois__(self):
-        logger = logging.getLogger(__name__)
+        logger.debug("Populating missing DOIs")
+        # exit()
         self.missing_dois = []
         if self.dois is not None and len(self.dois) > 0:
             logger.info(f"Looking up {self.number_of_dois} DOIs in "
@@ -95,9 +95,15 @@ class WikipediaPage:
             missing_dois = [doi for doi in self.dois if not doi.found_in_wikidata]
             if missing_dois is not None and len(missing_dois) > 0:
                 self.missing_dois.extend(missing_dois)
+        if len(self.missing_dois) > 0:
+            if config.loglevel == logging.DEBUG:
+                logger.debug("Done populating DOIs")
+                console.print(self.missing_dois)
+                # exit()
 
     def __upload_subject_qids_to_wikidata__(self):
         if config.match_subjects_to_qids_and_upload:
+            logger.debug("Calculating the number of matches to upload")
             number_of_subject_matches = sum(
                 [doi.crossref.work.number_of_subject_matches for doi in self.dois
                  if doi.crossref is not None and doi.crossref.work is not None]
@@ -108,6 +114,13 @@ class WikipediaPage:
                 if config.exit_after_uploads_on_one_page:
                     print("debug exit after uploads")
                     exit()
+            else:
+                if len(self.dois) == 0:
+                    logger.debug("No DOIs found in this page")
+                else:
+                    logger.debug(f"Found no matches to upload for the following DOIs found in {self.title}")
+                    console.print(self.dois)
+                    # exit()
 
     def __calculate_statistics__(self):
         self.number_of_dois = len(self.dois)

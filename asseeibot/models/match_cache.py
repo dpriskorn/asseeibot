@@ -37,12 +37,14 @@ class MatchCache(Cache):
     qid_dropped: bool = None
     qid_found: bool = None
     pickle: str = config.cache_pickle_filename
+    match: FuzzyMatch = None
+    crossref_subject: str = None
 
     class Config:
         # Because of DataFrame
         arbitrary_types_allowed = True
 
-    def __check_variables__(self):
+    def __validate_match_variables__(self):
         logger.debug("Checking variables")
         if self.match.qid is None:
             raise ValueError("match.qid was None")
@@ -56,7 +58,7 @@ class MatchCache(Cache):
             raise ValueError("match.match_based_on was None")
 
     def __append_match_result_to_the_dataframe__(self):
-        self.__check_variables__()
+        self.__validate_match_variables__()
         logger.debug("Adding to cache")
         data = {
             CacheDataframeColumn.QID.value: self.match.qid.value,
@@ -72,9 +74,9 @@ class MatchCache(Cache):
             self.dataframe = self.dataframe.append(pd.DataFrame(data=[data]))
 
     def __check_crossref_subject__(self):
-        if self.match.crossref_subject is None:
+        if self.crossref_subject is None:
             raise ValueError("crossref_subject was None")
-        if self.match.crossref_subject == "":
+        if self.crossref_subject == "":
             raise ValueError("crossref_subject was empty string")
 
     def __check_qid__(self):
@@ -85,7 +87,7 @@ class MatchCache(Cache):
         if config.loglevel == logging.DEBUG:
             logging.debug("Checking if the qid is still in the cache")
             match = (self.dataframe[CacheDataframeColumn.QID.value] == self.match.qid.value).any()
-            logger.debug(f"match:{match}")
+            # logger.debug(f"match:{match}")
             print(self.dataframe.info())
             logger.debug(f"Saving pickle without {self.match.qid.value}")
 
@@ -107,12 +109,11 @@ class MatchCache(Cache):
         """
         logger.info("Extracting match from cache")
         found_match = self.dataframe.loc[
-            self.dataframe[CacheDataframeColumn.CROSSREF_SUBJECT.value] == self.match.crossref_subject].any()
-        logger.debug(f"result:{found_match}")
+            self.dataframe[CacheDataframeColumn.CROSSREF_SUBJECT.value] == self.crossref_subject].any()
+        # logger.debug(f"result:{found_match}")
         if found_match is not None:
-            logger.info("Already matched QID found in the cache")
             row: DataFrame = self.dataframe[
-                self.dataframe[CacheDataframeColumn.CROSSREF_SUBJECT.value] == self.match.crossref_subject
+                self.dataframe[CacheDataframeColumn.CROSSREF_SUBJECT.value] == self.crossref_subject
             ]
             if isinstance(row, DataFrame):
                 # print(row)
@@ -121,9 +122,11 @@ class MatchCache(Cache):
                 qid: EntityId = EntityId(row[CacheDataframeColumn.QID.value][0])
                 original_subject: str = row[CacheDataframeColumn.ORIGINAL_SUBJECT.value][0]
                 crossref_subject: str = row[CacheDataframeColumn.ORIGINAL_SUBJECT.value][0]
-                match_based_on = MatchBasedOn(row[CacheDataframeColumn.MATCH_BASED_ON.value][0])
+                match_based_on: MatchBasedOn = MatchBasedOn(MatchBasedOn(row[CacheDataframeColumn.MATCH_BASED_ON.value][0]))
                 split_subject: bool = bool(row[CacheDataframeColumn.SPLIT_SUBJECT.value][0])
                 approved: bool = bool(row[CacheDataframeColumn.APPROVED.value][0])
+                logger.info(f"{'Approved' if approved else 'Declined'} match for crossref "
+                            f"subject '{self.crossref_subject}' found in the cache")
                 ontology_dataframe = runtime_variables.ontology_dataframe
                 label = ontology_dataframe.loc[
                     ontology_dataframe[OntologyDataframeColumn.ITEM.value] == qid.url(),
@@ -156,16 +159,14 @@ class MatchCache(Cache):
 
     def __lookup_crossref_subject__(self):
         if self.dataframe is not None and len(self.dataframe) > 0:
-            match = (self.dataframe[CacheDataframeColumn.CROSSREF_SUBJECT.value] == self.match.crossref_subject).any()
-            logger.debug(f"match:{match}")
+            match = (self.dataframe[CacheDataframeColumn.CROSSREF_SUBJECT.value] == self.crossref_subject).any()
+            # logger.debug(f"match:{match}")
             self.crossref_subject_found = match
-        else:
-            self.crossref_subject_found = False
 
-    def __lookup_qid__(self):
-        match = (self.dataframe[CacheDataframeColumn.QID.value] == self.match.qid.value).any()
-        logger.debug(f"match:{match}")
-        self.qid_found = match
+    # def __lookup_qid__(self):
+    #     match = (self.dataframe[CacheDataframeColumn.QID.value] == self.match.qid.value).any()
+    #     # logger.debug(f"match:{match}")
+    #     self.qid_found = match
 
     def read(self) -> Optional[FuzzyMatch]:
         """Returns None or result from the cache"""
@@ -174,6 +175,7 @@ class MatchCache(Cache):
         self.__lookup_crossref_subject__()
         if self.crossref_subject_found:
             self.__extract_match__()
+            self.__validate_match_variables__()
             return self.match
 
     def add(self) -> bool:

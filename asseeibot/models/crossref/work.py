@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import logging
 from datetime import datetime
 from typing import List, Any, Optional, Union
 
@@ -8,6 +9,8 @@ from pydantic import BaseModel, PositiveInt, conint
 from asseeibot.models.crossref.enums import CrossrefEntryType, CrossrefContentType
 from asseeibot.models.identifiers.isbn import Isbn
 from asseeibot.models.named_entity_recognition import NamedEntityRecognition
+
+logger = logging.getLogger(__name__)
 
 
 class OrdinalWordToIntegerConverter(BaseModel):
@@ -107,7 +110,12 @@ class CrossrefWork(BaseModel):
     @property
     def number_of_subject_matches(self):
         if self.ner is not None:
-            return len(self.ner.subject_matches)
+            number_of_matches = len(self.ner.subject_matches)
+            logger.debug(f"Nnumber of matches was {number_of_matches}")
+            if self.ner is not None and number_of_matches > 0:
+                return number_of_matches
+            else:
+                return 0
         else:
             return 0
 
@@ -120,6 +128,7 @@ class CrossrefWork(BaseModel):
         return f"<{self.doi} {self.first_title} with {self.references_count} references>"
 
     def match_subjects_to_qids(self):
+        logger.info(f"Matching subjects for {self.doi} now")
         if self.subject is not None:
             self.ner = NamedEntityRecognition(raw_subjects=self.subject)
             self.ner.start()

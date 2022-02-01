@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 from caseconverter import snakecase
 from habanero import Crossref
-from pydantic.dataclasses import dataclass
+from pydantic import BaseModel
 from requests import HTTPError
 
 import config
@@ -13,15 +13,13 @@ from asseeibot.models.crossref.enums import CrossrefEntryType
 from asseeibot.models.crossref.work import CrossrefWork
 
 
-@dataclass
-class CrossrefEngine:
+class CrossrefEngine(BaseModel):
     """Lookup a work in Crossref"""
-    doi: Any
+    doi: Any = None  # We can't type this to Doi because of a forwardref error
     result: Any = None
     work: CrossrefWork = None
-
-    # def __post_init_post_parse__(self):
-    #     logger = logging.getLogger(__name__)
+    data: Any = None
+    object_type: str = None
 
     def __convert_to_snake_case__(self):
         """This converts to snakecase 2 levels down in the dictionary
@@ -60,9 +58,9 @@ class CrossrefEngine:
                 value = new_list
             renamed_key = snakecase(key).lower()
             finished_data[renamed_key] = value
-        if config.loglevel == logging.DEBUG:
-            logger.debug("Here is the renamed dict")
-            console.print(finished_data)
+        # if config.loglevel == logging.DEBUG:
+        #     logger.debug("Here is the renamed dict")
+        #     console.print(finished_data)
         self.data = finished_data
 
     def __lookup_work__(self):
@@ -101,17 +99,12 @@ class CrossrefEngine:
                         self.__convert_to_snake_case__()
                         work = CrossrefWork(**self.data)
                         if work is not None:
-                            if config.loglevel == logging.DEBUG:
-                                logger.debug("Finished model dict")
-                                console.print(work.dict())
+                            # if config.loglevel == logging.DEBUG:
+                            #     logger.debug("Finished model dict")
+                            #     console.print(work.dict())
                             console.print(work)
-                            # references = work.reference
-                            # if references is not None:
-                            #     for reference in references:
-                            #         if reference.first_page is not None:
-                            #             int(reference.first_page)
-                        # exit(0)
                         self.work = work
+                        # exit(0)
                 else:
                     raise ValueError("type not found")
             else:
@@ -133,4 +126,3 @@ class CrossrefEngine:
         if config.match_subjects_to_qids_and_upload and self.work is not None:
             self.work.match_subjects_to_qids()
             self.__print_matches_found__()
-
