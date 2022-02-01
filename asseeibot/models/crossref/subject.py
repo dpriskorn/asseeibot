@@ -36,6 +36,7 @@ class CrossrefSubject(BaseModel):
                 logger.info("This subject was approved")
                 self.match_status = MatchStatus.APPROVED
             else:
+                self.match_status = MatchStatus.DECLINED
                 logger.info("This subject was declined earlier so we skip it")
         else:
             logger.info("Got no match from the ontology")
