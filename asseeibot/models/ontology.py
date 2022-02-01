@@ -41,6 +41,8 @@ class Ontology(BaseModel):
 
     def __calculate_scores__(self):
         logger.debug(f"Calculating scores")
+        if self.dataframe is None:
+            raise ValueError("self.dataframe was None")
         # This code is inspired by Nikhil VJ
         # https://stackoverflow.com/questions/38577332/apply-fuzzy-matching-across-a-dataframe-column-and-save-results-in-a-new-column
         # We lowercase the string to avoid having the same ratio
