@@ -154,7 +154,6 @@ class WikidataScientificItem(Item):
         logger.info("DOI not found via Hub")
 
     def add_subjects(self, crossref: CrossrefEngine):
-        logger = logging.getLogger(__name__)
         if crossref.work is not None:
             # print_match_table(crossref)
             logger.info(f"Adding {crossref.work.number_of_subject_matches} now to {self.qid.url()}")
