@@ -101,9 +101,9 @@ class CrossrefEngine(BaseModel):
                         self.__convert_to_snake_case__()
                         work = CrossrefWork(**self.data)
                         if work is not None:
-                            # if config.loglevel == logging.DEBUG:
-                            #     logger.debug("Finished model dict")
-                            #     console.print(work.dict())
+                            if config.loglevel == logging.DEBUG:
+                                logger.debug("CrossrefWork dict")
+                                console.print(work.dict())
                             console.print(work)
                         self.work = work
                         # exit(0)
