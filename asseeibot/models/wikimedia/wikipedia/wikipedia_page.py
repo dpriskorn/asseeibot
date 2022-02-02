@@ -203,8 +203,6 @@ class WikipediaPage:
                  if doi.crossref is not None and doi.crossref.work is not None]
             )
             if number_of_subject_matches > 0:
-                console.print(f"Uploading {number_of_subject_matches} subjects to Wikidata "
-                              f"found via DOIs on the Wikipedia page {self.title}")
                 from asseeibot.helpers.tables import print_all_matches_table
                 print_all_matches_table(self)
                 if config.press_enter_confirmations:
