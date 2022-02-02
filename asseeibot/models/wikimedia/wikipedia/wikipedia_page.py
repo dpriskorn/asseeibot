@@ -6,7 +6,8 @@ import pywikibot
 from pywikibot import Page
 
 import config
-from asseeibot.helpers.console import console, print_all_matches_table
+from asseeibot.helpers.console import console
+from asseeibot.helpers.tables import print_all_matches_table
 from asseeibot.models.identifiers.doi import Doi
 from asseeibot.models.wikimedia.wikipedia.templates.enwp.cite_journal import CiteJournal
 from asseeibot.models.wikimedia.wikipedia.wikipedia_page_reference import WikipediaPageReference

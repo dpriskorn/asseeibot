@@ -9,7 +9,8 @@ from pydantic import BaseModel
 from requests import HTTPError, JSONDecodeError
 
 import config
-from asseeibot.helpers.console import console, print_match_table
+from asseeibot.helpers.console import console
+from asseeibot.helpers.tables import print_match_table
 from asseeibot.models.crossref.enums import CrossrefEntryType
 from asseeibot.models.crossref.work import CrossrefWork
 
