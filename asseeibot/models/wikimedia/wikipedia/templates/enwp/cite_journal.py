@@ -1,12 +1,12 @@
-from typing import Optional
+from typing import Optional, Any
 
-from asseeibot.models.identifiers.doi import Doi
+# from asseeibot.models.identifiers.doi import Doi
 from asseeibot.models.wikimedia.wikipedia.wikipedia_page_reference import WikipediaPageReference
 
 
 class CiteJournal(WikipediaPageReference):
     """This models the template cite journal in English Wikipedia"""
-    doi: Optional[Doi]
+    doi: Optional[str] = None
     journal_title: str = None
     jstor: str = None
     pmid: str = None
@@ -46,4 +46,4 @@ class CiteJournal(WikipediaPageReference):
     #             self.article_title = value
 
     def __str__(self):
-        return f"<{self.title} (doi:{self.doi} pmid:{self.pmid} jstor:{self.jstor})>"
+        return f"<[bold green]{self.title}[/bold green] (doi:{self.doi} pmid:{self.pmid} jstor:{self.jstor})>"
