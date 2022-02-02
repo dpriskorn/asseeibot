@@ -164,8 +164,9 @@ class WikidataScientificItem(Item):
             logger.info(f"Adding {crossref.work.number_of_subject_matches} now to {self.qid.url()}")
             for match in crossref.work.ner.subject_matches:
                 self.__add_main_subject__(match=match)
-            print("debug exit after upload to one item")
-            input("press enter")
+            if config.press_enter_confirmations:
+                # print("debug exit after upload to one item")
+                input("press enter to continue")
 
     def lookup_in_crossref_and_then_wikidata(self) -> None:
         """This looks up first in Crossref to get the correct DOI-string
