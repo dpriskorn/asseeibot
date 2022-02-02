@@ -64,6 +64,11 @@ sources and decide for yourself whether to trust their authors and the code.
 ## Configuration
 Edit the config.py file in the asseeibot/ directory and add your WMF username there.
 
+## Diagrams
+### Sequence diagram
+![bild](https://user-images.githubusercontent.com/68460690/152224991-b84b268a-ff60-4ea6-99a0-897c8c7f699d.png)
+
+
 ## History
 The development was paused in 2021 because the Wikidata infrastructure is not 
 ready to handle all the new items and triples that this bot would create over time.
