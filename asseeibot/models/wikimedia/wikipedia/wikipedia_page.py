@@ -98,7 +98,7 @@ class Doi(Identifier):
             else:
                 logger.debug("No subject Q-items matched for this DOI")
         else:
-            logger.warning("DOI not found in both Wikidata and Crossref")
+            logger.debug("DOI not found in both Wikidata and Crossref")
 
 
 class WikipediaPage:
