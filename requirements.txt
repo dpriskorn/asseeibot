@@ -1,5 +1,6 @@
 aiohttp~=3.7.4.post0
 asyncio~=3.4.3
+case-converter
 dataenforce~=0.1.2
 fuzzywuzzy~=0.18.0
 git+git://github.com/LeMyst/WikibaseIntegrator@v0.12.0rc1#egg=wikibaseintegrator
