@@ -133,9 +133,10 @@ class Ontology(BaseModel):
         cache = MatchCache(crossref_subject=self.crossref_subject)
         cache.read()
         if cache.crossref_subject_found:
+            if config.loglevel == logging.DEBUG:
+                from asseeibot.helpers.console import console
+                console.print(cache.dict())
             self.match = cache.match
-            # from asseeibot.helpers.console import console
-            # console.print(cache.dict())
             if self.match.approved:
                 self.__enrich_cache_match__()
         else:
@@ -146,6 +147,9 @@ class Ontology(BaseModel):
         if self.match is None and label_score >= alias_score:
             logger.debug("Matching on original subject and label")
             if label_score >= config.label_threshold_ratio:
+                if config.loglevel == logging.DEBUG:
+                    from asseeibot.helpers.console import console
+                    console.print(top_label_match.dict())
                 answer = yes_no_question("Does this match?\n"
                                          f"{str(top_label_match)}")
                 if answer:
@@ -168,6 +172,9 @@ class Ontology(BaseModel):
                 cache_instance.add()
         elif self.match is None and alias_score >= config.alias_threshold_ratio:
             logger.debug("Matching on original subject and alias")
+            if config.loglevel == logging.DEBUG:
+                from asseeibot.helpers.console import console
+                console.print(top_alias_match.dict())
             answer = yes_no_question("Does this match?\n"
                                      f"{str(top_alias_match)}")
             if answer:

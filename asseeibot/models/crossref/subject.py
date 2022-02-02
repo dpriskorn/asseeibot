@@ -6,7 +6,6 @@ from pydantic import BaseModel
 from asseeibot.models.crossref.enums import SupportedSplit
 from asseeibot.models.enums import MatchStatus
 from asseeibot.models.ontology import Ontology
-from asseeibot.models.ontology_dataframe import OntologyDataframeSetup
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +31,6 @@ class CrossrefSubject(BaseModel):
                                  split_subject=split_subject)
         self.ontology.lookup_subject()
         if self.ontology.match is not None:
-            from asseeibot.helpers.console import console
-            console.print(self.ontology.match.dict())
             if self.ontology.match.approved is True:
                 logger.info("This subject was approved")
                 self.match_status = MatchStatus.APPROVED

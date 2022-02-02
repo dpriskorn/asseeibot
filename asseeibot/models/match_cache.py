@@ -95,7 +95,7 @@ class MatchCache(Cache):
         self.__read_dataframe_from_disk__()
         # This tests whether any row matches
         match = (self.dataframe[CacheDataframeColumn.QID.value] == self.match.qid.value).any()
-        logger.debug(f"match:{match}")
+        # logger.debug(f"match:{match}")
         if match:
             logger.debug("Deleting the item from the cache now")
             self.dataframe = self.dataframe[self.dataframe[CacheDataframeColumn.QID.value] != self.match.qid.value]
