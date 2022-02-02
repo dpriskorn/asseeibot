@@ -2,7 +2,6 @@ import logging
 from time import sleep
 from typing import Any, Dict
 
-import requests
 from caseconverter import snakecase
 from habanero import Crossref
 from pydantic import BaseModel

@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Optional
 
 # from asseeibot.models.identifiers.doi import Doi
 from asseeibot.models.wikimedia.wikipedia.wikipedia_page_reference import WikipediaPageReference
