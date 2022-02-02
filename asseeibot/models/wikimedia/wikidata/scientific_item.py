@@ -1,7 +1,6 @@
-from __future__ import annotations
 import logging
 from datetime import datetime, timezone
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 from urllib.parse import quote
 
 import requests
@@ -19,9 +18,6 @@ from asseeibot.models.statistic_pickled_dataframe import StatisticPickledDatafra
 from asseeibot.models.wikimedia.enums import StatedIn, Property, DeterminationMethod
 from asseeibot.models.wikimedia.wikidata.entity_id import EntityId
 from asseeibot.models.wikimedia.wikidata.item import Item
-
-if TYPE_CHECKING:
-    from asseeibot.models.crossref.engine import CrossrefEngine
 
 logger = logging.getLogger(__name__)
 

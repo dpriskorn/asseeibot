@@ -3,7 +3,6 @@ from typing import Optional, List
 from pydantic import BaseModel
 from wikibaseintegrator import wbi_config, WikibaseIntegrator
 from wikibaseintegrator.entities import Item as EntityItem
-from wikibaseintegrator.wbi_helpers import search_entities
 
 import config
 from asseeibot.models.wikimedia.enums import WikimediaLanguage

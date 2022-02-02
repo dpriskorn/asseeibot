@@ -9,7 +9,7 @@ from pandas import DataFrame
 from pydantic import BaseModel
 
 if TYPE_CHECKING:
-    from asseeibot import FuzzyMatch, runtime_variables
+    from asseeibot import FuzzyMatch
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +19,8 @@ class PickledDataframe(BaseModel):
     dataframe: DataFrame = None
     match: FuzzyMatch = None
 
+    class Config:
+        arbitrary_types_allowed = True
 
     # def __init__(self):
     #     self.match = FuzzyMatch(

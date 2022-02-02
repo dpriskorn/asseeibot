@@ -29,10 +29,6 @@ class MatchPickledDataframe(PickledDataframe):
     qid_dropped: bool = None
     qid_found: bool = None
 
-    class Config:
-        # Because of DataFrame
-        arbitrary_types_allowed = True
-
     def __append_match_result_to_the_dataframe__(self):
         self.__validate_match_variables__()
         logger.debug("Adding to cache")

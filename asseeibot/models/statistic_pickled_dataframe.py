@@ -1,12 +1,9 @@
 import logging
 from datetime import datetime
-from typing import Optional
 
 import pandas as pd
-from pandas import DataFrame
 
 import config
-from asseeibot import FuzzyMatch
 from asseeibot.models.enums import StatisticDataframeColumn
 from asseeibot.models.pickled_dataframe import PickledDataframe
 
