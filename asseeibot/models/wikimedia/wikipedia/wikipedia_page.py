@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from typing import List, Any, TYPE_CHECKING
 
 import pywikibot
@@ -42,11 +43,12 @@ class Doi(Identifier):
         can easily look them up via SPARQL later"""
         return self.value.upper()
 
-    # def __test_doi__(self):
-    #     doi_regex_pattern = "^10.\d{4,9}\/+.+$"
-    #     if re.match(doi_regex_pattern, self.value) is None:
-    #         self.regex_validated = False
-    #         logger.error(f"{self.value} did not match the doi regex")
+    def __test_doi__(self):
+        doi_regex_pattern = "^10.\d{4,9}\/+.+$"
+        if re.match(doi_regex_pattern, self.value) is None:
+            self.regex_validated = False
+            logger.error(f"{self.value} did not match the doi regex")
+            exit()
 
     def lookup_in_crossref(self):
         """Lookup in Crossref and parse the whole result into an object we can use"""
@@ -159,8 +161,11 @@ class WikipediaPage:
                 cite_journal = CiteJournal(**content_as_dict)
                 self.references.append(cite_journal)
                 if cite_journal.doi is not None:
-                    self.number_of_dois += 1
-                    self.dois.append(Doi(value=cite_journal.doi))
+                    doi = Doi(value=cite_journal.doi)
+                    doi.__test_doi__()
+                    if doi.regex_validated:
+                        self.number_of_dois += 1
+                        self.dois.append(doi)
                 else:
                     # We ignore cultural magazines for now
                     if cite_journal.journal_title is not None and "magazine" not in cite_journal.journal_title:
