@@ -167,7 +167,7 @@ class WikidataScientificItem(Item):
         if crossref.work is not None:
             # print_match_table(crossref)
             logger.info(f"Adding {crossref.work.number_of_subject_matches} now to {self.qid.url()}")
-            for match in crossref.work.ner.subject_matches:
+            for match in crossref.work.named_entity_recognition.subject_matches:
                 self.__add_main_subject__(match=match)
 
     def lookup_in_crossref_and_then_wikidata(self) -> None:

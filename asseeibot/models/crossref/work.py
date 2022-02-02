@@ -69,7 +69,7 @@ class CrossrefWork(BaseModel):
     issued: Optional[CrossrefDateParts]
     __license_url: Optional[str]
     link: Optional[List[CrossrefLink]]
-    ner: NamedEntityRecognition = None
+    named_entity_recognition: NamedEntityRecognition = None
     object_type: Optional[CrossrefEntryType]
     original_title: Optional[List[str]]
     pdf_urls: Optional[List[str]]
@@ -109,10 +109,10 @@ class CrossrefWork(BaseModel):
 
     @property
     def number_of_subject_matches(self):
-        if self.ner is not None:
-            number_of_matches = len(self.ner.subject_matches)
+        if self.named_entity_recognition is not None:
+            number_of_matches = len(self.named_entity_recognition.subject_matches)
             logger.debug(f"Nnumber of matches was {number_of_matches}")
-            if self.ner is not None and number_of_matches > 0:
+            if self.named_entity_recognition is not None and number_of_matches > 0:
                 return number_of_matches
             else:
                 return 0
@@ -130,8 +130,8 @@ class CrossrefWork(BaseModel):
     def match_subjects_to_qids(self):
         logger.info(f"Matching subjects for {self.doi} now")
         if self.subject is not None:
-            self.ner = NamedEntityRecognition(raw_subjects=self.subject)
-            self.ner.start()
+            self.named_entity_recognition = NamedEntityRecognition(raw_subjects=self.subject)
+            self.named_entity_recognition.start()
 
     def parse_into_objects(self):
         # now we got the messy data from CrossRef
