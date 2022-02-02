@@ -126,4 +126,5 @@ class CrossrefEngine(BaseModel):
         """Match subjects"""
         if config.match_subjects_to_qids_and_upload and self.work is not None:
             self.work.match_subjects_to_qids()
-            self.__print_matches_found__()
+            # Disabled because we print all matches in the end instead for better UX
+            # self.__print_matches_found__()

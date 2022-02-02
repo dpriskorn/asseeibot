@@ -6,7 +6,7 @@ import pywikibot
 from pywikibot import Page
 
 import config
-from asseeibot.helpers.console import console
+from asseeibot.helpers.console import console, print_all_matches_table
 from asseeibot.models.identifiers.doi import Doi
 from asseeibot.models.wikimedia.wikipedia.templates.enwp.cite_journal import CiteJournal
 from asseeibot.models.wikimedia.wikipedia.wikipedia_page_reference import WikipediaPageReference
@@ -109,7 +109,10 @@ class WikipediaPage:
                  if doi.crossref is not None and doi.crossref.work is not None]
             )
             if number_of_subject_matches > 0:
-                console.print(f"Uploading {number_of_subject_matches} subjects to Wikidata")
+                console.print(f"Uploading {number_of_subject_matches} subjects to Wikidata "
+                              f"found via DOIs on the Wikipedia page {self.title}")
+                # TODO present all the matches here in a table
+                print_all_matches_table(self)
                 [doi.upload_subjects_to_wikidata() for doi in self.dois]
             else:
                 if len(self.dois) == 0:
