@@ -125,7 +125,7 @@ class CrossrefWork(BaseModel):
         # raise NotImplementedError("resolve the license url before returning")
 
     def __str__(self):
-        return f"<{self.doi} {self.first_title} with {self.references_count} references>"
+        return f"<{self.doi} [green][bold]{self.first_title}[/bold][/green] with {self.references_count} references>"
 
     def match_subjects_to_qids(self):
         logger.info(f"Matching subjects for {self.doi} now")
