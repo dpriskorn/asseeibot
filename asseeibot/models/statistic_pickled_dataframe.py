@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from enum import Enum
 from typing import Optional
 
 import pandas as pd
@@ -8,28 +7,16 @@ from pandas import DataFrame
 
 import config
 from asseeibot import FuzzyMatch
-from asseeibot.models.cache import Cache
+from asseeibot.models.enums import StatisticDataframeColumn
+from asseeibot.models.pickled_dataframe import PickledDataframe
 
 logger = logging.getLogger(__name__)
 
 
-class StatisticDataframeColumn(Enum):
-    EDITED_QID = "edited_qid"
-    SUBJECT_QID = "subject_qid"
-    CROSSREF_SUBJECT = "crossref_subject"
-    MATCH_BASED_ON = "match_based_on"
-    SPLIT_SUBJECT = "split_subject"
-    ORIGINAL_SUBJECT = "original_subject"
-    DATETIME = "datetime"
-    ROLLED_BACK = "rolled_back"
-
-
-class StatisticDataframe(Cache):
+class StatisticPickledDataframe(PickledDataframe):
     """This class stores all uploaded data to a dataframe
     It makes it easy to follow edits over time"""
-    match: Optional[FuzzyMatch]
-    pickle: str = config.statistic_pickle_filename
-    dataframe: DataFrame = None
+    __pickle: str = config.statistic_pickle_filename
 
     # def __init__(self):
     #     self.match = FuzzyMatch(

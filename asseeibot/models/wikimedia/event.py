@@ -42,6 +42,16 @@ class WikimediaEvent:
         self.bot_edit = bool(self.event_data['bot'])
         self.edit_type = WikimediaEditType(self.event_data['type'])
 
+    def __print_progress__(self):
+        logger = logging.getLogger(__name__)
+        if self.edit_type is not None:
+            if self.bot_edit is True:
+                bot = "(bot)"
+            else:
+                bot = "(!bot)"
+            logger.info(f"Working on '{self.page_title}'")
+            logger.info(f"({self.edit_type.value})\t{self.server_name}\t{bot}\t\"{self.url()}\"")
+
     def process(self):
         logger = logging.getLogger(__name__)
         if self.language_code != "en":
@@ -57,12 +67,3 @@ class WikimediaEvent:
     def url(self):
         return f"http://{self.server_name}/wiki/{quote(self.page_title)}"
 
-    def __print_progress__(self):
-        logger = logging.getLogger(__name__)
-        if self.edit_type is not None:
-            if self.bot_edit is True:
-                bot = "(bot)"
-            else:
-                bot = "(!bot)"
-            logger.info(f"Working on '{self.page_title}'")
-            logger.info(f"({self.edit_type.value})\t{self.server_name}\t{bot}\t\"{self.url()}\"")

@@ -1,0 +1,255 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+'BaseModel is not included in the hierarchy
+
+' Abstract classes
+abstract class Identifier
+{
++value: str
++found_in_wikidata: bool = False
+-__str__()
+}
+
+abstract class PickledDataframe
+{
+-__pickle: str
++dataframe: DataFrame = None
++match: FuzzyMatch = None
++-__read_dataframe_from_disk__()
+-__save_dataframe_to_disk__()
+-__verify_that_the_cache_file_exists_and_read__()
+}
+
+abstract class Item
+{
+-__aliases: Optional[List[str]]
+-__description: Optional[str]
+-__item: Optional[EntityItem]
++qid: EntityId
++aliases()
++description()
+-__fetch__()
+}
+
+' Classes
+class WikipediaPage
+{
++crossref: CrossrefEngine = None
++found_in_crossref: bool = False
++found_in_wikidata: bool = False
++regex_validated: bool = True
++wikidata_scientific_item: WikidataScientificItem = None
+-__init__()
+-__parse_templates__()
+-__populate_missing_dois__()
+-__upload_all_subjects_matched_to_wikidata__()
+-__calculate_statistics__()
+}
+
+class WikipediaPageReference
+{
++title: str = None
+}
+
+class MatchPickledDataframe
+{
++crossref_subject: str = None
++crossref_subject_found: bool = None
++match: FuzzyMatch = None
++pickle: str = config.cache_pickle_filename
++qid_dropped: bool = None
++qid_found: bool = None
+
+-__append_match_result_to_the_dataframe__()
+-__check_crossref_subject__()
+-__check_if_drop_was_successful__()
+-__check_qid__()
+-__drop_qid_from_dataframe__()
+-__extract_match__()
+-__lookup_crossref_subject__()
+-__validate_match_variables__()
++add()
++delete()
++read()
+}
+
+class StatisticPickledDataframe
+{
++dataframe: DataFrame = None
++match: Optional[FuzzyMatch]
+-__pickle: str = config.statistic_pickle_filename
+-__append_to_the_dataframe__()
+add()
+}
+
+class EntityId
+{
++letter: WikidataNamespaceLetters = None
++raw_entity_id: str
++rest: str = None
++value
+-__post_init_post_parse__()
+-__str__()
++history_url()
++url()
+}
+
+class FuzzyMatch
+{
++alias: Optional[str]
++approved: Optional[bool]
++crossref_subject: Optional[str]
++description: Optional[str]
++edited_qid: Optional[EntityId]
++label: Optional[str]
++match_based_on: Optional[MatchBasedOn]
++original_subject: Optional[str]
++qid: Optional[EntityId]
++split_subject: Optional[bool]
+-__str__()
+}
+class NamedEntityRecognition
+{
++raw_subjects: Optional[List[str]]
++already_matched_qids: List[str] = None
++subject_matches: List[FuzzyMatch] = None
+-__lookup_subjects__()
+start()
+}
+class Doi
+{
++crossref: CrossrefEngine = None
++wikidata_scientific_item: WikidataScientificItem = None
++regex_validated: bool = True
++found_in_crossref: bool = False
++found_in_wikidata: bool = False
+-__lookup_in_crossref__()
+-__lookup_in_crossref_and_then_in_wikidata__()
+-__str__()
+-__test_doi__()
++lookup_and_match_subjects()
++upload_subjects_to_wikidata()
+}
+
+class ScientificItem
+{
++doi: Doi = None
++found_in_wikidata: bool = False
++qid: EntityId = None
+-__add_main_subject__()
+-__call_the_hub_api__()
+-__lookup_via_hub__()
++add_subjects()
++wikidata_doi_search_url()
+}
+
+class Ontology
+{
++crossref_subject: str
++match: Optional[FuzzyMatch] = None
++original_subject: str
++split_subject: bool
+-__check_subject_and_original_subject__()
+-__calculate_scores__()
+-__enrich_cache_match__()
+-__extract_top_match_score__()
+-__extract_top_label_match_and_score__()
+-__extract_top_alias_match_and_score__()
+-__extract_top_matches__()
+-__get_first_row__()
+-__get_the_dataframe_from_config__()
+-__get_top_match__()
+-__lookup_in_cache__()
+-__lookup_scores_and_matches_in_the_ontology__()
+-__print_dataframe_head__()
+-__print_subject_information__()
+-__sort_dataframe__()
+-__validate_the_match__()
++lookup_subject()
+}
+
+class WikimediaEventStream
+{
++earlier_events: Set[str] = set()
++event_count: int = 0
++event_site: WikimediaSite = None
++language_code: str = None
++missing_dois: List[Doi] = None
++missing_identitifier_limit: int = config.missing_identitifier_limit
++pywikibot_site: PywikibotSite = None
++total_number_of_dois: int = 0
++total_number_of_isbn: int = 0
++total_number_of_missing_dois: int = 0
++total_number_of_missing_isbn: int = 0
+-__get_events__()
+-__init__()
+-__instantiate_pywikibot__()
+-__print_missing_dois__()
+-__print_sourcemd_link__()
+-__print_statistics__()
+}
+class WikimediaEvent
+{
++bot_edit: bool
++edit_type: WikimediaEditType = None
++event_data: Dict[str, str] = None
++event_stream: Any = None  # We can't type this because of pydantic
++language_code: str = None
++namespace: int = None
++page_title: str = None
++server_name: str = None
++wikipedia_page: WikipediaPage = None
+-__init__()
+-__parse__()
+-__print_progress__()
+process()
+url()
+}
+class CiteJournal
+{
++doi: Optional[str] = None
++journal_title: str = None
++jstor: str = None
++pmid: str = None
++scopus_id: str = None
+-__str__()
+}
+
+PickledDataframe <|- MatchPickledDataframe
+PickledDataframe <|- StatisticPickledDataframe
+Identifier <|- Doi
+Item <|- ScientificItem
+WikipediaPageReference <|- CiteJournal
+'<|-
+
+enum MatchStatus
+enum PywikibotSite
+enum OntologyDataframeColumn
+enum MatchBasedOn
+enum CacheDataframeColumn
+
+'abstract class AbstractList
+'abstract AbstractCollection
+'interface List
+'interface Collection
+'
+'List <|-- AbstractList
+'Collection <|-- AbstractCollection
+'
+'Collection <|- List
+'AbstractCollection <|- AbstractList
+'AbstractList <|-- ArrayList
+'
+'class ArrayList {
+'Object[] elementData
+'size()
+'}
+'
+'enum TimeUnit {
+'DAYS
+'HOURS
+'MINUTES
+'}
+
+@enduml

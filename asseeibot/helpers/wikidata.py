@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import logging
+from urllib.parse import quote
 
 import pandas as pd
 from wikibaseintegrator import wbi_config
@@ -298,3 +299,12 @@ def wikidata_query(sparql_query):
 #         logging.debug(f"result from WBI:{result}")
 #     # TODO add handling of result from WBI and return True == Success or False
 #     return result
+def string_search_url(string: str) -> str:
+    if string is not None and string != "":
+        # quote to guard against äöå and the like
+        return (
+                "https://www.wikidata.org/w/index.php?" +
+                "search={}&title=Special%3ASearch&".format(quote(string)) +
+                "profile=advanced&fulltext=0&" +
+                "advancedSearch-current=%7B%7D&ns0=1"
+        )

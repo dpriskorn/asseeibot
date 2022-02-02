@@ -13,8 +13,11 @@ wbi_config.config['USER_AGENT'] = config.user_agent
 class EntityId:
     raw_entity_id: str
     letter: WikidataNamespaceLetters = None
-    # This can be e.g. "32698-F1" in the case of a lexeme
     rest: str = None
+
+    @property
+    def value(self):
+        return f"{self.letter.value}{self.rest}"
 
     # See https://pydantic-docs.helpmanual.io/usage/dataclasses/
     def __post_init_post_parse__(self):
@@ -34,18 +37,14 @@ class EntityId:
         else:
             raise ValueError("Entity ID was None")
 
-    def url(self):
-        return f"{config.wd_prefix}{str(self)}"
+    def __str__(self):
+        return f"{self.letter.value}{self.rest}"
 
     def history_url(self):
         return f"https://www.wikidata.org/w/index.php?title={self.value}&action=history"
 
-    @property
-    def value(self):
-        return f"{self.letter.value}{self.rest}"
-
-    def __str__(self):
-        return f"{self.letter.value}{self.rest}"
+    def url(self):
+        return f"{config.wd_prefix}{str(self)}"
 
     # def extract_wdqs_json_entity_id(self, json: Dict, sparql_variable: str):
     #     self.__init__(json[sparql_variable]["value"].replace(

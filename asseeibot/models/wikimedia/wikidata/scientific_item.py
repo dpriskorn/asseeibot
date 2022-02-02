@@ -14,9 +14,10 @@ import asseeibot.runtime_variables
 import config
 from asseeibot.helpers.console import console
 from asseeibot.models.fuzzy_match import FuzzyMatch
-from asseeibot.models.statistic_dataframe import StatisticDataframe
+from asseeibot.models.identifiers.doi import Doi
+from asseeibot.models.statistic_pickled_dataframe import StatisticPickledDataframe
 from asseeibot.models.wikimedia.enums import StatedIn, Property, DeterminationMethod
-from asseeibot.models.wikimedia.wikidata.entity import EntityId
+from asseeibot.models.wikimedia.wikidata.entity_id import EntityId
 from asseeibot.models.wikimedia.wikidata.item import Item
 
 if TYPE_CHECKING:
@@ -26,7 +27,11 @@ logger = logging.getLogger(__name__)
 
 
 class WikidataScientificItem(Item):
-    doi: Any
+    """This models a scientific item on Wikidata
+
+    We pass to it a Doi object from which we can get
+    the data we need for improving Wikidata"""
+    doi: Doi = None
     found_in_wikidata: bool = False
     qid: EntityId = None
 
@@ -110,7 +115,7 @@ class WikidataScientificItem(Item):
             if isinstance(result, WbiEntityItem):
                 console.print(f"[green]Uploaded '{match.label}' to[/green] {self.qid.history_url()}")
                 match.edited_qid = self.qid
-                upload_dataframe = StatisticDataframe()
+                upload_dataframe = StatisticPickledDataframe()
                 upload_dataframe.update_forward_refs()
                 upload_dataframe.match = match
                 upload_dataframe.add()
@@ -163,18 +168,18 @@ class WikidataScientificItem(Item):
                     self.__call_the_hub_api__(self.doi.value.lower())
         logger.info("DOI not found via Hub")
 
-    def add_subjects(self, crossref: CrossrefEngine):
-        if crossref.work is not None:
+    def add_subjects(self):
+        """Add subjects to Wikidata from Doi->Crossref->CrossrefWork->NamedEntityRecognition"""
+        if self.doi.crossref.work is not None:
             # print_match_table(crossref)
-            logger.info(f"Adding {crossref.work.number_of_subject_matches} now to {self.qid.url()}")
-            for match in crossref.work.named_entity_recognition.subject_matches:
+            logger.info(f"Adding {self.doi.crossref.work.number_of_subject_matches} now to {self.qid.url()}")
+            for match in self.doi.crossref.work.named_entity_recognition.subject_matches:
                 self.__add_main_subject__(match=match)
 
-    def lookup_in_crossref_and_then_wikidata(self) -> None:
-        """This looks up first in Crossref to get the correct DOI-string
-        and then in Wikidata"""
-        self.doi.lookup_in_crossref()
-        self.__lookup_via_hub__()
+    # def lookup_in_crossref_and_then_wikidata(self) -> None:
+    #     """This looks up first in Crossref to get the correct DOI-string
+    #     and then in Wikidata"""
+    #     self.doi.lookup_and_match_subjects()
 
     def wikidata_doi_search_url(self):
         # quote to guard against äöå and the like

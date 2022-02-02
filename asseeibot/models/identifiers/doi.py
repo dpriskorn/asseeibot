@@ -18,25 +18,7 @@ class Doi(Identifier):
     found_in_crossref: bool = False
     found_in_wikidata: bool = False
 
-    def __repr__(self):
-        """DOI identifiers are case-insensitive.
-        Return upper case always to make sure we
-        can easily look them up via SPARQL later"""
-        return self.value.upper()
-
-    def __str__(self):
-        """DOI identifiers are case-insensitive.
-        Return upper case always to make sure we
-        can easily look them up via SPARQL later"""
-        return self.value.upper()
-
-    def __test_doi__(self):
-        doi_regex_pattern = "^10.\d{4,9}\/+.+$"
-        if re.match(doi_regex_pattern, self.value) is None:
-            self.regex_validated = False
-            logger.error(f"{self.value} did not match the doi regex")
-
-    def lookup_in_crossref(self):
+    def __lookup_in_crossref__(self):
         """Lookup in Crossref and parse the whole result into an object we can use"""
         logger.debug(f"Looking up {self.value} in Crossref")
         self.crossref = CrossrefEngine()
@@ -49,14 +31,29 @@ class Doi(Identifier):
         else:
             self.found_in_crossref = False
 
-    def __lookup_in_crossref_and_then_wikidata__(self):
+    def __lookup_in_crossref_and_then_in_wikidata__(self):
         self.wikidata_scientific_item = WikidataScientificItem(doi=self)
-        self.wikidata_scientific_item.lookup_in_crossref_and_then_wikidata()
+        self.__lookup_in_crossref__()
         self.found_in_wikidata = self.wikidata_scientific_item.found_in_wikidata
+
+    def __str__(self):
+        """DOI identifiers are case-insensitive.
+        Return upper case always to make sure we
+        can easily look them up via SPARQL later"""
+        return self.value.upper()
+
+    def __test_doi__(self):
+        doi_regex_pattern = "^10.\d{4,9}\/+.+$"
+        if self.value == "":
+            logger.error("DOI was empty string")
+        else:
+            if re.match(doi_regex_pattern, self.value) is None:
+                self.regex_validated = False
+                logger.error(f"{self.value} did not match the doi regex")
 
     def lookup_and_match_subjects(self):
         """Looking up in Crossref, Wikidata and match subjects only if found in both"""
-        self.__lookup_in_crossref_and_then_wikidata__()
+        self.__lookup_in_crossref_and_then_in_wikidata__()
         if self.crossref is not None and self.crossref.work is not None:
             logger.debug("Found in crossref")
             if self.found_in_wikidata:
@@ -79,7 +76,9 @@ class Doi(Identifier):
                     self.crossref.work.number_of_subject_matches > 0
             ):
                 logger.info(f"Uploading matched subjects for {self.value} now")
-                self.wikidata_scientific_item.add_subjects(self.crossref)
+                # How should the data pass to wikidata_scientific_item?
+
+                self.wikidata_scientific_item.add_subjects()
             else:
                 logger.debug("No subject Q-items matched for this DOI")
         else:

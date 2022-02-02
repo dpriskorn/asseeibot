@@ -12,8 +12,8 @@ class CiteJournal(WikipediaPageReference):
     pmid: str = None
     scopus_id: str = None
 
-    def __post_init_post_parse__(self):
-        pass
+    # def __post_init_post_parse__(self):
+    #     pass
         # logger = logging.getLogger(__name__)
         # # uGlY hack
         # # Convert after pydantic finished parsing

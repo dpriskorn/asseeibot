@@ -7,12 +7,13 @@ from pydantic import BaseModel, PositiveInt
 
 import asseeibot.runtime_variables
 import config
+from asseeibot.helpers.runtime_variable_setup import prepare_the_ontology_pickled_dataframe
 from asseeibot.helpers.util import yes_no_question
-from asseeibot.models.fuzzy_match import FuzzyMatch, MatchBasedOn
-from asseeibot.models.match_cache import MatchCache
-from asseeibot.models.ontology_dataframe import OntologyDataframeColumn, OntologyDataframeSetup
-from asseeibot.models.wikimedia.wikidata.entity import EntityId
-from asseeibot.models.wikimedia.wikidata.search import string_search_url
+from asseeibot.models.fuzzy_match import FuzzyMatch
+from asseeibot.models.match_pickled_dataframe import MatchPickledDataframe
+from asseeibot.models.enums import OntologyDataframeColumn, MatchBasedOn
+from asseeibot.models.wikimedia.wikidata.entity_id import EntityId
+from asseeibot.helpers.wikidata import string_search_url
 
 logger = logging.getLogger(__name__)
 
@@ -106,8 +107,7 @@ class Ontology(BaseModel):
 
     def __get_the_dataframe_from_config__(self):
         if asseeibot.runtime_variables.ontology_dataframe is None:
-            dataframe_setup = OntologyDataframeSetup()
-            dataframe_setup.prepare_the_dataframe()
+            prepare_the_ontology_pickled_dataframe()
         self.dataframe = asseeibot.runtime_variables.ontology_dataframe
         # raise RuntimeError("config.ontology_dataframe was None")
 
@@ -130,7 +130,7 @@ class Ontology(BaseModel):
         ))
 
     def __lookup_in_cache__(self):
-        cache = MatchCache(crossref_subject=self.crossref_subject)
+        cache = MatchPickledDataframe(crossref_subject=self.crossref_subject)
         cache.read()
         if cache.crossref_subject_found:
             if config.loglevel == logging.DEBUG:
@@ -167,8 +167,8 @@ class Ontology(BaseModel):
                     split_subject=self.split_subject,
                     approved=approved,
                 )
-                cache_instance = MatchCache(match=self.match,
-                                            crossref_subject=self.crossref_subject)
+                cache_instance = MatchPickledDataframe(match=self.match,
+                                                       crossref_subject=self.crossref_subject)
                 cache_instance.add()
         elif self.match is None and alias_score >= config.alias_threshold_ratio:
             logger.debug("Matching on original subject and alias")
@@ -192,8 +192,8 @@ class Ontology(BaseModel):
                 split_subject=self.split_subject,
                 approved=approved,
             )
-            cache_instance = MatchCache(match=self.match,
-                                        crossref_subject=self.crossref_subject)
+            cache_instance = MatchPickledDataframe(match=self.match,
+                                                   crossref_subject=self.crossref_subject)
             cache_instance.add()
         else:
             # None of the ratios reached the threshold

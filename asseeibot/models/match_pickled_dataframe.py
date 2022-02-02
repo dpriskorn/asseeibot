@@ -1,5 +1,4 @@
 import logging
-from enum import Enum
 from typing import Optional
 
 import pandas as pd
@@ -7,10 +6,10 @@ from pandas import DataFrame
 
 import config
 from asseeibot import runtime_variables
-from asseeibot.models.cache import Cache
-from asseeibot.models.fuzzy_match import FuzzyMatch, MatchBasedOn
-from asseeibot.models.ontology_dataframe import OntologyDataframeColumn
-from asseeibot.models.wikimedia.wikidata.entity import EntityId
+from asseeibot.models.pickled_dataframe import PickledDataframe
+from asseeibot.models.fuzzy_match import FuzzyMatch
+from asseeibot.models.enums import OntologyDataframeColumn, MatchBasedOn, CacheDataframeColumn
+from asseeibot.models.wikimedia.wikidata.entity_id import EntityId
 
 logger = logging.getLogger(__name__)
 
@@ -21,41 +20,18 @@ logger = logging.getLogger(__name__)
 # https://stackoverflow.com/questions/24761133/pandas-check-if-row-exists-with-certain-values
 
 
-class CacheDataframeColumn(Enum):
-    QID = "qid"
-    CROSSREF_SUBJECT = "crossref_subject"
-    MATCH_BASED_ON = "match_based_on"
-    SPLIT_SUBJECT = "split_subject"
-    ORIGINAL_SUBJECT = "original_subject"
-    APPROVED = "approved"
-
-
-class MatchCache(Cache):
+class MatchPickledDataframe(PickledDataframe):
     """This models our cache of matches"""
+    crossref_subject: str = None
     crossref_subject_found: bool = None
-    dataframe: DataFrame = None
+    match: FuzzyMatch = None
+    __pickle: str = config.cache_pickle_filename
     qid_dropped: bool = None
     qid_found: bool = None
-    pickle: str = config.cache_pickle_filename
-    match: FuzzyMatch = None
-    crossref_subject: str = None
 
     class Config:
         # Because of DataFrame
         arbitrary_types_allowed = True
-
-    def __validate_match_variables__(self):
-        logger.debug("Checking variables")
-        if self.match.qid is None:
-            raise ValueError("match.qid was None")
-        if self.match.original_subject is None:
-            raise ValueError("match.original_subject was None")
-        if self.match.crossref_subject is None:
-            raise ValueError("match.crossref_subject was None")
-        if self.match.split_subject is None:
-            raise ValueError("match.split_subject was None")
-        if self.match.match_based_on is None:
-            raise ValueError("match.match_based_on was None")
 
     def __append_match_result_to_the_dataframe__(self):
         self.__validate_match_variables__()
@@ -79,10 +55,6 @@ class MatchCache(Cache):
         if self.crossref_subject == "":
             raise ValueError("crossref_subject was empty string")
 
-    def __check_qid__(self):
-        if self.match.qid is None:
-            raise ValueError("qid was None")
-
     def __check_if_drop_was_successful__(self):
         if config.loglevel == logging.DEBUG:
             logging.debug("Checking if the qid is still in the cache")
@@ -90,6 +62,10 @@ class MatchCache(Cache):
             # logger.debug(f"match:{match}")
             print(self.dataframe.info())
             logger.debug(f"Saving pickle without {self.match.qid.value}")
+
+    def __check_qid__(self):
+        if self.match.qid is None:
+            raise ValueError("qid was None")
 
     def __drop_qid_from_dataframe__(self):
         self.__read_dataframe_from_disk__()
@@ -114,7 +90,7 @@ class MatchCache(Cache):
         if found_match is not None:
             row: DataFrame = self.dataframe[
                 self.dataframe[CacheDataframeColumn.CROSSREF_SUBJECT.value] == self.crossref_subject
-            ]
+                ]
             if isinstance(row, DataFrame):
                 # print(row)
                 # print(row[CacheDataframeColumn.QID.value].values[0])
@@ -163,20 +139,18 @@ class MatchCache(Cache):
             # logger.debug(f"match:{match}")
             self.crossref_subject_found = match
 
-    # def __lookup_qid__(self):
-    #     match = (self.dataframe[CacheDataframeColumn.QID.value] == self.match.qid.value).any()
-    #     # logger.debug(f"match:{match}")
-    #     self.qid_found = match
-
-    def read(self) -> Optional[FuzzyMatch]:
-        """Returns None or result from the cache"""
-        self.__check_crossref_subject__()
-        self.__verify_that_the_cache_file_exists_and_read__()
-        self.__lookup_crossref_subject__()
-        if self.crossref_subject_found:
-            self.__extract_match__()
-            self.__validate_match_variables__()
-            return self.match
+    def __validate_match_variables__(self):
+        logger.debug("Checking variables")
+        if self.match.qid is None:
+            raise ValueError("match.qid was None")
+        if self.match.original_subject is None:
+            raise ValueError("match.original_subject was None")
+        if self.match.crossref_subject is None:
+            raise ValueError("match.crossref_subject was None")
+        if self.match.split_subject is None:
+            raise ValueError("match.split_subject was None")
+        if self.match.match_based_on is None:
+            raise ValueError("match.match_based_on was None")
 
     def add(self) -> bool:
         """Add a match to the cache
@@ -206,3 +180,18 @@ class MatchCache(Cache):
             return True
         else:
             return False
+
+    def read(self) -> Optional[FuzzyMatch]:
+        """Returns None or result from the cache"""
+        self.__check_crossref_subject__()
+        self.__verify_that_the_cache_file_exists_and_read__()
+        self.__lookup_crossref_subject__()
+        if self.crossref_subject_found:
+            self.__extract_match__()
+            self.__validate_match_variables__()
+            return self.match
+
+    # def __lookup_qid__(self):
+    #     match = (self.dataframe[CacheDataframeColumn.QID.value] == self.match.qid.value).any()
+    #     # logger.debug(f"match:{match}")
+    #     self.qid_found = match

@@ -7,7 +7,7 @@ from wikibaseintegrator.wbi_helpers import search_entities
 
 import config
 from asseeibot.models.wikimedia.enums import WikimediaLanguage
-from asseeibot.models.wikimedia.wikidata.entity import EntityId
+from asseeibot.models.wikimedia.wikidata.entity_id import EntityId
 
 
 class Item(BaseModel):
@@ -15,12 +15,6 @@ class Item(BaseModel):
     __item: Optional[EntityItem]
     __aliases: Optional[List[str]]
     __description: Optional[str]
-
-    def __fetch__(self):
-        # fetch using WBI
-        wbi_config.config["USER_AGENT_DEFAULT"] = config.user_agent
-        wbi = WikibaseIntegrator(login=None)
-        self.__item = wbi.item.get()
 
     @property
     def aliases(self):
@@ -38,9 +32,16 @@ class Item(BaseModel):
             self.__description = self.__item.descriptions.get(WikimediaLanguage.ENGLISH.value)
         return self.__description
 
-    @staticmethod
-    def __call_wbi_search_entities__(subject):
-        return search_entities(search_string=subject,
-                               language="en",
-                               dict_result=True,
-                               max_results=1)
+    def __fetch__(self):
+        # fetch using WBI
+        wbi_config.config["USER_AGENT_DEFAULT"] = config.user_agent
+        wbi = WikibaseIntegrator(login=None)
+        self.__item = wbi.item.get()
+
+    # @staticmethod
+    # def __call_wbi_search_entities__(subject):
+    #     return search_entities(search_string=subject,
+    #                            language="en",
+    #                            dict_result=True,
+    #                            max_results=1)
+

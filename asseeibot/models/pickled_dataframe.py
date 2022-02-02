@@ -5,17 +5,20 @@ from os.path import exists
 from typing import TYPE_CHECKING
 
 import pandas as pd
+from pandas import DataFrame
 from pydantic import BaseModel
 
 if TYPE_CHECKING:
-    from asseeibot import FuzzyMatch
+    from asseeibot import FuzzyMatch, runtime_variables
 
 logger = logging.getLogger(__name__)
 
 
-class Cache(BaseModel):
-    match: FuzzyMatch
-    pickle: str
+class PickledDataframe(BaseModel):
+    __pickle: str
+    dataframe: DataFrame = None
+    match: FuzzyMatch = None
+
 
     # def __init__(self):
     #     self.match = FuzzyMatch(
@@ -34,13 +37,13 @@ class Cache(BaseModel):
     #     self.__save_dataframe_to_disk__()
 
     def __read_dataframe_from_disk__(self):
-        self.dataframe = pd.read_pickle(self.pickle)
+        self.dataframe = pd.read_pickle(self.__pickle)
 
     def __save_dataframe_to_disk__(self):
-        self.dataframe.to_pickle(self.pickle)
+        self.dataframe.to_pickle(self.__pickle)
 
     def __verify_that_the_cache_file_exists_and_read__(self):
-        if not exists(self.pickle):
-            logger.error(f"Pickle file {self.pickle} not found.")
+        if not exists(self.__pickle):
+            logger.error(f"Pickle file {self.__pickle} not found.")
         else:
             self.__read_dataframe_from_disk__()

@@ -1,0 +1,64 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+actor User
+
+control asseibot
+
+User -> asseibot: Run with no arguments
+
+asseibot -> Wikimedia: Follow stream
+
+loop until max_number_of_events or max_number_of_dois
+    Wikimedia -> asseibot: Response event
+
+    asseibot -> asseibot: Parse event and find English Wikipedia change
+
+    asseibot -> Wikipedia: Request raw page via API
+
+    Wikipedia -> asseibot: Response
+
+    loop until end
+        asseibot -> asseibot: Parse templates of page and find DOIs
+    end
+
+    alt DOI found
+        asseibot -> Crossref: Request DOI data
+
+        Crossref -> asseibot: Response DOI data
+
+        asseibot -> asseibot: Parse Crossref data and look for subjects
+
+        loop 3 times max (guessing the casing)
+            asseibot -> Hub: Request QID for DOI
+            asseibot -> Hub: Response QID for DOI
+        end
+
+        alt Crossref subject found and QID found in Wikidata
+            asseibot -> asseibot: Lookup subject in match cache
+            alt no match found
+                asseibot -> asseibot: Lookup subject in ontology
+                alt ontology match found
+                    asseibot -> User: Ask accept/decline match
+                    User -> asseibot: Read response
+                end
+            end
+            alt match found
+                asseibot -> asseibot: Store match in memory
+            end
+        end
+    end
+
+    alt at least 1 subject approved for a DOI found in this event
+        loop gather matches found
+            asseibot -> asseibot: Show table with approved/cached matches to user before upload
+
+            asseibot -> Wikidata: Upload subjects to P921 with WikibaseIntegrator
+        end
+    end
+end
+
+
+@enduml

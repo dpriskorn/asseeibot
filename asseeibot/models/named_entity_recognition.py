@@ -24,10 +24,6 @@ class NamedEntityRecognition(BaseModel):
     already_matched_qids: List[str] = None
     subject_matches: List[FuzzyMatch] = None
 
-    def start(self):
-        if self.raw_subjects is not None:
-            self.__lookup_subjects__()
-
     def __lookup_subjects__(self):
         self.already_matched_qids = []
         self.subject_matches = []
@@ -46,3 +42,7 @@ class NamedEntityRecognition(BaseModel):
             else:
                 logger.debug("No match")
                  # input("press enter")
+
+    def start(self):
+        if self.raw_subjects is not None:
+            self.__lookup_subjects__()

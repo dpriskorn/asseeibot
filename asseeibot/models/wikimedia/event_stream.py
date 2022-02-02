@@ -11,7 +11,7 @@ from pywikibot import APISite
 import config
 from asseeibot.helpers.console import console
 from asseeibot.models.identifiers.doi import Doi
-from asseeibot.models.pywikibot import PywikibotSite
+from asseeibot.models.enums import PywikibotSite
 from asseeibot.models.wikimedia.enums import WikimediaSite
 from asseeibot.models.wikimedia.event import WikimediaEvent
 
