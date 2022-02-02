@@ -16,7 +16,7 @@ abstract class PickledDataframe
 -__pickle: str
 +dataframe: DataFrame = None
 +match: FuzzyMatch = None
-+-__read_dataframe_from_disk__()
+-__read_dataframe_from_disk__()
 -__save_dataframe_to_disk__()
 -__verify_that_the_cache_file_exists_and_read__()
 }
@@ -76,11 +76,10 @@ class MatchPickledDataframe
 
 class StatisticPickledDataframe
 {
-+dataframe: DataFrame = None
 +match: Optional[FuzzyMatch]
 -__pickle: str = config.statistic_pickle_filename
 -__append_to_the_dataframe__()
-add()
++add()
 }
 
 class EntityId
@@ -115,7 +114,7 @@ class NamedEntityRecognition
 +already_matched_qids: List[str] = None
 +subject_matches: List[FuzzyMatch] = None
 -__lookup_subjects__()
-start()
++start()
 }
 class Doi
 {
@@ -203,8 +202,8 @@ class WikimediaEvent
 -__init__()
 -__parse__()
 -__print_progress__()
-process()
-url()
++process()
++url()
 }
 class CiteJournal
 {
