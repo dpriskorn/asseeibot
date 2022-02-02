@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from urllib.parse import quote
 
 import requests
@@ -13,11 +13,13 @@ import asseeibot.runtime_variables
 import config
 from asseeibot.helpers.console import console
 from asseeibot.models.fuzzy_match import FuzzyMatch
-from asseeibot.models.identifiers.doi import Doi
 from asseeibot.models.statistic_pickled_dataframe import StatisticPickledDataframe
 from asseeibot.models.wikimedia.enums import StatedIn, Property, DeterminationMethod
 from asseeibot.models.wikimedia.wikidata.entity_id import EntityId
 from asseeibot.models.wikimedia.wikidata.item import Item
+
+if TYPE_CHECKING:
+    from asseeibot.models.identifiers.doi import Doi
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +29,7 @@ class WikidataScientificItem(Item):
 
     We pass to it a Doi object from which we can get
     the data we need for improving Wikidata"""
-    doi: Doi = None
+    doi: Any = None
     found_in_wikidata: bool = False
     qid: EntityId = None
 

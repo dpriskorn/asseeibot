@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-import re
 from typing import List, Any, TYPE_CHECKING
 
 import pywikibot
@@ -10,14 +9,11 @@ from pywikibot import Page
 
 import config
 from asseeibot.helpers.console import console
-from asseeibot.models.identifiers.doi import Doi
-from asseeibot.models.identifiers.identifier import Identifier
-from asseeibot.models.wikimedia.wikidata.scientific_item import WikidataScientificItem
 from asseeibot.models.wikimedia.wikipedia.templates.enwp.cite_journal import CiteJournal
 from asseeibot.models.wikimedia.wikipedia.wikipedia_page_reference import WikipediaPageReference
 
 if TYPE_CHECKING:
-    from asseeibot.models.crossref.engine import CrossrefEngine
+    from asseeibot.models.identifiers.doi import Doi
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +81,7 @@ class WikipediaPage:
                 cite_journal = CiteJournal(**content_as_dict)
                 self.references.append(cite_journal)
                 if cite_journal.doi is not None:
+                    from asseeibot.models.identifiers.doi import Doi
                     doi = Doi(value=cite_journal.doi)
                     doi.__test_doi__()
                     if doi.regex_validated:
@@ -107,6 +104,7 @@ class WikipediaPage:
             logger.info(f"Looking up {self.number_of_dois} DOIs in "
                         f"Wikidata and if found also in Crossref")
             for doi in self.dois:
+                from asseeibot.models.identifiers.doi import Doi
                 if not isinstance(doi, Doi):
                     raise ValueError("not instance of DOI")
             [doi.lookup_and_match_subjects() for doi in self.dois]
