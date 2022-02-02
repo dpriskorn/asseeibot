@@ -24,7 +24,7 @@ def print_match_table(crossref_work: CrossrefWork):
 def print_all_matches_table(wikipedia_page: WikipediaPage):
     matches = []
     matches_lists: List[List[FuzzyMatch]] = [doi.crossref.work.ner.subject_matches for doi in wikipedia_page.dois
-                                             if doi.crossref.work.ner is not None]
+                                             if doi.crossref.work is not None and doi.crossref.work.ner is not None]
     for match_list in matches_lists:
         matches.extend(match_list)
     table = Table(title=f"Uploading these {len(matches)} subjects to Wikidata "
