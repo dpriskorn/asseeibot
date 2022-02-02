@@ -131,6 +131,7 @@ class WikidataScientificItem(Item):
             self.found_in_wikidata = True
             location = response.headers['Location']
             logger.debug(f"location from hub: {location}")
+            console.print(f"[bold red]location from hub: {location}[/bold red]")
             self.qid = EntityId(location)
         elif response.status_code == 400:
             self.found_in_wikidata = False
