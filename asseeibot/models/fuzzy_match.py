@@ -24,5 +24,5 @@ class FuzzyMatch(BaseModel):
     description: Optional[str]
 
     def __str__(self):
-        return (f"{self.label} ({self.alias}): {self.description} "
+        return (f"[bold green]{self.label}[/bold green] ({self.alias}): {self.description} "
                 f"{self.qid.url()}")

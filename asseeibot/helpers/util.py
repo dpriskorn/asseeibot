@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import sys
 # Workaround for 3.7 missing Literal see https://python.plainenglish.io/the-literal-annotation-in-python-f882c021ab53
+from asseeibot import console
+
 if sys.version_info.major == 3 and sys.version_info.minor == 7:
     from typing import Union
     from typing_extensions import Literal
@@ -15,7 +17,7 @@ def yes_no_question(message: str):
     # I%E2%80%99m-new-to-Python-how-can-I-write-a-yes-no-question
     # this will loop forever
     while True:
-        answer = input("{} [Y/n]: ".format(message))
+        answer = console.input("{} [Y/n]: ".format(message))
         if len(answer) == 0 or answer[0].lower() in ('y', 'n'):
             if len(answer) == 0:
                 return True
