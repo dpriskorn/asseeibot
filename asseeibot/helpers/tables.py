@@ -30,7 +30,8 @@ def print_all_matches_table(wikipedia_page: WikipediaPage):
     table.add_column(f"Crossref subject")
     # show QID URL in a column?
     matches = []
-    matches_lists: List[List[FuzzyMatch]] = [doi.crossref.work.ner.subject_matches for doi in wikipedia_page.dois]
+    matches_lists: List[List[FuzzyMatch]] = [doi.crossref.work.ner.subject_matches for doi in wikipedia_page.dois
+                                             if doi.crossref.work.ner is not None]
     for match_list in matches_lists:
         matches.extend(match_list)
     for match in matches:
