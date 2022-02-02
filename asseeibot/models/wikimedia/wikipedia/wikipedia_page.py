@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import json
 import logging
 from typing import List, Any, TYPE_CHECKING
@@ -16,10 +17,10 @@ from asseeibot.models.wikimedia.wikipedia.wikipedia_page_reference import Wikipe
 if TYPE_CHECKING:
     from asseeibot.models.crossref.engine import CrossrefEngine
 
-
 logger = logging.getLogger(__name__)
 
 
+# This is a hack. Copying it here avoids an otherwise seemingly unavoidable cascade of pydantic errors...
 # BaseModel
 class Doi(Identifier):
     """Models a DOI"""
@@ -41,11 +42,11 @@ class Doi(Identifier):
         can easily look them up via SPARQL later"""
         return self.value.upper()
 
-    def __test_doi__(self):
-        doi_regex_pattern = "^10.\d{4,9}\/+.+$"
-        if re.match(doi_regex_pattern, self.value) is None:
-            self.regex_validated = False
-            logger.error(f"{self.value} did not match the doi regex")
+    # def __test_doi__(self):
+    #     doi_regex_pattern = "^10.\d{4,9}\/+.+$"
+    #     if re.match(doi_regex_pattern, self.value) is None:
+    #         self.regex_validated = False
+    #         logger.error(f"{self.value} did not match the doi regex")
 
     def lookup_in_crossref(self):
         """Lookup in Crossref and parse the whole result into an object we can use"""
@@ -74,8 +75,8 @@ class Doi(Identifier):
             if self.found_in_wikidata:
                 logger.info(f"Matching subjects for {self.value} now")
                 self.crossref.match_subjects()
-                #print("debug exit after matching subjects")
-                #exit()
+                # print("debug exit after matching subjects")
+                # exit()
             else:
                 logger.debug("Not found in Wikidata, skipping lookup of subjects")
         else:
@@ -130,7 +131,7 @@ class WikipediaPage:
         self.page_id = int(self.pywikibot_page.pageid)
         self.__parse_templates__()
         self.__populate_missing_dois__()
-        self.__upload_subject_qids_to_wikidata__()
+        self.__upload_all_subjects_matched_to_wikidata__()
         self.__calculate_statistics__()
 
     def __parse_templates__(self):
@@ -189,7 +190,7 @@ class WikipediaPage:
                 console.print(self.missing_dois)
                 # exit()
 
-    def __upload_subject_qids_to_wikidata__(self):
+    def __upload_all_subjects_matched_to_wikidata__(self):
         if config.match_subjects_to_qids_and_upload:
             logger.debug("Calculating the number of matches to upload")
             number_of_subject_matches = sum(
@@ -199,9 +200,10 @@ class WikipediaPage:
             if number_of_subject_matches > 0:
                 console.print(f"Uploading {number_of_subject_matches} subjects to Wikidata "
                               f"found via DOIs on the Wikipedia page {self.title}")
-                # TODO present all the matches here in a table
                 from asseeibot.helpers.tables import print_all_matches_table
                 print_all_matches_table(self)
+                if config.press_enter_confirmations:
+                    input("press enter to continue upload or ctrl+c to quit")
                 [doi.upload_subjects_to_wikidata() for doi in self.dois]
             else:
                 if len(self.dois) == 0:
