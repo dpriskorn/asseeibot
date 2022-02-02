@@ -111,9 +111,6 @@ class WikipediaPage:
             if number_of_subject_matches > 0:
                 console.print(f"Uploading {number_of_subject_matches} subjects to Wikidata")
                 [doi.upload_subjects_to_wikidata() for doi in self.dois]
-                if config.press_enter_confirmations:
-                    # print("debug press enter after uploads")
-                    input("press enter to continue")
             else:
                 if len(self.dois) == 0:
                     logger.debug("No DOIs found in this page")
