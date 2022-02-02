@@ -25,7 +25,8 @@ ask_before_lookup = False
 max_events = 0  # Max events to read. 0 = unlimited
 missing_identitifier_limit = 2  # How many DOIs to stop after. 0 = unlimited
 loglevel = logging.WARNING
-cache_pickle_filename = "old_cache.pkl"
+cache_pickle_filename = "cache.pkl"
+statistic_pickle_filename = "statistic.pkl.gz"
 # excluded_wikis = ["ceb", "zh", "ja"]
 # trust_url_file_endings = True
 
