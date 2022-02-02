@@ -2,10 +2,11 @@ import logging
 from time import sleep
 from typing import Any, Dict
 
+import requests
 from caseconverter import snakecase
 from habanero import Crossref
 from pydantic import BaseModel
-from requests import HTTPError
+from requests import HTTPError, JSONDecodeError
 
 import config
 from asseeibot.helpers.console import console, print_match_table
@@ -75,7 +76,7 @@ class CrossrefEngine(BaseModel):
         # result = cr.works(doi=doi)
         try:
             self.result = cr.works(ids=self.doi.value)
-        except (HTTPError, ConnectionError) as e:
+        except (HTTPError, ConnectionError, JSONDecodeError) as e:
             logger.error(f"Got error from Crossref: {e}")
 
     def __parse_habanero_data__(self):
