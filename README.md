@@ -65,9 +65,11 @@ sources and decide for yourself whether to trust their authors and the code.
 Edit the config.py file in the asseeibot/ directory and add your WMF username there.
 
 ## Diagrams
+These were made using the excellent [PlanUML](https://plantuml.com/index) plugin to PyCharm
 ### Sequence diagram
 ![bild](https://user-images.githubusercontent.com/68460690/152224991-b84b268a-ff60-4ea6-99a0-897c8c7f699d.png)
-
+### Class hierarchy diagram
+![bild](https://user-images.githubusercontent.com/68460690/152242344-b1debfc1-3ae1-4a8c-968c-92dfe43f96bc.png)
 
 ## History
 The development was paused in 2021 because the Wikidata infrastructure is not 
@@ -84,7 +86,7 @@ and an upload function using the fantastic library WikibaseIntegrator.
 ## What I learned from this project
 * This was the second time I dipped my toes in asynchronous programming. 
   It was fun and challenging thanks to the framework I used. 
-* I made my first sequence diagram using PlanUML. It really helps getting an overview of the flow of the program.
+* I made my first 2 diagrams using PlanUML. It really helps getting an overview of the flow of the program and the relations between the classes.
 * I ran into some issues with a library for parsing the Wikipedia page and reported the issue upstream. 
   Waiting for a solution there I hacked the library code locally and got it to work :)
   Then I switched to pywikibot to get better support for template parsing.
