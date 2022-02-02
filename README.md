@@ -84,6 +84,7 @@ and an upload function using the fantastic library WikibaseIntegrator.
 ## What I learned from this project
 * This was the second time I dipped my toes in asynchronous programming. 
   It was fun and challenging thanks to the framework I used. 
+* I made my first sequence diagram using PlanUML. It really helps getting an overview of the flow of the program.
 * I ran into some issues with a library for parsing the Wikipedia page and reported the issue upstream. 
   Waiting for a solution there I hacked the library code locally and got it to work :)
   Then I switched to pywikibot to get better support for template parsing.
@@ -92,8 +93,8 @@ and an upload function using the fantastic library WikibaseIntegrator.
   Unfortunately it seems to be difficult to turn off the verbose logging, so I don't like it much.
 * I tried completely avoiding strings outside of variables in config and enums for the first time. 
   It makes it easier to debug, read and refactor the code.
-* I used the imminent class validation library pydantic for the first time. What a wonderful tool!
-* I used Rich tables for better output to the console. 
+* I used the class validation library pydantic for the first time. Unfortunately it seems that it has some issues with lazy evaluation of imports so I get errors out of the box :/ 
+* I used Rich tables for better output to the console. It even support links!
 
 ## TODO once WMF fixed the infrastructure or a proper Wikibase for all of science has been set up
 * Support for ISBN
