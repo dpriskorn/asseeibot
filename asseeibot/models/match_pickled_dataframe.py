@@ -179,7 +179,6 @@ class MatchPickledDataframe(PickledDataframe):
 
     def read(self) -> Optional[FuzzyMatch]:
         """Returns None or result from the cache"""
-        self.__read_dataframe_from_disk__()
         self.__check_crossref_subject__()
         self.__verify_that_the_cache_file_exists_and_read__()
         self.__lookup_crossref_subject__()
@@ -187,8 +186,3 @@ class MatchPickledDataframe(PickledDataframe):
             self.__extract_match__()
             self.__validate_match_variables__()
             return self.match
-
-    # def __lookup_qid__(self):
-    #     match = (self.dataframe[CacheDataframeColumn.QID.value] == self.match.qid.value).any()
-    #     # logger.debug(f"match:{match}")
-    #     self.qid_found = match

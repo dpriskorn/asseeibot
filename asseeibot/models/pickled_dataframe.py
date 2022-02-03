@@ -29,26 +29,10 @@ class PickledDataframe(BaseModel):
         self.dataframe.to_pickle(self.__pickle_filename)
 
     def __verify_that_the_cache_file_exists_and_read__(self):
+        """This is the method we use to read the dataframe"""
         if self.__pickle_filename is None:
-            raise ValueError("pickle was None")
+            raise ValueError("__pickle_filename was None")
         if not exists(self.__pickle_filename):
             logger.error(f"Pickle file {self.__pickle_filename} not found.")
         else:
             self.__read_dataframe_from_disk__()
-
-    # def __init__(self):
-    #     self.match = FuzzyMatch(
-    #         qid=qid,
-    #         original_subject=original_subject,
-    #         match_based_on=match_based_on,
-    #         split_subject=split_subject,
-    #         crossref_subject=crossref_subject,
-    #         alias=alias,
-    #         label=label,
-    #         description=description,
-    #     )
-
-    # def __create_dataframe__(self):
-    #     self.dataframe = pd.DataFrame()
-    #     self.__save_dataframe_to_disk__()
-
