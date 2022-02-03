@@ -325,11 +325,6 @@ Ontology "0..*" - "1" FuzzyMatch
 NamedEntityRecognition "0..*" - "1..*" FuzzyMatch
 FuzzyMatch "1" - "1" EntityId
 
-
-
-
-
-
 enum MatchStatus
 enum PywikibotSite
 enum OntologyDataframeColumn
