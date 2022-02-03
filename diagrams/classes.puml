@@ -37,7 +37,6 @@ class MatchPickledDataframe
 {
 +crossref_subject: str = None
 +crossref_subject_found: bool = None
-+match: FuzzyMatch = None
 +pickle: str = config.cache_pickle_filename
 +qid_dropped: bool = None
 +qid_found: bool = None
@@ -57,7 +56,6 @@ class MatchPickledDataframe
 
 class StatisticPickledDataframe
 {
-+match: Optional[FuzzyMatch]
 -__pickle: str = config.statistic_pickle_filename
 -__append_to_the_dataframe__()
 +add()
@@ -315,6 +313,18 @@ BaseModel <|- WikipediaPageReference
 BaseModel <|- FuzzyMatch
 BaseModel <|- Ontology
 BaseModel <|- NamedEntityRecognition
+
+WikipediaPage "0..*" - "1..*" Doi
+WikipediaPage "0..*" - "1..*" CiteJournal
+ScientificItem "0..*" - "1..*" FuzzyMatch
+ScientificItem "0..*" - "1" CrossrefEngine
+CrossrefEngine "0..*" - "1" CrossrefWork
+Doi "0..*" - "1" ScientificItem
+PickledDataframe "0..*" - "1" FuzzyMatch
+Ontology "0..*" - "1" FuzzyMatch
+NamedEntityRecognition "0..*" - "1..*" FuzzyMatch
+FuzzyMatch "1" - "1" EntityId
+
 
 
 
