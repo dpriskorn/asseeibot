@@ -39,7 +39,8 @@ class WikipediaPage:
     def __calculate_statistics__(self):
         self.number_of_dois = len(self.dois)
         self.number_of_missing_dois = len(self.missing_dois)
-        logger.info(f"Found {self.number_of_missing_dois}/{self.number_of_dois} missing DOIs on this page")
+        logger.info(f"{self.number_of_missing_dois} out of {self.number_of_dois} "
+                    f"DOIs on this page were missing in Wikidata")
         # if len(missing_dois) > 0:
         #     input_output.save_to_wikipedia_list(missing_dois, language_code, title)
         # if config.import_mode:
@@ -117,7 +118,7 @@ class WikipediaPage:
         self.missing_dois = []
         if self.dois is not None and len(self.dois) > 0:
             logger.info(f"Looking up {self.number_of_dois} DOIs in "
-                        f"Wikidata and if found also in Crossref")
+                        f"Crossref and Wikidata")
             [doi.lookup_in_crossref_and_then_in_wikidata() for doi in self.dois]
             missing_dois = [doi for doi in self.dois if not doi.wikidata_scientific_item.doi_found_in_wikidata]
             if missing_dois is not None and len(missing_dois) > 0:
