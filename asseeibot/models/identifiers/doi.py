@@ -1,6 +1,7 @@
 import logging
 import re
 
+import config
 from asseeibot.models.crossref.engine import CrossrefEngine
 from asseeibot.models.identifiers.identifier import Identifier
 # @dataclass
@@ -37,7 +38,7 @@ class Doi(Identifier):
         self.wikidata_scientific_item.lookup_in_wikidata()
         self.found_in_wikidata = self.wikidata_scientific_item.found_in_wikidata
 
-    def __str__(self):
+    def __repr__(self):
         """DOI identifiers are case-insensitive.
         Return upper case always to make sure we
         can easily look them up via SPARQL later"""
@@ -66,8 +67,8 @@ class Doi(Identifier):
                 logger.debug("Not found in Wikidata, skipping lookup of subjects")
         else:
             logger.debug("Not found in crossref")
-        print("debug input")
-        input("press enter")
+        if config.loglevel == logging.DEBUG:
+            input("press enter after lookup and match")
 
     def upload_subjects_to_wikidata(self):
         """Upload all the matched subjects to Wikidata"""

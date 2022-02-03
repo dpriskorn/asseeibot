@@ -114,7 +114,7 @@ class WikidataScientificItem(Item):
                 console.print(f"[green]Uploaded '{match.label}' to[/green] {self.qid.history_url()}")
                 match.edited_qid = self.qid
                 upload_dataframe = StatisticPickledDataframe()
-                upload_dataframe.update_forward_refs()
+                # upload_dataframe.update_forward_refs()
                 upload_dataframe.match = match
                 upload_dataframe.add()
             else:

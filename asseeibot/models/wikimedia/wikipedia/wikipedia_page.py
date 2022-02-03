@@ -115,7 +115,7 @@ class WikipediaPage:
             if config.loglevel == logging.DEBUG:
                 logger.debug("Done populating DOIs")
                 console.print(self.missing_dois)
-                # exit()
+                input("press enter after printing dois")
 
     def __upload_all_subjects_matched_to_wikidata__(self):
         if config.match_subjects_to_qids_and_upload:

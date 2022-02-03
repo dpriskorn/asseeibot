@@ -13,19 +13,7 @@ logger = logging.getLogger(__name__)
 class StatisticPickledDataframe(PickledDataframe):
     """This class stores all uploaded data to a dataframe
     It makes it easy to follow edits over time"""
-    __pickle_filename: str = config.statistic_pickle_filename
-
-    # def __init__(self):
-    #     self.match = FuzzyMatch(
-    #         qid=qid,
-    #         original_subject=original_subject,
-    #         match_based_on=match_based_on,
-    #         split_subject=split_subject,
-    #         crossref_subject=crossref_subject,
-    #         alias=alias,
-    #         label=label,
-    #         description=description,
-    #     )
+    _pickle_filename: str = config.statistic_pickle_filename
 
     class Config:
         arbitrary_types_allowed = True
@@ -54,6 +42,7 @@ class StatisticPickledDataframe(PickledDataframe):
 
     def add(self):
         """Add an uploaded match to the dataframe"""
+        logger.debug(f"add: {self._pickle_filename}")
         self.__verify_that_the_cache_file_exists_and_read__()
         self.__append_to_the_dataframe__()
         self.__save_dataframe_to_disk__()
