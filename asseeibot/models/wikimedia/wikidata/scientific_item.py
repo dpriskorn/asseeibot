@@ -30,7 +30,6 @@ class WikidataScientificItem(Item):
     crossref_doi: str = None
     doi_found_in_crossref: bool = False
     doi_found_in_wikidata: bool = False
-    number_of_subject_matches: int = 0
     qid: EntityId = None
     subject_matches: List[FuzzyMatch] = None
     wikipedia_doi: str  # This is mandatory
@@ -191,14 +190,15 @@ class WikidataScientificItem(Item):
             if self.doi_found_in_wikidata:
                 logger.info(f"Matching subjects for {self.wikipedia_doi} now")
                 self.crossref.match_subjects()
+                logger.debug(f"lookup_and_match_subjects:Found {self.crossref.work.number_of_subject_matches} matches")
                 # print("debug exit after matching subjects")
                 # exit()
             else:
                 logger.debug("Not found in Wikidata, skipping lookup of subjects")
         else:
             logger.debug("Not found in crossref")
-        if config.loglevel == logging.DEBUG:
-            input("press enter after lookup and match")
+        # if config.loglevel == logging.DEBUG:
+        #     input("press enter after lookup and match")
 
     def upload_subjects(self):
         """Upload all the matched subjects to Wikidata"""
@@ -207,9 +207,9 @@ class WikidataScientificItem(Item):
                 self.doi_found_in_crossref
         ):
             if (
-                    self.number_of_subject_matches > 0
+                    self.crossref.work.number_of_subject_matches > 0
             ):
-                logger.info(f"Uploading {self.number_of_subject_matches} now to {self.qid.url()}")
+                logger.info(f"Uploading {self.crossref.work.number_of_subject_matches} now to {self.qid.url()}")
                 for match in self.subject_matches:
                     self.__upload_main_subject_using_wbi__(match=match)
             else:

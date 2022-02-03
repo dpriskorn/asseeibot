@@ -5,6 +5,7 @@ import logging
 from typing import List, Any, TYPE_CHECKING
 
 import pywikibot
+from pydantic import BaseModel
 from pywikibot import Page
 
 import config
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 # This is a hack. Copying it here avoids an otherwise seemingly unavoidable cascade of pydantic errors...
 
 
-class WikipediaPage:
+class WikipediaPage(BaseModel):
     """Models a WMF Wikipedia page"""
     _pywikibot_page: Page = None
     dois: List[Doi] = None
@@ -34,7 +35,7 @@ class WikipediaPage:
     references: List[WikipediaPageReference] = None
     title: str = None
     # We can't type this with WikimediaEvent because of pydantic
-    wikimedia_event: Any = None
+    wikimedia_event: Any
 
     def __calculate_statistics__(self):
         self.number_of_dois = len(self.dois)
@@ -54,24 +55,36 @@ class WikipediaPage:
         # else:
         #     pass
 
-    def __init__(
-            self,
-            wikimedia_event: Any = None
-    ):
-        """Get the page from Wikipedia"""
-        if wikimedia_event is None:
+    def start(self):
+        if self.wikimedia_event is None:
             raise ValueError("wikimedia_event was None")
-        self.wikimedia_event = wikimedia_event
+        self.__get_title_from_event__()
+        self.__get_wikipedia_page__()
+        self.__parse_templates__()
+        self.__lookup_and_match_and_populate_missing_dois__()
+        self.__upload_all_subjects_matched_to_wikidata__()
+        self.__calculate_statistics__()
+
+    def __get_title_from_event__(self):
         self.title = self.wikimedia_event.page_title
         if self.title is None or self.title == "":
             raise ValueError("title not set correctly")
+
+    def __get_wikipedia_page__(self):
+        """Get the page from Wikipedia"""
         logger.info("Fetching the wikitext")
         self._pywikibot_page = pywikibot.Page(self.wikimedia_event.event_stream.pywikibot_site, self.title)
+        # this id is useful when talking to WikipediaCitations because it is unique
         self.page_id = int(self._pywikibot_page.pageid)
-        self.__parse_templates__()
-        self.__populate_missing_dois__()
-        self.__upload_all_subjects_matched_to_wikidata__()
-        self.__calculate_statistics__()
+
+    # def __match_subjects__(self):
+    #     logger.info(f"Matching subjects from {len(self.dois) - self.number_of_missing_dois} DOIs")
+    #     [doi.wikidata_scientific_item.crossref.work.match_subjects_to_qids() for doi in self.dois
+    #      if (
+    #              doi.wikidata_scientific_item.doi_found_in_wikidata and
+    #              doi.wikidata_scientific_item.crossref is not None and
+    #              doi.wikidata_scientific_item.crossref.work is not None
+    #      )]
 
     def __parse_templates__(self):
         """We parse all the templates into WikipediaPageReferences"""
@@ -112,26 +125,28 @@ class WikipediaPage:
                                        f"(pmid:{cite_journal.pmid} jstor:{cite_journal.jstor})")
         # exit()
 
-    def __populate_missing_dois__(self):
-        logger.debug("Populating missing DOIs")
+    def __lookup_and_match_and_populate_missing_dois__(self):
+        logger.debug("__lookup_and_match_and_populate_missing_dois__:Populating missing DOIs")
         # exit()
         self.missing_dois = []
         if self.dois is not None and len(self.dois) > 0:
             logger.info(f"Looking up {self.number_of_dois} DOIs in "
                         f"Crossref and Wikidata")
-            [doi.lookup_in_crossref_and_then_in_wikidata() for doi in self.dois]
+            [doi.test_doi_then_lookup_in_crossref_and_then_in_wikidata_and_then_match_subjects() for doi in self.dois]
             missing_dois = [doi for doi in self.dois if not doi.wikidata_scientific_item.doi_found_in_wikidata]
             if missing_dois is not None and len(missing_dois) > 0:
                 self.missing_dois.extend(missing_dois)
-        if len(self.missing_dois) > 0:
+        self.number_of_missing_dois = len(self.missing_dois)
+        if self.number_of_missing_dois > 0:
+            logger.info(f"Found {self.number_of_missing_dois} missing DOIs on the page '{self.title}")
             if config.loglevel == logging.DEBUG:
                 logger.debug("Done populating DOIs")
                 console.print(self.missing_dois)
-                input("press enter after printing dois")
+                # input("press enter after printing dois")
 
     def __upload_all_subjects_matched_to_wikidata__(self):
         if config.match_subjects_to_qids_and_upload:
-            logger.debug("Calculating the number of matches to upload")
+            logger.debug("__upload_all_subjects_matched_to_wikidata__:Calculating the number of matches to upload")
             number_of_subject_matches = sum(
                 [doi.wikidata_scientific_item.number_of_subject_matches for doi in self.dois]
             )
@@ -143,8 +158,10 @@ class WikipediaPage:
                 [doi.wikidata_scientific_item.upload_subjects() for doi in self.dois]
             else:
                 if len(self.dois) == 0:
-                    logger.debug("No DOIs found in this page")
+                    logger.debug("__upload_all_subjects_matched_to_wikidata__:No DOIs found in this page")
                 else:
-                    logger.debug(f"Found no matches to upload for the following DOIs found in {self.title}")
+                    if config.loglevel == logging.DEBUG:
+                        # logger.debug(f"__upload_all_subjects_matched_to_wikidata__:Found no matches to upload for the following DOIs found in {self.title}")
+                        input("press enter to continue after no matches found")
                     # console.print(self.dois)
                     # exit()

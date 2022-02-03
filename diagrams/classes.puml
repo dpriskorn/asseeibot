@@ -4,6 +4,7 @@
 'BaseModel is not included in the hierarchy
 
 ' Abstract classes
+abstract class BaseModel
 abstract class Identifier
 {
 +value: str
@@ -34,7 +35,7 @@ abstract class Item
 ' Classes
 class WikipediaPage
 {
--pywikibot_page: Page = None
+-_pywikibot_page: Page = None
 +dois: List[Doi] = None
 +missing_dois: List[Doi] = None
 +number_of_dois: int = 0
@@ -46,10 +47,13 @@ class WikipediaPage
 +title: str = None
 +wikimedia_event: Any = None
 -__calculate_statistics__()
--__init__()
+-__get_title_from_event__()
+-__get_wikipedia_page__()
+-__match_subjects__()
 -__parse_templates__()
 -__populate_missing_dois__()
 -__upload_all_subjects_matched_to_wikidata__()
++start()
 }
 
 class WikipediaPageReference
@@ -226,12 +230,81 @@ class CiteJournal
 -__str__()
 }
 
+class CrossrefEngine
+{
++data: Any = None
++object_type: str = None
++result: Any = None
++wikipedia_doi: str
++work: CrossrefWork = None
+-__convert_to_snake_case__()
+-__lookup_work__()
+-__parse_habanero_data__()
++lookup_work()
++match_subjects()
+}
+
+
+class CrossrefWork
+{
+-__isbn: Optional[List[str]]
+-__license_url: Optional[str]
++author: Optional[List[CrossrefAuthor]]
++doi: str
++is_referenced_by_count: Optional[conint(ge=0)]
++issn: Optional[List[str]]
++issn_qid: Optional[str]
++issued: Optional[CrossrefDateParts]
++link: Optional[List[CrossrefLink]]
++named_entity_recognition: NamedEntityRecognition = None
++object_type: Optional[CrossrefEntryType]
++original_title: Optional[List[str]]
++pdf_urls: Optional[List[str]]
++prefix: Optional[str]
++published: Optional[CrossrefDateParts]
++published_print: Optional[CrossrefDateParts]
++publisher: Optional[str]
++publisher_location: Optional[str]
++reference: Optional[List[CrossrefReference]]
++references_count: Optional[conint(ge=0)]
++score: str
++source: str
++subject: Optional[List[str]]  # raw subjects
++subtitle: Optional[List[str]]
++title: Optional[List[Any]]
++first_title
++isbn_list
++license_qid
++number_of_subject_matches
++references
+-__str__
++match_subjects_to_qids()
++parse_into_objects()
++pretty_print()
+}
+
 PickledDataframe <|- MatchPickledDataframe
 PickledDataframe <|- StatisticPickledDataframe
 Identifier <|- Doi
 Item <|- ScientificItem
 WikipediaPageReference <|- CiteJournal
-'<|-
+BaseModel <|- WikipediaPage
+BaseModel <|- CrossrefEngine
+BaseModel <|- CrossrefWork
+BaseModel <|- Item
+BaseModel <|- PickledDataframe
+BaseModel <|- Identifier
+BaseModel <|- EntityId
+BaseModel <|- WikimediaEventStream
+BaseModel <|- WikimediaEvent
+BaseModel <|- WikipediaPageReference
+BaseModel <|- FuzzyMatch
+BaseModel <|- Ontology
+BaseModel <|- NamedEntityRecognition
+
+
+
+
 
 enum MatchStatus
 enum PywikibotSite

@@ -14,7 +14,7 @@ class Doi(Identifier):
     regex_validated: bool = True
     wikidata_scientific_item: WikidataScientificItem = None
 
-    def lookup_in_crossref_and_then_in_wikidata(self):
+    def test_doi_then_lookup_in_crossref_and_then_in_wikidata_and_then_match_subjects(self):
         self.__test_doi__()
         if self.regex_validated:
             self.wikidata_scientific_item = WikidataScientificItem(
