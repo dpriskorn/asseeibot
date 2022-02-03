@@ -151,7 +151,11 @@ class WikipediaPage(BaseModel):
         if config.match_subjects_to_qids_and_upload:
             logger.debug("__upload_all_subjects_matched_to_wikidata__:Calculating the number of matches to upload")
             number_of_subject_matches = sum(
-                [doi.wikidata_scientific_item.number_of_subject_matches for doi in self.dois]
+                [doi.wikidata_scientific_item.crossref.work.number_of_subject_matches for doi in self.dois
+                 if (
+                    doi.wikidata_scientific_item.crossref is not None and
+                    doi.wikidata_scientific_item.crossref.work is not None
+                 )]
             )
             if number_of_subject_matches > 0:
                 from asseeibot.helpers.tables import print_all_matches_table
