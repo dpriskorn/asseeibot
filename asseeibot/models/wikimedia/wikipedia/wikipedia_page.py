@@ -37,6 +37,9 @@ class WikipediaPage(BaseModel):
     # We can't type this with WikimediaEvent because of pydantic
     wikimedia_event: Any
 
+    class Config:
+        arbitrary_types_allowed = True
+
     def __calculate_statistics__(self):
         self.number_of_dois = len(self.dois)
         self.number_of_missing_dois = len(self.missing_dois)
