@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 class WikipediaPage(BaseModel):
     """Models a WMF Wikipedia page"""
-    _pywikibot_page: Page = None
+    pywikibot_page: Page = None
     dois: List[Doi] = None
     missing_dois: List[Doi] = None
     number_of_dois: int = 0
@@ -73,9 +73,9 @@ class WikipediaPage(BaseModel):
     def __get_wikipedia_page__(self):
         """Get the page from Wikipedia"""
         logger.info("Fetching the wikitext")
-        self._pywikibot_page = pywikibot.Page(self.wikimedia_event.event_stream.pywikibot_site, self.title)
+        self.pywikibot_page = pywikibot.Page(self.wikimedia_event.event_stream.pywikibot_site, self.title)
         # this id is useful when talking to WikipediaCitations because it is unique
-        self.page_id = int(self._pywikibot_page.pageid)
+        self.page_id = int(self.pywikibot_page.pageid)
 
     # def __match_subjects__(self):
     #     logger.info(f"Matching subjects from {len(self.dois) - self.number_of_missing_dois} DOIs")
@@ -89,7 +89,7 @@ class WikipediaPage(BaseModel):
     def __parse_templates__(self):
         """We parse all the templates into WikipediaPageReferences"""
         logger.info("Parsing templates")
-        raw = self._pywikibot_page.raw_extracted_templates
+        raw = self.pywikibot_page.raw_extracted_templates
         self.references = []
         self.dois = []
         for template_name, content in raw:
