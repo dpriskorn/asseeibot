@@ -3,10 +3,11 @@ from enum import Enum
 
 class CrossrefEntryType(Enum):
     BOOK = "book"
-    JOURNAL_ARTICLE = "journal-article"
-    PROCEEDINGS_ARTICLE = "proceedings-article"
     BOOK_CHAPTER = "book-chapter"
     COMPONENT = "component"
+    JOURNAL_ARTICLE = "journal-article"
+    PROCEEDINGS_ARTICLE = "proceedings-article"
+    REFERENCE_ENTRY = "reference-entry"
 
 
 class CrossrefContentType(Enum):
