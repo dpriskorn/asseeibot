@@ -15,11 +15,11 @@ from asseeibot.models.crossref.work import CrossrefWork
 
 class CrossrefEngine(BaseModel):
     """Lookup a work in Crossref"""
-    wikipedia_doi: str
-    result: Any = None
-    work: CrossrefWork = None
     data: Any = None
     object_type: str = None
+    result: Any = None
+    wikipedia_doi: str
+    work: CrossrefWork = None
 
     def __convert_to_snake_case__(self):
         """This converts to snakecase 2 levels down in the dictionary
@@ -101,7 +101,8 @@ class CrossrefEngine(BaseModel):
                             if config.loglevel == logging.DEBUG:
                                 logger.debug("CrossrefWork dict")
                                 console.print(work.dict())
-                            console.print(work)
+                            work.pretty_print()
+                            input("press enter to continue after printing work")
                         self.work = work
                         # exit(0)
                 else:

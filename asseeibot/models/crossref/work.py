@@ -1,73 +1,43 @@
 #!/usr/bin/env python3
 import logging
-from datetime import datetime
-from typing import List, Any, Optional, Union
+from typing import List, Any, Optional
 
 from habanero import Crossref  # type: ignore
-from pydantic import BaseModel, PositiveInt, conint
+from pydantic import BaseModel, conint
 
-from asseeibot.models.crossref.enums import CrossrefEntryType, CrossrefContentType
+from asseeibot.models.crossref.author import CrossrefAuthor
+from asseeibot.models.crossref.date_parts import CrossrefDateParts
+from asseeibot.models.crossref.enums import CrossrefEntryType
+from asseeibot.models.crossref.link import CrossrefLink, CrossrefReference
 from asseeibot.models.identifiers.isbn import Isbn
 from asseeibot.models.named_entity_recognition import NamedEntityRecognition
 
 logger = logging.getLogger(__name__)
 
 
-class OrdinalWordToIntegerConverter(BaseModel):
-    word: str
-    words = ["first", "second"]
-
-    def get_integer(self):
-        if self.word in self.words:
-            for index, value in enumerate(self.words):
-                if value == self.word:
-                    # Python lists are zero indexed so we +1 here
-                    return index + 1
-        else:
-            raise ValueError(f"{self.word} is not supported")
-
-
-class CrossrefAuthor(BaseModel):
-    given: Optional[str]
-    family: Optional[str]
-    sequence: Optional[str]
-    affiliation: Optional[List[Any]]
-
-
-class CrossrefDateParts(BaseModel):
-    """This model date-parts in the crossref API.
-    They contain None sometimes."""
-    date_parts: Optional[List[List[Union[conint(ge=0, lt=2023), None]]]]
-    date_time: Optional[datetime]
-
-
-class CrossrefLink(BaseModel):
-    url: str
-    content_type: Optional[CrossrefContentType]
-    intended_application: Optional[str]
-
-
-class CrossrefReference(BaseModel):
-    key: Optional[str]
-    # doi-asserted-by
-    first_page: Optional[Union[PositiveInt, str]]
-    doi: Optional[str]
-    article_title: Optional[str]
-    volume: Optional[str]  # This is often a PositiveInt but str like "Volume 8" do appear
-    author: Optional[str]
-    year: Optional[Union[conint(gt=1800, lt=2023), str]]  # can be a string like "2002a"
-    journal_tile: Optional[str]
+# class OrdinalWordToIntegerConverter(BaseModel):
+#     word: str
+#     words = ["first", "second"]
+#
+#     def get_integer(self):
+#         if self.word in self.words:
+#             for index, value in enumerate(self.words):
+#                 if value == self.word:
+#                     # Python lists are zero indexed so we +1 here
+#                     return index + 1
+#         else:
+#             raise ValueError(f"{self.word} is not supported")
 
 
 class CrossrefWork(BaseModel):
+    __isbn: Optional[List[str]]
+    __license_url: Optional[str]
     author: Optional[List[CrossrefAuthor]]
     doi: str
     is_referenced_by_count: Optional[conint(ge=0)]
-    __isbn: Optional[List[str]]
     issn: Optional[List[str]]
     issn_qid: Optional[str]
     issued: Optional[CrossrefDateParts]
-    __license_url: Optional[str]
     link: Optional[List[CrossrefLink]]
     named_entity_recognition: NamedEntityRecognition = None
     object_type: Optional[CrossrefEntryType]
@@ -81,12 +51,12 @@ class CrossrefWork(BaseModel):
     reference: Optional[List[CrossrefReference]]
     references_count: Optional[conint(ge=0)]
     score: str
-    subject: Optional[List[str]]  # raw subjects
     source: str
+    subject: Optional[List[str]]  # raw subjects
     subtitle: Optional[List[str]]
     title: Optional[List[Any]]
     # url: str
-    xml_urls: Optional[List[str]]
+    # xml_urls: Optional[List[str]]
 
     class Config:
         arbitrary_types_allowed = True
@@ -141,7 +111,8 @@ class CrossrefWork(BaseModel):
         from asseeibot.helpers.console import console
         console.print(f"<{self.doi} [bold orange]"
                       f"{self.first_title}[/bold orange] "
-                      f"with {self.references_count} references>")
+                      f"with {self.references_count} references and "
+                      f"{f'the subjects ' + str(self.subject) if self.subject is not None else 'no subjects'}>")
 
     # def handle_references(
     #         references: List[Dict[str, str]],
