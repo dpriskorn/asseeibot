@@ -126,22 +126,23 @@ class WikidataScientificItem(Item):
         if doi is None:
             raise ValueError("doi was None")
         if doi == "":
-            raise ValueError("doi was empty string")
-        url = f"https://hub.toolforge.org/doi:{quote(doi)}?site:wikidata?format=json"
-        response = requests.get(url, allow_redirects=False)
-        if response.status_code == 302:
-            logger.debug("Found QID via Hub")
-            self.found_in_wikidata = True
-            location = response.headers['Location']
-            logger.debug(f"location from hub: {location}")
-            console.print(f"[bold red]location from hub: {location}[/bold red]")
-            self.qid = EntityId(location)
-        elif response.status_code == 400:
-            self.found_in_wikidata = False
+            logger.warning("doi was empty string")
         else:
-            logger.error(f"Got {response.status_code} from Hub")
-            console.print(response.json())
-            exit(0)
+            url = f"https://hub.toolforge.org/doi:{quote(doi)}?site:wikidata?format=json"
+            response = requests.get(url, allow_redirects=False)
+            if response.status_code == 302:
+                logger.debug("Found QID via Hub")
+                self.found_in_wikidata = True
+                location = response.headers['Location']
+                logger.debug(f"location from hub: {location}")
+                console.print(f"[bold red]location from hub: {location}[/bold red]")
+                self.qid = EntityId(location)
+            elif response.status_code == 400:
+                self.found_in_wikidata = False
+            else:
+                logger.error(f"Got {response.status_code} from Hub")
+                console.print(response.json())
+                exit(0)
 
     def __lookup_via_hub__(self) -> None:
         """Lookup via hub.toolforge.org
