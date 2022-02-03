@@ -32,8 +32,9 @@ class Doi(Identifier):
             self.found_in_crossref = False
 
     def __lookup_in_crossref_and_then_in_wikidata__(self):
-        self.wikidata_scientific_item = WikidataScientificItem(doi=self)
         self.__lookup_in_crossref__()
+        self.wikidata_scientific_item = WikidataScientificItem(doi=self)
+        self.wikidata_scientific_item.lookup_in_wikidata()
         self.found_in_wikidata = self.wikidata_scientific_item.found_in_wikidata
 
     def __str__(self):
@@ -65,6 +66,8 @@ class Doi(Identifier):
                 logger.debug("Not found in Wikidata, skipping lookup of subjects")
         else:
             logger.debug("Not found in crossref")
+        print("debug input")
+        input("press enter")
 
     def upload_subjects_to_wikidata(self):
         """Upload all the matched subjects to Wikidata"""

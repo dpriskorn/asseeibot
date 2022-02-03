@@ -168,11 +168,16 @@ class WikidataScientificItem(Item):
 
     def add_subjects(self):
         """Add subjects to Wikidata from Doi->Crossref->CrossrefWork->NamedEntityRecognition"""
+        logger.info("Adding subjects")
         if self.doi.crossref.work is not None:
             # print_match_table(crossref)
             logger.info(f"Adding {self.doi.crossref.work.number_of_subject_matches} now to {self.qid.url()}")
             for match in self.doi.crossref.work.named_entity_recognition.subject_matches:
                 self.__add_main_subject__(match=match)
+
+    def lookup_in_wikidata(self):
+        logger.debug("Looking up in Wikidata")
+        self.__lookup_via_hub__()
 
     # def lookup_in_crossref_and_then_wikidata(self) -> None:
     #     """This looks up first in Crossref to get the correct DOI-string
