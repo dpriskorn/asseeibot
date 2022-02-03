@@ -7,13 +7,12 @@
 abstract class Identifier
 {
 +value: str
-+found_in_wikidata: bool = False
 -__str__()
 }
 
 abstract class PickledDataframe
 {
--__pickle: str
+-_pickle_filename: str
 +dataframe: DataFrame = None
 +match: FuzzyMatch = None
 -__read_dataframe_from_disk__()
@@ -35,16 +34,22 @@ abstract class Item
 ' Classes
 class WikipediaPage
 {
-+crossref: CrossrefEngine = None
-+found_in_crossref: bool = False
-+found_in_wikidata: bool = False
-+regex_validated: bool = True
-+wikidata_scientific_item: WikidataScientificItem = None
+-pywikibot_page: Page = None
++dois: List[Doi] = None
++missing_dois: List[Doi] = None
++number_of_dois: int = 0
++number_of_isbns: int = 0
++number_of_missing_dois: int = 0
++number_of_missing_isbns: int = 0
++page_id: int = None
++references: List[WikipediaPageReference] = None
++title: str = None
++wikimedia_event: Any = None
+-__calculate_statistics__()
 -__init__()
 -__parse_templates__()
 -__populate_missing_dois__()
 -__upload_all_subjects_matched_to_wikidata__()
--__calculate_statistics__()
 }
 
 class WikipediaPageReference
@@ -108,6 +113,7 @@ class FuzzyMatch
 +split_subject: Optional[bool]
 -__str__()
 }
+
 class NamedEntityRecognition
 {
 +raw_subjects: Optional[List[str]]
@@ -116,30 +122,33 @@ class NamedEntityRecognition
 -__lookup_subjects__()
 +start()
 }
+
 class Doi
 {
-+crossref: CrossrefEngine = None
-+wikidata_scientific_item: WikidataScientificItem = None
 +regex_validated: bool = True
-+found_in_crossref: bool = False
-+found_in_wikidata: bool = False
--__lookup_in_crossref__()
--__lookup_in_crossref_and_then_in_wikidata__()
++wikidata_scientific_item: WikidataScientificItem = None
 -__str__()
 -__test_doi__()
-+lookup_and_match_subjects()
-+upload_subjects_to_wikidata()
++lookup_in_crossref_and_then_in_wikidata()
 }
 
 class ScientificItem
 {
-+doi: Doi = None
-+found_in_wikidata: bool = False
++crossref: CrossrefEngine = None
++crossref_doi: str = None
++doi_found_in_crossref: bool = False
++doi_found_in_wikidata: bool = False
++number_of_subject_matches: int = 0
 +qid: EntityId = None
--__add_main_subject__()
++subject_matches: List[FuzzyMatch] = None
++wikipedia_doi: str  # This is mandatory
 -__call_the_hub_api__()
 -__lookup_via_hub__()
-+add_subjects()
+-__lookup_in_crossref__()
+-__upload_main_subject_using_wbi__()
+-__lookup_in_wikidata__()
++lookup_and_match_subjects()
++upload_subjects()
 +wikidata_doi_search_url()
 }
 
@@ -188,6 +197,7 @@ class WikimediaEventStream
 -__print_sourcemd_link__()
 -__print_statistics__()
 }
+
 class WikimediaEvent
 {
 +bot_edit: bool
@@ -205,6 +215,7 @@ class WikimediaEvent
 +process()
 +url()
 }
+
 class CiteJournal
 {
 +doi: Optional[str] = None

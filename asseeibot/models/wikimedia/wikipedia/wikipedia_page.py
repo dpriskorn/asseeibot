@@ -23,19 +23,35 @@ logger = logging.getLogger(__name__)
 
 class WikipediaPage:
     """Models a WMF Wikipedia page"""
+    _pywikibot_page: Page = None
+    dois: List[Doi] = None
+    missing_dois: List[Doi] = None
     number_of_dois: int = 0
     number_of_isbns: int = 0
     number_of_missing_dois: int = 0
     number_of_missing_isbns: int = 0
     page_id: int = None
-    pywikibot_page: Page = None
     references: List[WikipediaPageReference] = None
     title: str = None
     # We can't type this with WikimediaEvent because of pydantic
     wikimedia_event: Any = None
-    # We can't type these with Doi because of pydantic
-    missing_dois: List[Doi] = None
-    dois: List[Doi] = None
+
+    def __calculate_statistics__(self):
+        self.number_of_dois = len(self.dois)
+        self.number_of_missing_dois = len(self.missing_dois)
+        logger.info(f"Found {self.number_of_missing_dois}/{self.number_of_dois} missing DOIs on this page")
+        # if len(missing_dois) > 0:
+        #     input_output.save_to_wikipedia_list(missing_dois, language_code, title)
+        # if config.import_mode:
+        # answer = util.yes_no_question(
+        #     f"{doi} is missing in WD. Do you"+
+        #     " want to add it now?"
+        # )
+        # if answer:
+        #     crossref.lookup_data(doi=doi, in_wikipedia=True)
+        #     pass
+        # else:
+        #     pass
 
     def __init__(
             self,
@@ -49,8 +65,8 @@ class WikipediaPage:
         if self.title is None or self.title == "":
             raise ValueError("title not set correctly")
         logger.info("Fetching the wikitext")
-        self.pywikibot_page = pywikibot.Page(self.wikimedia_event.event_stream.pywikibot_site, self.title)
-        self.page_id = int(self.pywikibot_page.pageid)
+        self._pywikibot_page = pywikibot.Page(self.wikimedia_event.event_stream.pywikibot_site, self.title)
+        self.page_id = int(self._pywikibot_page.pageid)
         self.__parse_templates__()
         self.__populate_missing_dois__()
         self.__upload_all_subjects_matched_to_wikidata__()
@@ -58,9 +74,8 @@ class WikipediaPage:
 
     def __parse_templates__(self):
         """We parse all the templates into WikipediaPageReferences"""
-        logger = logging.getLogger(__name__)
         logger.info("Parsing templates")
-        raw = self.pywikibot_page.raw_extracted_templates
+        raw = self._pywikibot_page.raw_extracted_templates
         self.references = []
         self.dois = []
         for template_name, content in raw:
@@ -103,12 +118,8 @@ class WikipediaPage:
         if self.dois is not None and len(self.dois) > 0:
             logger.info(f"Looking up {self.number_of_dois} DOIs in "
                         f"Wikidata and if found also in Crossref")
-            for doi in self.dois:
-                from asseeibot.models.identifiers.doi import Doi
-                if not isinstance(doi, Doi):
-                    raise ValueError("not instance of DOI")
-            [doi.lookup_and_match_subjects() for doi in self.dois]
-            missing_dois = [doi for doi in self.dois if not doi.found_in_wikidata]
+            [doi.lookup_in_crossref_and_then_in_wikidata() for doi in self.dois]
+            missing_dois = [doi for doi in self.dois if not doi.wikidata_scientific_item.doi_found_in_wikidata]
             if missing_dois is not None and len(missing_dois) > 0:
                 self.missing_dois.extend(missing_dois)
         if len(self.missing_dois) > 0:
@@ -121,36 +132,18 @@ class WikipediaPage:
         if config.match_subjects_to_qids_and_upload:
             logger.debug("Calculating the number of matches to upload")
             number_of_subject_matches = sum(
-                [doi.crossref.work.number_of_subject_matches for doi in self.dois
-                 if doi.crossref is not None and doi.crossref.work is not None]
+                [doi.wikidata_scientific_item.number_of_subject_matches for doi in self.dois]
             )
             if number_of_subject_matches > 0:
                 from asseeibot.helpers.tables import print_all_matches_table
                 print_all_matches_table(self)
                 if config.press_enter_confirmations:
                     input("press enter to continue upload or ctrl+c to quit")
-                [doi.upload_subjects_to_wikidata() for doi in self.dois]
+                [doi.wikidata_scientific_item.upload_subjects() for doi in self.dois]
             else:
                 if len(self.dois) == 0:
                     logger.debug("No DOIs found in this page")
                 else:
                     logger.debug(f"Found no matches to upload for the following DOIs found in {self.title}")
-                    console.print(self.dois)
+                    # console.print(self.dois)
                     # exit()
-
-    def __calculate_statistics__(self):
-        self.number_of_dois = len(self.dois)
-        self.number_of_missing_dois = len(self.missing_dois)
-        logger.info(f"Found {self.number_of_missing_dois}/{self.number_of_dois} missing DOIs on this page")
-        # if len(missing_dois) > 0:
-        #     input_output.save_to_wikipedia_list(missing_dois, language_code, title)
-        # if config.import_mode:
-        # answer = util.yes_no_question(
-        #     f"{doi} is missing in WD. Do you"+
-        #     " want to add it now?"
-        # )
-        # if answer:
-        #     crossref.lookup_data(doi=doi, in_wikipedia=True)
-        #     pass
-        # else:
-        #     pass

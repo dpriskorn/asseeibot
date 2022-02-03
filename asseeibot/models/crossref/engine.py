@@ -9,14 +9,13 @@ from requests import HTTPError, JSONDecodeError
 
 import config
 from asseeibot.helpers.console import console
-from asseeibot.helpers.tables import print_match_table
 from asseeibot.models.crossref.enums import CrossrefEntryType
 from asseeibot.models.crossref.work import CrossrefWork
 
 
 class CrossrefEngine(BaseModel):
     """Lookup a work in Crossref"""
-    doi: Any = None  # We can't type this to Doi because of a forwardref error
+    wikipedia_doi: str
     result: Any = None
     work: CrossrefWork = None
     data: Any = None
@@ -70,12 +69,11 @@ class CrossrefEngine(BaseModel):
         # https://www.crossref.org/education/retrieve-metadata/rest-api/
         # async client here https://github.com/izihawa/aiocrossref but only 1 contributor
         # https://github.com/sckott/habanero >6 contributors not async
-        logger.debug(f"Looking up work {self.doi.value} in Crossref")
+        logger.debug(f"Looking up work {self.wikipedia_doi} in Crossref")
         # logging.info("Looking up from Crossref")
         cr = Crossref(mailto=config.crossref_polite_pool_email)
-        # result = cr.works(doi=doi)
         try:
-            self.result = cr.works(ids=self.doi.value)
+            self.result = cr.works(ids=self.wikipedia_doi)
         except (HTTPError, ConnectionError, JSONDecodeError) as e:
             logger.error(f"Got error from Crossref: {e}")
 
@@ -112,9 +110,9 @@ class CrossrefEngine(BaseModel):
                 logger.error("no message dict in result from Crossref")
                 sleep(10)
 
-    def __print_matches_found__(self):
-        if self.work.number_of_subject_matches > 0:
-            print_match_table(self.work)
+    # def __print_matches_found__(self):
+    #     if self.work.number_of_subject_matches > 0:
+    #         print_match_table(self.work)
 
     def lookup_work(self):
         """Lookup, parse and match subjects and store the
