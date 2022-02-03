@@ -15,12 +15,26 @@ logger = logging.getLogger(__name__)
 
 
 class PickledDataframe(BaseModel):
-    __pickle: str
+    __pickle_filename: str = None
     dataframe: DataFrame = None
     match: FuzzyMatch = None
 
     class Config:
         arbitrary_types_allowed = True
+
+    def __read_dataframe_from_disk__(self):
+        self.dataframe = pd.read_pickle(self.__pickle_filename)
+
+    def __save_dataframe_to_disk__(self):
+        self.dataframe.to_pickle(self.__pickle_filename)
+
+    def __verify_that_the_cache_file_exists_and_read__(self):
+        if self.__pickle_filename is None:
+            raise ValueError("pickle was None")
+        if not exists(self.__pickle_filename):
+            logger.error(f"Pickle file {self.__pickle_filename} not found.")
+        else:
+            self.__read_dataframe_from_disk__()
 
     # def __init__(self):
     #     self.match = FuzzyMatch(
@@ -38,14 +52,3 @@ class PickledDataframe(BaseModel):
     #     self.dataframe = pd.DataFrame()
     #     self.__save_dataframe_to_disk__()
 
-    def __read_dataframe_from_disk__(self):
-        self.dataframe = pd.read_pickle(self.__pickle)
-
-    def __save_dataframe_to_disk__(self):
-        self.dataframe.to_pickle(self.__pickle)
-
-    def __verify_that_the_cache_file_exists_and_read__(self):
-        if not exists(self.__pickle):
-            logger.error(f"Pickle file {self.__pickle} not found.")
-        else:
-            self.__read_dataframe_from_disk__()

@@ -22,10 +22,10 @@ logger = logging.getLogger(__name__)
 
 class MatchPickledDataframe(PickledDataframe):
     """This models our cache of matches"""
+    __pickle_filename: str = config.cache_pickle_filename
     crossref_subject: str = None
     crossref_subject_found: bool = None
     match: FuzzyMatch = None
-    __pickle: str = config.cache_pickle_filename
     qid_dropped: bool = None
     qid_found: bool = None
 
@@ -179,6 +179,7 @@ class MatchPickledDataframe(PickledDataframe):
 
     def read(self) -> Optional[FuzzyMatch]:
         """Returns None or result from the cache"""
+        self.__read_dataframe_from_disk__()
         self.__check_crossref_subject__()
         self.__verify_that_the_cache_file_exists_and_read__()
         self.__lookup_crossref_subject__()

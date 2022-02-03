@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class StatisticPickledDataframe(PickledDataframe):
     """This class stores all uploaded data to a dataframe
     It makes it easy to follow edits over time"""
-    __pickle: str = config.statistic_pickle_filename
+    __pickle_filename: str = config.statistic_pickle_filename
 
     # def __init__(self):
     #     self.match = FuzzyMatch(
