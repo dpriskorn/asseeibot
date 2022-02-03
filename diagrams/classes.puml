@@ -5,11 +5,23 @@
 
 ' Abstract classes
 abstract class BaseModel
-abstract class Identifier
-{
-+value: str
--__str__()
+
+package Identifiers {
+    abstract class Identifier
+    {
+    +value: str
+    -__str__()
+    }
+    class Doi
+    {
+    +regex_validated: bool = True
+    +wikidata_scientific_item: WikidataScientificItem = None
+    -__str__()
+    -__test_doi__()
+    +lookup_in_crossref_and_then_in_wikidata()
+    }
 }
+
 
 abstract class PickledDataframe
 {
@@ -19,46 +31,6 @@ abstract class PickledDataframe
 -__read_dataframe_from_disk__()
 -__save_dataframe_to_disk__()
 -__verify_that_the_cache_file_exists_and_read__()
-}
-
-abstract class Item
-{
--__aliases: Optional[List[str]]
--__description: Optional[str]
--__item: Optional[EntityItem]
-+qid: EntityId
-+aliases()
-+description()
--__fetch__()
-}
-
-' Classes
-class WikipediaPage
-{
--_pywikibot_page: Page = None
-+dois: List[Doi] = None
-+missing_dois: List[Doi] = None
-+number_of_dois: int = 0
-+number_of_isbns: int = 0
-+number_of_missing_dois: int = 0
-+number_of_missing_isbns: int = 0
-+page_id: int = None
-+references: List[WikipediaPageReference] = None
-+title: str = None
-+wikimedia_event: Any = None
--__calculate_statistics__()
--__get_title_from_event__()
--__get_wikipedia_page__()
--__match_subjects__()
--__parse_templates__()
--__populate_missing_dois__()
--__upload_all_subjects_matched_to_wikidata__()
-+start()
-}
-
-class WikipediaPageReference
-{
-+title: str = None
 }
 
 class MatchPickledDataframe
@@ -91,17 +63,6 @@ class StatisticPickledDataframe
 +add()
 }
 
-class EntityId
-{
-+letter: WikidataNamespaceLetters = None
-+raw_entity_id: str
-+rest: str = None
-+value
--__post_init_post_parse__()
--__str__()
-+history_url()
-+url()
-}
 
 class FuzzyMatch
 {
@@ -125,35 +86,6 @@ class NamedEntityRecognition
 +subject_matches: List[FuzzyMatch] = None
 -__lookup_subjects__()
 +start()
-}
-
-class Doi
-{
-+regex_validated: bool = True
-+wikidata_scientific_item: WikidataScientificItem = None
--__str__()
--__test_doi__()
-+lookup_in_crossref_and_then_in_wikidata()
-}
-
-class ScientificItem
-{
-+crossref: CrossrefEngine = None
-+crossref_doi: str = None
-+doi_found_in_crossref: bool = False
-+doi_found_in_wikidata: bool = False
-+number_of_subject_matches: int = 0
-+qid: EntityId = None
-+subject_matches: List[FuzzyMatch] = None
-+wikipedia_doi: str  # This is mandatory
--__call_the_hub_api__()
--__lookup_via_hub__()
--__lookup_in_crossref__()
--__upload_main_subject_using_wbi__()
--__lookup_in_wikidata__()
-+lookup_and_match_subjects()
-+upload_subjects()
-+wikidata_doi_search_url()
 }
 
 class Ontology
@@ -181,108 +113,190 @@ class Ontology
 +lookup_subject()
 }
 
-class WikimediaEventStream
-{
-+earlier_events: Set[str] = set()
-+event_count: int = 0
-+event_site: WikimediaSite = None
-+language_code: str = None
-+missing_dois: List[Doi] = None
-+missing_identitifier_limit: int = config.missing_identitifier_limit
-+pywikibot_site: PywikibotSite = None
-+total_number_of_dois: int = 0
-+total_number_of_isbn: int = 0
-+total_number_of_missing_dois: int = 0
-+total_number_of_missing_isbn: int = 0
--__get_events__()
--__init__()
--__instantiate_pywikibot__()
--__print_missing_dois__()
--__print_sourcemd_link__()
--__print_statistics__()
+package Wikimedia {
+    package Wikidata {
+        class EntityId
+        {
+        +letter: WikidataNamespaceLetters = None
+        +raw_entity_id: str
+        +rest: str = None
+        +value
+        -__post_init_post_parse__()
+        -__str__()
+        +history_url()
+        +url()
+        }
+
+        abstract class Item
+        {
+        -__aliases: Optional[List[str]]
+        -__description: Optional[str]
+        -__item: Optional[EntityItem]
+        +qid: EntityId
+        +aliases()
+        +description()
+        -__fetch__()
+        }
+
+        class ScientificItem
+        {
+        +crossref: CrossrefEngine = None
+        +crossref_doi: str = None
+        +doi_found_in_crossref: bool = False
+        +doi_found_in_wikidata: bool = False
+        +number_of_subject_matches: int = 0
+        +qid: EntityId = None
+        +subject_matches: List[FuzzyMatch] = None
+        +wikipedia_doi: str  # This is mandatory
+        -__call_the_hub_api__()
+        -__lookup_via_hub__()
+        -__lookup_in_crossref__()
+        -__upload_main_subject_using_wbi__()
+        -__lookup_in_wikidata__()
+        +lookup_and_match_subjects()
+        +upload_subjects()
+        +wikidata_doi_search_url()
+        }
+    }
+
+    package Wikipedia {
+        package templates {
+            package enwp {
+
+                class CiteJournal
+                {
+                +doi: Optional[str] = None
+                +journal_title: str = None
+                +jstor: str = None
+                +pmid: str = None
+                +scopus_id: str = None
+                -__str__()
+                }
+            }
+        }
+
+        class WikipediaPage
+        {
+        -_pywikibot_page: Page = None
+        +dois: List[Doi] = None
+        +missing_dois: List[Doi] = None
+        +number_of_dois: int = 0
+        +number_of_isbns: int = 0
+        +number_of_missing_dois: int = 0
+        +number_of_missing_isbns: int = 0
+        +page_id: int = None
+        +references: List[WikipediaPageReference] = None
+        +title: str = None
+        +wikimedia_event: Any = None
+        -__calculate_statistics__()
+        -__get_title_from_event__()
+        -__get_wikipedia_page__()
+        -__match_subjects__()
+        -__parse_templates__()
+        -__populate_missing_dois__()
+        -__upload_all_subjects_matched_to_wikidata__()
+        +start()
+        }
+
+        class WikipediaPageReference
+        {
+        +title: str = None
+        }
+    }
+
+    class WikimediaEventStream
+    {
+    +earlier_events: Set[str] = set()
+    +event_count: int = 0
+    +event_site: WikimediaSite = None
+    +language_code: str = None
+    +missing_dois: List[Doi] = None
+    +missing_identitifier_limit: int = config.missing_identitifier_limit
+    +pywikibot_site: PywikibotSite = None
+    +total_number_of_dois: int = 0
+    +total_number_of_isbn: int = 0
+    +total_number_of_missing_dois: int = 0
+    +total_number_of_missing_isbn: int = 0
+    -__get_events__()
+    -__init__()
+    -__instantiate_pywikibot__()
+    -__print_missing_dois__()
+    -__print_sourcemd_link__()
+    -__print_statistics__()
+    }
+
+    class WikimediaEvent
+    {
+    +bot_edit: bool
+    +edit_type: WikimediaEditType = None
+    +event_data: Dict[str, str] = None
+    +event_stream: Any = None  # We can't type this because of pydantic
+    +language_code: str = None
+    +namespace: int = None
+    +page_title: str = None
+    +server_name: str = None
+    +wikipedia_page: WikipediaPage = None
+    -__init__()
+    -__parse__()
+    -__print_progress__()
+    +process()
+    +url()
+    }
 }
 
-class WikimediaEvent
-{
-+bot_edit: bool
-+edit_type: WikimediaEditType = None
-+event_data: Dict[str, str] = None
-+event_stream: Any = None  # We can't type this because of pydantic
-+language_code: str = None
-+namespace: int = None
-+page_title: str = None
-+server_name: str = None
-+wikipedia_page: WikipediaPage = None
--__init__()
--__parse__()
--__print_progress__()
-+process()
-+url()
+package Crossref {
+    class CrossrefEngine
+    {
+    +data: Any = None
+    +object_type: str = None
+    +result: Any = None
+    +wikipedia_doi: str
+    +work: CrossrefWork = None
+    -__convert_to_snake_case__()
+    -__lookup_work__()
+    -__parse_habanero_data__()
+    +lookup_work()
+    +match_subjects()
+    }
+
+    class CrossrefWork
+    {
+    -__isbn: Optional[List[str]]
+    -__license_url: Optional[str]
+    +author: Optional[List[CrossrefAuthor]]
+    +doi: str
+    +is_referenced_by_count: Optional[conint(ge=0)]
+    +issn: Optional[List[str]]
+    +issn_qid: Optional[str]
+    +issued: Optional[CrossrefDateParts]
+    +link: Optional[List[CrossrefLink]]
+    +named_entity_recognition: NamedEntityRecognition = None
+    +object_type: Optional[CrossrefEntryType]
+    +original_title: Optional[List[str]]
+    +pdf_urls: Optional[List[str]]
+    +prefix: Optional[str]
+    +published: Optional[CrossrefDateParts]
+    +published_print: Optional[CrossrefDateParts]
+    +publisher: Optional[str]
+    +publisher_location: Optional[str]
+    +reference: Optional[List[CrossrefReference]]
+    +references_count: Optional[conint(ge=0)]
+    +score: str
+    +source: str
+    +subject: Optional[List[str]]  # raw subjects
+    +subtitle: Optional[List[str]]
+    +title: Optional[List[Any]]
+    +first_title
+    +isbn_list
+    +license_qid
+    +number_of_subject_matches
+    +references
+    -__str__
+    +match_subjects_to_qids()
+    +parse_into_objects()
+    +pretty_print()
+    }
 }
-
-class CiteJournal
-{
-+doi: Optional[str] = None
-+journal_title: str = None
-+jstor: str = None
-+pmid: str = None
-+scopus_id: str = None
--__str__()
-}
-
-class CrossrefEngine
-{
-+data: Any = None
-+object_type: str = None
-+result: Any = None
-+wikipedia_doi: str
-+work: CrossrefWork = None
--__convert_to_snake_case__()
--__lookup_work__()
--__parse_habanero_data__()
-+lookup_work()
-+match_subjects()
-}
-
-
-class CrossrefWork
-{
--__isbn: Optional[List[str]]
--__license_url: Optional[str]
-+author: Optional[List[CrossrefAuthor]]
-+doi: str
-+is_referenced_by_count: Optional[conint(ge=0)]
-+issn: Optional[List[str]]
-+issn_qid: Optional[str]
-+issued: Optional[CrossrefDateParts]
-+link: Optional[List[CrossrefLink]]
-+named_entity_recognition: NamedEntityRecognition = None
-+object_type: Optional[CrossrefEntryType]
-+original_title: Optional[List[str]]
-+pdf_urls: Optional[List[str]]
-+prefix: Optional[str]
-+published: Optional[CrossrefDateParts]
-+published_print: Optional[CrossrefDateParts]
-+publisher: Optional[str]
-+publisher_location: Optional[str]
-+reference: Optional[List[CrossrefReference]]
-+references_count: Optional[conint(ge=0)]
-+score: str
-+source: str
-+subject: Optional[List[str]]  # raw subjects
-+subtitle: Optional[List[str]]
-+title: Optional[List[Any]]
-+first_title
-+isbn_list
-+license_qid
-+number_of_subject_matches
-+references
--__str__
-+match_subjects_to_qids()
-+parse_into_objects()
-+pretty_print()
-}
-
 PickledDataframe <|- MatchPickledDataframe
 PickledDataframe <|- StatisticPickledDataframe
 Identifier <|- Doi
