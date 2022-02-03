@@ -1,3 +1,5 @@
+import pandas as pd
+
 from asseeibot import runtime_variables
 
 
