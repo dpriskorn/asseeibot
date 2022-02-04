@@ -25,7 +25,7 @@ class EntityId:
         if self.raw_entity_id is not None:
             # Remove prefix if found
             logger.debug("Removing prefixes")
-            for prefix in config.wd_prefixes:
+            for prefix in config.wikidata_prefixes:
                 if prefix in self.raw_entity_id:
                     self.raw_entity_id = self.raw_entity_id.replace(prefix, "")
             if len(self.raw_entity_id) > 1:
@@ -44,9 +44,9 @@ class EntityId:
         return f"https://www.wikidata.org/w/index.php?title={self.value}&action=history"
 
     def url(self):
-        return f"{config.wd_prefix}{str(self)}"
+        return f"{config.wikidata_entity_prefix}{str(self)}"
 
     # def extract_wdqs_json_entity_id(self, json: Dict, sparql_variable: str):
     #     self.__init__(json[sparql_variable]["value"].replace(
-    #         config.wd_prefix, ""
+    #         config.wikidata_entity_prefix, ""
     #     ))

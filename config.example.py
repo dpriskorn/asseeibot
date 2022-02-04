@@ -34,6 +34,7 @@ statistic_pickle_filename = "statistic.pkl.gz"
 version = "0.3-alpha1"
 user_agent = f"Asynchronous Server Side Events External Identifier Bot/v{version} " \
              f"https://github.com/dpriskorn/asseeibot run by User:{username}"
-wd_prefix = "http://www.wikidata.org/entity/"
-wd_prefixes = ["http://www.wikidata.org/entity/", "https://www.wikidata.org/entity/",
-               "https://www.wikidata.org/wiki/", "http://www.wikidata.org/wiki/"]
+wikidata_entity_prefix = "http://www.wikidata.org/entity/"
+wikidata_wiki_prefix = "https://www.wikidata.org/wiki/"
+wikidata_prefixes = ["http://www.wikidata.org/entity/", "https://www.wikidata.org/entity/",
+                     "https://www.wikidata.org/wiki/", "http://www.wikidata.org/wiki/"]

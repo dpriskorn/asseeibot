@@ -44,7 +44,7 @@ class WikidataScientificItem(Item):
             if response.status_code == 302:
                 location = response.headers['Location']
                 logger.debug(f"location from hub: {location}")
-                if config.wd_prefix in location:
+                if config.wikidata_wiki_prefix in location:
                     logger.debug("Found QID via Hub")
                     self.doi_found_in_wikidata = True
                     console.print(f"[bold red]location from hub: {location}[/bold red]")
