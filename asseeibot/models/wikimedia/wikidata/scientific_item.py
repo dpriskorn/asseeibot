@@ -38,7 +38,7 @@ class WikidataScientificItem(Item):
         if doi == "":
             logger.warning("doi was empty string")
         else:
-            url = f"https://hub.toolforge.org/doi:{quote(doi)}?site:wikidata?format=json"
+            url = f"https://hub.toolforge.org/doi:{quote(doi)}?site=wikidata?format=json"
             response = requests.get(url, allow_redirects=False)
             if response.status_code == 302:
                 location = response.headers['Location']
