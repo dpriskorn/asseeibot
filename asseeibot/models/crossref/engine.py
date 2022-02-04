@@ -75,7 +75,7 @@ class CrossrefEngine(BaseModel):
         try:
             self.result = cr.works(ids=self.wikipedia_doi)
         except (HTTPError, ConnectionError, JSONDecodeError) as e:
-            if "Resource not found" not in e:
+            if "Resource not found" not in str(e):
                 logger.error(f"Got error from Crossref: {e}")
 
     def __parse_habanero_data__(self):
