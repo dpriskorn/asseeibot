@@ -42,12 +42,16 @@ class WikidataScientificItem(Item):
             url = f"https://hub.toolforge.org/doi:{quote(doi)}?site:wikidata?format=json"
             response = requests.get(url, allow_redirects=False)
             if response.status_code == 302:
-                logger.debug("Found QID via Hub")
-                self.doi_found_in_wikidata = True
                 location = response.headers['Location']
                 logger.debug(f"location from hub: {location}")
-                console.print(f"[bold red]location from hub: {location}[/bold red]")
-                self.qid = EntityId(location)
+                if config.wd_prefix in location:
+                    logger.debug("Found QID via Hub")
+                    self.doi_found_in_wikidata = True
+                    console.print(f"[bold red]location from hub: {location}[/bold red]")
+                    self.qid = EntityId(location)
+                else:
+                    logger.error(f"Got {location} from Hub instead of a QID")
+                    self.doi_found_in_wikidata = False
             elif response.status_code == 400:
                 self.doi_found_in_wikidata = False
             else:
