@@ -102,7 +102,8 @@ class CrossrefEngine(BaseModel):
                                 logger.debug("CrossrefWork dict")
                                 console.print(work.dict())
                             work.pretty_print()
-                            input("press enter to continue after printing work")
+                            if config.loglevel == logging.DEBUG:
+                                input("press enter to continue after printing work")
                         self.work = work
                         # exit(0)
                 else:
