@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime, timezone
-from typing import List
 from urllib.parse import quote
 
 import requests
@@ -11,10 +10,10 @@ from wikibaseintegrator.wbi_enums import ActionIfExists
 
 import asseeibot.runtime_variables
 import config
+from asseeibot import FuzzyMatch
 from asseeibot.helpers.console import console
-from asseeibot.models.crossref.engine import CrossrefEngine
-from asseeibot.models.fuzzy_match import FuzzyMatch
-from asseeibot.models.statistic_pickled_dataframe import StatisticPickledDataframe
+from asseeibot.models.crossref_engine.__init__ import CrossrefEngine
+from asseeibot.models.pickled_dataframe.statistics import Statistics
 from asseeibot.models.wikimedia.enums import StatedIn, Property, DeterminationMethod
 from asseeibot.models.wikimedia.wikidata.entity_id import EntityId
 from asseeibot.models.wikimedia.wikidata.item import Item
@@ -60,8 +59,8 @@ class WikidataScientificItem(Item):
                 exit(0)
 
     def __lookup_in_crossref__(self):
-        """Lookup in Crossref and parse the whole result into an object we can use"""
-        logger.debug(f"Looking up {self.wikipedia_doi} in Crossref")
+        """Lookup in CrossrefEngine and parse the whole result into an object we can use"""
+        logger.debug(f"Looking up {self.wikipedia_doi} in CrossrefEngine")
         self.crossref = CrossrefEngine(wikipedia_doi=self.wikipedia_doi)
         self.crossref.lookup_work()
         if self.crossref.work is not None:
@@ -71,15 +70,15 @@ class WikidataScientificItem(Item):
             self.doi_found_in_crossref = False
 
     def __lookup_via_hub__(self) -> None:
-        """Lookup via hub.toolforge.org using the DOI from Crossref if possible
+        """Lookup via hub.toolforge.org using the DOI from CrossrefEngine if possible
         It is way faster than WDQS
         https://hub.toolforge.org/doi:10.1111/j.1746-8361.1978.tb01321.x?site:wikidata?format=json"""
         logger.info("Looking up via Hub")
         if self.crossref_doi:
             if self.crossref_doi == "":
-                logger.warning("doi from crossref was empty string")
+                logger.warning("doi from crossref_engine was empty string")
             else:
-                logger.debug("Using DOI from Crossref to lookup in Hub")
+                logger.debug("Using DOI from CrossrefEngine to lookup in Hub")
                 self.__call_the_hub_api__(self.crossref_doi)
         if not self.doi_found_in_wikidata:
             logger.debug("Using DOI from Wikipedia to lookup in Hub")
@@ -171,10 +170,10 @@ class WikidataScientificItem(Item):
             if isinstance(result, WbiEntityItem):
                 console.print(f"[green]Uploaded '{match.label}' to[/green] {self.qid.history_url()}")
                 match.edited_qid = self.qid
-                upload_dataframe = StatisticPickledDataframe()
+                statistics = Statistics()
                 # upload_dataframe.update_forward_refs()
-                upload_dataframe.match = match
-                upload_dataframe.add()
+                statistics.match = match
+                statistics.add()
             else:
                 raise ValueError("Did not get an item back from WBI, something went wrong :/")
             # print("debug exit after adding to statistics")
@@ -185,11 +184,11 @@ class WikidataScientificItem(Item):
         self.__lookup_via_hub__()
 
     def lookup_and_match_subjects(self):
-        """Looking up in Crossref, Wikidata and match subjects only if found in both"""
+        """Looking up in CrossrefEngine, Wikidata and match subjects only if found in both"""
         self.__lookup_in_crossref__()
         self.__lookup_in_wikidata__()
         if self.crossref is not None and self.crossref.work is not None:
-            logger.debug("Found in crossref")
+            logger.debug("Found in crossref_engine")
             if self.doi_found_in_wikidata:
                 logger.info(f"Matching subjects for {self.wikipedia_doi} now")
                 self.crossref.match_subjects()
@@ -199,7 +198,7 @@ class WikidataScientificItem(Item):
             else:
                 logger.debug("Not found in Wikidata, skipping lookup of subjects")
         else:
-            logger.debug("Not found in crossref")
+            logger.debug("Not found in crossref_engine")
         # if config.loglevel == logging.DEBUG:
         #     input("press enter after lookup and match")
 
@@ -209,17 +208,17 @@ class WikidataScientificItem(Item):
                 self.doi_found_in_wikidata and
                 self.doi_found_in_crossref
         ):
-            logger.info("Found in both Wikidata and Crossref :)")
+            logger.info("Found in both Wikidata and CrossrefEngine :)")
             if (
                     self.crossref.work.number_of_subject_matches > 0
             ):
                 logger.info(f"Uploading {self.crossref.work.number_of_subject_matches} now to {self.qid.url()}")
-                for match in self.crossref.work.named_entity_recognition.subject_matches:
+                for match in self.crossref.work.subject_matches:
                     self.__upload_main_subject_using_wbi__(match=match)
             else:
                 logger.info("No subject Q-items matched for this DOI")
         else:
-            logger.debug("DOI not found in both Wikidata and Crossref")
+            logger.debug("DOI not found in both Wikidata and CrossrefEngine")
 
     def wikidata_doi_search_url(self):
         # quote to guard against äöå and the like

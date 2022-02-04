@@ -10,7 +10,7 @@ from asseeibot.models.pickled_dataframe import PickledDataframe
 logger = logging.getLogger(__name__)
 
 
-class StatisticPickledDataframe(PickledDataframe):
+class Statistics(PickledDataframe):
     """This class stores all uploaded data to a dataframe
     It makes it easy to follow edits over time"""
     _pickle_filename: str = config.statistic_pickle_filename

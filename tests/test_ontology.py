@@ -1,10 +1,9 @@
 import logging
 from unittest import TestCase
 
-from asseeibot.models.ontology_dataframe import OntologyDataframeSetup
+from asseeibot import FuzzyMatch
+from asseeibot.models.crossref_engine.ontology_based_ner_matcher import OntologyBasedNerMatcher
 from asseeibot.models.enums import OntologyDataframeColumn
-from asseeibot.models.fuzzy_match import FuzzyMatch
-from asseeibot.models.ontology import Ontology
 
 logging.basicConfig(level=logging.INFO)
 
@@ -14,12 +13,11 @@ class TestOntology(TestCase):
     def test_calculate_scores(self):
         logger = logging.getLogger(__name__)
         subject = "Petrology"
-        dataframe = OntologyDataframeSetup()
-        dataframe.prepare_the_ontology_pickled_dataframe()
-        ontology = Ontology(
+        ontology = OntologyBasedNerMatcher(
             match=FuzzyMatch(
-                subject=subject,
-                original_subject=subject
+                crossref_subject=subject,
+                original_subject=subject,
+                split_subject=False
             ))
         ontology.__get_the_dataframe_from_config__()
         ontology.__calculate_scores__()
@@ -29,4 +27,3 @@ class TestOntology(TestCase):
             assert True
         else:
             self.fail()
-

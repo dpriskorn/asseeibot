@@ -11,10 +11,10 @@ from pywikibot import Page
 import config
 from asseeibot.helpers.console import console
 from asseeibot.models.wikimedia.wikipedia.templates.enwp.cite_journal import CiteJournal
-from asseeibot.models.wikimedia.wikipedia.wikipedia_page_reference import WikipediaPageReference
+from asseeibot.models.wikimedia.wikipedia.templates.wikipedia_page_reference import WikipediaPageReference
 
 if TYPE_CHECKING:
-    from asseeibot.models.identifiers.doi import Doi
+    from asseeibot.models.identifier.doi import Doi
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class WikipediaPage(BaseModel):
         #     " want to add it now?"
         # )
         # if answer:
-        #     crossref.lookup_data(doi=doi, in_wikipedia=True)
+        #     crossref_engine.lookup_data(doi=doi, in_wikipedia=True)
         #     pass
         # else:
         #     pass
@@ -82,11 +82,11 @@ class WikipediaPage(BaseModel):
 
     # def __match_subjects__(self):
     #     logger.info(f"Matching subjects from {len(self.dois) - self.number_of_missing_dois} DOIs")
-    #     [doi.wikidata_scientific_item.crossref.work.match_subjects_to_qids() for doi in self.dois
+    #     [doi.wikidata_scientific_item.crossref_engine.work.match_subjects_to_qids() for doi in self.dois
     #      if (
     #              doi.wikidata_scientific_item.doi_found_in_wikidata and
-    #              doi.wikidata_scientific_item.crossref is not None and
-    #              doi.wikidata_scientific_item.crossref.work is not None
+    #              doi.wikidata_scientific_item.crossref_engine is not None and
+    #              doi.wikidata_scientific_item.crossref_engine.work is not None
     #      )]
 
     def __parse_templates__(self):
@@ -113,7 +113,7 @@ class WikipediaPage(BaseModel):
                 cite_journal = CiteJournal(**content_as_dict)
                 self.references.append(cite_journal)
                 if cite_journal.doi is not None:
-                    from asseeibot.models.identifiers.doi import Doi
+                    from asseeibot.models.identifier.doi import Doi
                     doi = Doi(value=cite_journal.doi)
                     doi.__test_doi__()
                     if doi.regex_validated:
@@ -168,7 +168,8 @@ class WikipediaPage(BaseModel):
                     logger.debug("__upload_all_subjects_matched_to_wikidata__:No DOIs found in this page")
                 else:
                     if config.loglevel == logging.DEBUG:
-                        # logger.debug(f"__upload_all_subjects_matched_to_wikidata__:Found no matches to upload for the following DOIs found in {self.title}")
+                        # logger.debug(f"__upload_all_subjects_matched_to_wikidata__:
+                        # Found no matches to upload for the following DOIs found in {self.title}")
                         input("press enter to continue after no matches found")
                     # console.print(self.dois)
                     # exit()

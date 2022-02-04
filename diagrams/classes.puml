@@ -23,92 +23,87 @@ package Identifiers {
 }
 
 
-abstract class PickledDataframe
-{
--_pickle_filename: str
-+dataframe: DataFrame = None
-+match: FuzzyMatch = None
--__read_dataframe_from_disk__()
--__save_dataframe_to_disk__()
--__verify_that_the_cache_file_exists_and_read__()
+
+package PickledDataframe {
+    abstract class PickledDataframe
+    {
+    -_pickle_filename: str
+    +dataframe: DataFrame = None
+    +match: FuzzyMatch = None
+    -__read_dataframe_from_disk__()
+    -__save_dataframe_to_disk__()
+    -__verify_that_the_cache_file_exists_and_read__()
+    }
+
+    class Matches
+    {
+    +crossref_subject: str = None
+    +crossref_subject_found: bool = None
+    +pickle: str = config.cache_pickle_filename
+    +qid_dropped: bool = None
+    +qid_found: bool = None
+
+    -__append_match_result_to_the_dataframe__()
+    -__check_crossref_subject__()
+    -__check_if_drop_was_successful__()
+    -__check_qid__()
+    -__drop_qid_from_dataframe__()
+    -__extract_match__()
+    -__lookup_crossref_subject__()
+    -__validate_match_variables__()
+    +add()
+    +delete()
+    +read()
+    }
+
+    class Statistics
+    {
+    -__pickle: str = config.statistic_pickle_filename
+    -__append_to_the_dataframe__()
+    +add()
+    }
 }
 
-class MatchPickledDataframe
-{
-+crossref_subject: str = None
-+crossref_subject_found: bool = None
-+pickle: str = config.cache_pickle_filename
-+qid_dropped: bool = None
-+qid_found: bool = None
+package ontology_based_ner_matcher {
+    class FuzzyMatch
+    {
+    +alias: Optional[str]
+    +approved: Optional[bool]
+    +crossref_subject: Optional[str]
+    +description: Optional[str]
+    +edited_qid: Optional[EntityId]
+    +label: Optional[str]
+    +match_based_on: Optional[MatchBasedOn]
+    +original_subject: Optional[str]
+    +qid: Optional[EntityId]
+    +split_subject: Optional[bool]
+    -__str__()
+    }
 
--__append_match_result_to_the_dataframe__()
--__check_crossref_subject__()
--__check_if_drop_was_successful__()
--__check_qid__()
--__drop_qid_from_dataframe__()
--__extract_match__()
--__lookup_crossref_subject__()
--__validate_match_variables__()
-+add()
-+delete()
-+read()
-}
-
-class StatisticPickledDataframe
-{
--__pickle: str = config.statistic_pickle_filename
--__append_to_the_dataframe__()
-+add()
-}
-
-
-class FuzzyMatch
-{
-+alias: Optional[str]
-+approved: Optional[bool]
-+crossref_subject: Optional[str]
-+description: Optional[str]
-+edited_qid: Optional[EntityId]
-+label: Optional[str]
-+match_based_on: Optional[MatchBasedOn]
-+original_subject: Optional[str]
-+qid: Optional[EntityId]
-+split_subject: Optional[bool]
--__str__()
-}
-
-class NamedEntityRecognition
-{
-+raw_subjects: Optional[List[str]]
-+already_matched_qids: List[str] = None
-+subject_matches: List[FuzzyMatch] = None
--__lookup_subjects__()
-+start()
-}
-
-class Ontology
-{
-+crossref_subject: str
-+match: Optional[FuzzyMatch] = None
-+original_subject: str
-+split_subject: bool
--__check_subject_and_original_subject__()
--__calculate_scores__()
--__enrich_cache_match__()
--__extract_top_match_score__()
--__extract_top_label_match_and_score__()
--__extract_top_alias_match_and_score__()
--__extract_top_matches__()
--__get_first_row__()
--__get_the_dataframe_from_config__()
--__get_top_match__()
--__lookup_in_cache__()
--__lookup_scores_and_matches_in_the_ontology__()
--__print_dataframe_head__()
--__print_subject_information__()
--__sort_dataframe__()
--__validate_the_match__()
-+lookup_subject()
+    class OntologyBasedNerMatcher
+    {
+    +crossref_subject: str
+    +match: Optional[FuzzyMatch] = None
+    +original_subject: str
+    +split_subject: bool
+    -__check_subject_and_original_subject__()
+    -__calculate_scores__()
+    -__enrich_cache_match__()
+    -__extract_top_match_score__()
+    -__extract_top_label_match_and_score__()
+    -__extract_top_alias_match_and_score__()
+    -__extract_top_matches__()
+    -__get_first_row__()
+    -__get_the_dataframe_from_config__()
+    -__get_top_match__()
+    -__lookup_in_cache__()
+    -__lookup_scores_and_matches_in_the_ontology__()
+    -__print_dataframe_head__()
+    -__print_subject_information__()
+    -__sort_dataframe__()
+    -__validate_the_match__()
+    +lookup_subject()
+    }
 }
 
 package Wikimedia {
@@ -242,7 +237,7 @@ package Wikimedia {
     }
 }
 
-package Crossref {
+package crossref_engine {
     class CrossrefEngine
     {
     +data: Any = None
@@ -289,14 +284,19 @@ package Crossref {
     +license_qid
     +number_of_subject_matches
     +references
-    -__str__
+
+    +raw_subjects: Optional[List[str]]
+    +already_matched_qids: List[str] = None
+    +subject_matches: List[FuzzyMatch] = None
+    -__lookup_subjects__()
+    -__str__()
     +match_subjects_to_qids()
     +parse_into_objects()
     +pretty_print()
     }
 }
-PickledDataframe <|- MatchPickledDataframe
-PickledDataframe <|- StatisticPickledDataframe
+PickledDataframe <|- Matches
+PickledDataframe <|- Statistics
 Identifier <|- Doi
 Item <|- ScientificItem
 WikipediaPageReference <|- CiteJournal
@@ -311,8 +311,8 @@ BaseModel <|- WikimediaEventStream
 BaseModel <|- WikimediaEvent
 BaseModel <|- WikipediaPageReference
 BaseModel <|- FuzzyMatch
-BaseModel <|- Ontology
-BaseModel <|- NamedEntityRecognition
+BaseModel <|- OntologyBasedNerMatcher
+'BaseModel <|-
 
 WikipediaPage "0..*" - "1..*" Doi
 WikipediaPage "0..*" - "1..*" CiteJournal
@@ -321,8 +321,8 @@ ScientificItem "0..*" - "1" CrossrefEngine
 CrossrefEngine "0..*" - "1" CrossrefWork
 Doi "0..*" - "1" ScientificItem
 PickledDataframe "0..*" - "1" FuzzyMatch
-Ontology "0..*" - "1" FuzzyMatch
-NamedEntityRecognition "0..*" - "1..*" FuzzyMatch
+OntologyBasedNerMatcher "0..*" - "1" FuzzyMatch
+CrossrefWork "0..*" - "1..*" FuzzyMatch
 FuzzyMatch "1" - "1" EntityId
 
 enum MatchStatus
@@ -331,23 +331,6 @@ enum OntologyDataframeColumn
 enum MatchBasedOn
 enum CacheDataframeColumn
 
-'abstract class AbstractList
-'abstract AbstractCollection
-'interface List
-'interface Collection
-'
-'List <|-- AbstractList
-'Collection <|-- AbstractCollection
-'
-'Collection <|- List
-'AbstractCollection <|- AbstractList
-'AbstractList <|-- ArrayList
-'
-'class ArrayList {
-'Object[] elementData
-'size()
-'}
-'
 'enum TimeUnit {
 'DAYS
 'HOURS

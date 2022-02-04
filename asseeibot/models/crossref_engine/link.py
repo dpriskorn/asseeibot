@@ -2,7 +2,7 @@ from typing import Optional, Union
 
 from pydantic import BaseModel, PositiveInt, conint
 
-from asseeibot.models.crossref.enums import CrossrefContentType
+from asseeibot.models.crossref_engine.enums import CrossrefContentType
 
 
 class CrossrefLink(BaseModel):

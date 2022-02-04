@@ -1,9 +1,9 @@
 from pydantic.dataclasses import dataclass
 
-from asseeibot.models.identifiers.identifier import Identifier
+from asseeibot.models.identifier.__init__ import Identifier
 
 # How do we handle both 10 and 13?
-from asseeibot.models.identifiers.isbn_enum import IsbnLength
+from asseeibot.models.identifier.isbn_enum import IsbnLength
 
 
 @dataclass

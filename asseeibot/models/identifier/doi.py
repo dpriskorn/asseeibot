@@ -1,7 +1,7 @@
 import logging
 import re
 
-from asseeibot.models.identifiers.identifier import Identifier
+from asseeibot.models.identifier.__init__ import Identifier
 # @dataclass
 from asseeibot.models.wikimedia.wikidata.scientific_item import WikidataScientificItem
 
@@ -23,7 +23,7 @@ class Doi(Identifier):
             self.wikidata_scientific_item.lookup_and_match_subjects()
 
     def __repr__(self):
-        """DOI identifiers are case-insensitive.
+        """DOI identifier are case-insensitive.
         Return upper case always to make sure we
         can easily look them up via SPARQL later"""
         return self.value.upper()

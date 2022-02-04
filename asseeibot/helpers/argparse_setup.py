@@ -5,7 +5,7 @@ def setup_argparse_and_return_args():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description="""
 Asseeibot enables working main subject statements on items based on a 
-heuristic matching the subjects on works in Crossref with a custom domain specific ontology. 
+heuristic matching the subjects on works in CrossrefEngine with a custom domain specific ontology. 
 
 It caches all matches for later reuse.
 

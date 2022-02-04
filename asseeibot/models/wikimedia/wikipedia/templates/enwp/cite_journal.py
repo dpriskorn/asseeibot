@@ -1,7 +1,7 @@
 from typing import Optional
 
-# from asseeibot.models.identifiers.doi import Doi
-from asseeibot.models.wikimedia.wikipedia.wikipedia_page_reference import WikipediaPageReference
+# from asseeibot.models.identifier.doi import Doi
+from asseeibot.models.wikimedia.wikipedia.templates.wikipedia_page_reference import WikipediaPageReference
 
 
 class CiteJournal(WikipediaPageReference):
@@ -14,15 +14,15 @@ class CiteJournal(WikipediaPageReference):
 
     # def __post_init_post_parse__(self):
     #     pass
-        # logger = logging.getLogger(__name__)
-        # # uGlY hack
-        # # Convert after pydantic finished parsing
-        # # because it cannot parse into a Doi when given a string.
-        # if self.doi == "":
-        #     self.doi = None
-        # else:
-        #     self.doi: Doi = Doi(value=self.doi)
-        # logger.warning("post init post parse was run")
+    # logger = logging.getLogger(__name__)
+    # # uGlY hack
+    # # Convert after pydantic finished parsing
+    # # because it cannot parse into a Doi when given a string.
+    # if self.doi == "":
+    #     self.doi = None
+    # else:
+    #     self.doi: Doi = Doi(value=self.doi)
+    # logger.warning("post init post parse was run")
 
     # def __parse_template__(self):
     #     logger = logging.getLogger(__name__)

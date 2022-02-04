@@ -24,6 +24,7 @@ def wikidata_query(sparql_query):
         logger.error(f"Skipping this lookup")
         # raise Exception('No results')
 
+
 # DISABLED BECAUSE WE DON'T SUPPORT ISBN YET
 # def lookup_issn(issn: List[str]) -> Union[str,None]:
 #     print("Looking up ISSN on WD")

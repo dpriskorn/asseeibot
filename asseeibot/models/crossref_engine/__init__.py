@@ -9,12 +9,12 @@ from requests import HTTPError, JSONDecodeError
 
 import config
 from asseeibot.helpers.console import console
-from asseeibot.models.crossref.enums import CrossrefEntryType
-from asseeibot.models.crossref.work import CrossrefWork
+from asseeibot.models.crossref_engine.enums import CrossrefEntryType
+from asseeibot.models.crossref_engine.work import CrossrefWork
 
 
 class CrossrefEngine(BaseModel):
-    """Lookup a work in Crossref"""
+    """Lookup a work in CrossrefEngine"""
     data: Any = None
     object_type: str = None
     result: Any = None
@@ -38,7 +38,6 @@ class CrossrefEngine(BaseModel):
                 new_dictionary[renamed_key] = value
             return new_dictionary
 
-        logger = logging.getLogger(__name__)
         # pseudo code
         # we have a dict with keys
         data = self.data
@@ -63,20 +62,20 @@ class CrossrefEngine(BaseModel):
         #     console.print(finished_data)
         self.data = finished_data
 
-    def __lookup_work__(self):
+    def __lookup_work_using_habanero__(self):
         """Lookup the data"""
         logger = logging.getLogger(__name__)
         # https://www.crossref.org/education/retrieve-metadata/rest-api/
         # async client here https://github.com/izihawa/aiocrossref but only 1 contributor
         # https://github.com/sckott/habanero >6 contributors not async
-        logger.debug(f"Looking up work {self.wikipedia_doi} in Crossref")
-        # logging.info("Looking up from Crossref")
-        cr = Crossref(mailto=config.crossref_polite_pool_email)
+        logger.debug(f"Looking up work {self.wikipedia_doi} in CrossrefEngine")
+        # logging.info("Looking up from CrossrefEngine")
+        habanero = Crossref(mailto=config.crossref_polite_pool_email)
         try:
-            self.result = cr.works(ids=self.wikipedia_doi)
+            self.result = habanero.works(ids=self.wikipedia_doi)
         except (HTTPError, ConnectionError, JSONDecodeError) as e:
             if "Resource not found" not in str(e):
-                logger.error(f"Got error from Crossref: {e}")
+                logger.error(f"Got error from CrossrefEngine: {e}")
 
     def __parse_habanero_data__(self):
         logger = logging.getLogger(__name__)
@@ -92,7 +91,7 @@ class CrossrefEngine(BaseModel):
                         logger.info("Book detected, we exclude those for now.")
                         return None
                     else:
-                        logger.debug(f"Parsing the following crossref data now")
+                        logger.debug(f"Parsing the following crossref_engine data now")
                         # if config.loglevel == logging.DEBUG:
                         #     logger.debug("Data from Habanero")
                         #     console.print(self.data)
@@ -110,7 +109,7 @@ class CrossrefEngine(BaseModel):
                 else:
                     raise ValueError("type not found")
             else:
-                logger.error("no message dict in result from Crossref")
+                logger.error("no message dict in result from CrossrefEngine")
                 sleep(10)
 
     # def __print_matches_found__(self):
@@ -120,7 +119,7 @@ class CrossrefEngine(BaseModel):
     def lookup_work(self):
         """Lookup, parse and match subjects and store the
         CrossrefWork in the attribute self.work"""
-        self.__lookup_work__()
+        self.__lookup_work_using_habanero__()
         self.__parse_habanero_data__()
 
     def match_subjects(self):

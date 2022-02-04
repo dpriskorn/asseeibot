@@ -5,12 +5,14 @@ from typing import List, Any, Optional
 from habanero import Crossref  # type: ignore
 from pydantic import BaseModel, conint
 
-from asseeibot.models.crossref.author import CrossrefAuthor
-from asseeibot.models.crossref.date_parts import CrossrefDateParts
-from asseeibot.models.crossref.enums import CrossrefEntryType
-from asseeibot.models.crossref.link import CrossrefLink, CrossrefReference
-from asseeibot.models.identifiers.isbn import Isbn
-from asseeibot.models.named_entity_recognition import NamedEntityRecognition
+from asseeibot.models.crossref_engine.author import CrossrefAuthor
+from asseeibot.models.crossref_engine.date_parts import CrossrefDateParts
+from asseeibot.models.crossref_engine.enums import CrossrefEntryType
+from asseeibot.models.crossref_engine.link import CrossrefLink, CrossrefReference
+from asseeibot.models.crossref_engine.ontology_based_ner_matcher import FuzzyMatch
+from asseeibot.models.crossref_engine.subject import CrossrefSubject
+from asseeibot.models.enums import MatchStatus
+from asseeibot.models.identifier.isbn import Isbn
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +41,6 @@ class CrossrefWork(BaseModel):
     issn_qid: Optional[str]
     issued: Optional[CrossrefDateParts]
     link: Optional[List[CrossrefLink]]
-    named_entity_recognition: NamedEntityRecognition = None
     object_type: Optional[CrossrefEntryType]
     original_title: Optional[List[str]]
     pdf_urls: Optional[List[str]]
@@ -55,6 +56,11 @@ class CrossrefWork(BaseModel):
     subject: Optional[List[str]]  # raw subjects
     subtitle: Optional[List[str]]
     title: Optional[List[Any]]
+
+    raw_subjects: Optional[List[str]]
+    already_matched_qids: List[str] = None
+    subject_matches: List[FuzzyMatch] = None
+
     # url: str
     # xml_urls: Optional[List[str]]
 
@@ -79,13 +85,10 @@ class CrossrefWork(BaseModel):
 
     @property
     def number_of_subject_matches(self):
-        if self.named_entity_recognition is not None:
-            number_of_matches = len(self.named_entity_recognition.subject_matches)
-            logger.debug(f"Nnumber of matches was {number_of_matches}")
-            if self.named_entity_recognition is not None and number_of_matches > 0:
-                return number_of_matches
-            else:
-                return 0
+        number_of_matches = len(self.subject_matches)
+        logger.debug(f"Nnumber of matches was {number_of_matches}")
+        if number_of_matches > 0:
+            return number_of_matches
         else:
             return 0
 
@@ -94,18 +97,43 @@ class CrossrefWork(BaseModel):
         return self.reference
         # raise NotImplementedError("resolve the license url before returning")
 
+    def __lookup_subjects__(self):
+        """This models the science subject matcher
+
+        It takes a list of subjects and returns supervised
+        matches above a certain threshold if they are approved by the user.
+
+        The threshold determines which matches to show to the user.
+        The higher the closer the words are semantically calculated using
+        https://en.wikipedia.org/wiki/Levenshtein_distance
+        """
+        logger.debug("__lookup_subjects__:Running")
+        if self.raw_subjects is not None:
+            self.already_matched_qids = []
+            self.subject_matches = []
+            for original_subject in self.raw_subjects:
+                crossref_subject = CrossrefSubject(original_subject=original_subject)
+                crossref_subject.lookup()
+                if crossref_subject.match_status == MatchStatus.APPROVED:
+                    logger.debug("Adding approved match to the list of matches")
+                    if crossref_subject.matcher.match is None:
+                        raise ValueError("crossref_subject.matcher.match was wrong")
+                    self.subject_matches.append(crossref_subject.matcher.match)
+                    self.already_matched_qids.append(crossref_subject.matcher.match.qid.value)
+                elif crossref_subject.match_status == MatchStatus.DECLINED:
+                    logger.debug("Ignoring declined match.")
+                    # input("press enter")
+                else:
+                    logger.debug("No match")
+                    # input("press enter")
+
     def __str__(self):
         return f"<{self.doi} [green][bold]{self.first_title}[/bold][/green] with {self.references_count} references>"
 
     def match_subjects_to_qids(self):
         logger.info(f"Matching subjects for {self.doi} now")
         if self.subject is not None:
-            self.named_entity_recognition = NamedEntityRecognition(raw_subjects=self.subject)
-            self.named_entity_recognition.start()
-
-    def parse_into_objects(self):
-        # now we got the messy data from CrossRef
-        pass
+            self.__lookup_subjects__()
 
     def pretty_print(self):
         from asseeibot.helpers.console import console
@@ -197,7 +225,7 @@ class CrossrefWork(BaseModel):
     #     logger = logging.getLogger(__name__)
     #     if self.raw_links is not None:
     #         # TODO make this async
-    #         # Link is a field in the Crossref metadata
+    #         # Link is a field in the CrossrefEngine metadata
     #         # refactor pseudo code
     #         # first get the file ending
     #         # then call a checker
@@ -253,4 +281,3 @@ class CrossrefWork(BaseModel):
     #                     continue
     #         if found is False:
     #             logger.info("No fulltext links found")
-

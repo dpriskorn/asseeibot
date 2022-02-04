@@ -5,10 +5,9 @@ import pandas as pd
 from pandas import DataFrame
 
 import config
-from asseeibot import runtime_variables
-from asseeibot.models.pickled_dataframe import PickledDataframe
-from asseeibot.models.fuzzy_match import FuzzyMatch
+from asseeibot import runtime_variables, FuzzyMatch
 from asseeibot.models.enums import OntologyDataframeColumn, MatchBasedOn, CacheDataframeColumn
+from asseeibot.models.pickled_dataframe import PickledDataframe
 from asseeibot.models.wikimedia.wikidata.entity_id import EntityId
 
 logger = logging.getLogger(__name__)
@@ -20,7 +19,7 @@ logger = logging.getLogger(__name__)
 # https://stackoverflow.com/questions/24761133/pandas-check-if-row-exists-with-certain-values
 
 
-class MatchPickledDataframe(PickledDataframe):
+class Matches(PickledDataframe):
     """This models our cache of matches"""
     _pickle_filename = config.cache_pickle_filename
     crossref_subject: str = None
@@ -54,7 +53,7 @@ class MatchPickledDataframe(PickledDataframe):
     def __check_if_drop_was_successful__(self):
         if config.loglevel == logging.DEBUG:
             logging.debug("Checking if the qid is still in the cache")
-            match = (self.dataframe[CacheDataframeColumn.QID.value] == self.match.qid.value).any()
+            # match = (self.dataframe[CacheDataframeColumn.QID.value] == self.match.qid.value).any()
             # logger.debug(f"match:{match}")
             print(self.dataframe.info())
             logger.debug(f"Saving pickle without {self.match.qid.value}")
@@ -94,10 +93,12 @@ class MatchPickledDataframe(PickledDataframe):
                 qid: EntityId = EntityId(row[CacheDataframeColumn.QID.value][0])
                 original_subject: str = row[CacheDataframeColumn.ORIGINAL_SUBJECT.value][0]
                 crossref_subject: str = row[CacheDataframeColumn.ORIGINAL_SUBJECT.value][0]
-                match_based_on: MatchBasedOn = MatchBasedOn(MatchBasedOn(row[CacheDataframeColumn.MATCH_BASED_ON.value][0]))
+                match_based_on: MatchBasedOn = MatchBasedOn(
+                    MatchBasedOn(row[CacheDataframeColumn.MATCH_BASED_ON.value][0])
+                )
                 split_subject: bool = bool(row[CacheDataframeColumn.SPLIT_SUBJECT.value][0])
                 approved: bool = bool(row[CacheDataframeColumn.APPROVED.value][0])
-                logger.info(f"{'Approved' if approved else 'Declined'} match for crossref "
+                logger.info(f"{'Approved' if approved else 'Declined'} match for crossref_engine "
                             f"subject '{self.crossref_subject}' found in the cache")
                 ontology_dataframe = runtime_variables.ontology_dataframe
                 label = ontology_dataframe.loc[
@@ -151,7 +152,7 @@ class MatchPickledDataframe(PickledDataframe):
     def add(self) -> bool:
         """Add a match to the cache
         It returns True if it was added and False if either QID
-        or the crossref subject was found in the cache.
+        or the crossref_engine subject was found in the cache.
         :return: bool"""
         self.__check_crossref_subject__()
         self.__check_qid__()

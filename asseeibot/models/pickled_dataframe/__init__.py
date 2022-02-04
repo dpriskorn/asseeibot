@@ -8,8 +8,9 @@ import pandas as pd
 from pandas import DataFrame
 from pydantic import BaseModel
 
+
 if TYPE_CHECKING:
-    from asseeibot import FuzzyMatch
+    from asseeibot.models.crossref_engine.ontology_based_ner_matcher import FuzzyMatch
 
 logger = logging.getLogger(__name__)
 
