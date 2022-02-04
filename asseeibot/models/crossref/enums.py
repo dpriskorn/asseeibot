@@ -8,6 +8,7 @@ class CrossrefEntryType(Enum):
     JOURNAL_ARTICLE = "journal-article"
     PROCEEDINGS_ARTICLE = "proceedings-article"
     REFERENCE_ENTRY = "reference-entry"
+    REPORT = "report"
 
 
 class CrossrefContentType(Enum):
