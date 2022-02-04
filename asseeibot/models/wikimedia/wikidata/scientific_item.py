@@ -43,11 +43,11 @@ class WikidataScientificItem(Item):
             response = requests.get(url, allow_redirects=False)
             if response.status_code == 302:
                 location = response.headers['Location']
-                logger.debug(f"location from hub: {location}")
+                if config.loglevel == logging.DEBUG:
+                    console.print(f"[bold red]location from hub: {location}[/bold red]")
                 if config.wikidata_wiki_prefix in location:
                     logger.debug("Found QID via Hub")
                     self.doi_found_in_wikidata = True
-                    console.print(f"[bold red]location from hub: {location}[/bold red]")
                     self.qid = EntityId(location)
                 else:
                     logger.error(f"Got {location} from Hub instead of a QID")
