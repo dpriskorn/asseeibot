@@ -27,9 +27,9 @@ def print_all_matches_table(wikipedia_page: WikipediaPage):
         [doi.wikidata_scientific_item.crossref.work.named_entity_recognition.subject_matches for doi in
          wikipedia_page.dois
          if (
-                 doi.crossref is not None and
-                 doi.crossref.work is not None and
-                 doi.crossref.work.named_entity_recognition is not None
+                 doi.wikidata_scientific_item.crossref is not None and
+                 doi.wikidata_scientific_item.crossref.work is not None and
+                 doi.wikidata_scientific_item.crossref.work.named_entity_recognition is not None
          )]
     for match_list in matches_lists:
         matches.extend(match_list)
