@@ -183,6 +183,7 @@ class WikidataScientificItem(Item):
 
     def lookup_and_match_subjects(self):
         """Looking up in Crossref, Wikidata and match subjects only if found in both"""
+        self.__lookup_in_crossref__()
         self.__lookup_in_wikidata__()
         if self.crossref is not None and self.crossref.work is not None:
             logger.debug("Found in crossref")
