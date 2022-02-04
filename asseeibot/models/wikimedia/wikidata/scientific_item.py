@@ -87,7 +87,6 @@ class WikidataScientificItem(Item):
                 if not self.doi_found_in_wikidata:
                     logger.debug("Using lowercase DOI from Wikipedia to lookup in Hub")
                     self.__call_the_hub_api__(self.wikipedia_doi.lower())
-        logger.info("DOI not found via Hub")
 
     def __upload_main_subject_using_wbi__(
             self,
@@ -206,6 +205,7 @@ class WikidataScientificItem(Item):
                 self.doi_found_in_wikidata and
                 self.doi_found_in_crossref
         ):
+            logger.info("Found in both Wikidata and Crossref :)")
             if (
                     self.crossref.work.number_of_subject_matches > 0
             ):
