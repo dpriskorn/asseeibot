@@ -1,7 +1,8 @@
 import logging
 from unittest import TestCase
 
-from asseeibot.models.ontology_dataframe import Dataframe, OntologyDataframeColumn
+from asseeibot.models.ontology_dataframe import OntologyDataframeSetup
+from asseeibot.models.enums import OntologyDataframeColumn
 from asseeibot.models.fuzzy_match import FuzzyMatch
 from asseeibot.models.ontology import Ontology
 
@@ -13,8 +14,8 @@ class TestOntology(TestCase):
     def test_calculate_scores(self):
         logger = logging.getLogger(__name__)
         subject = "Petrology"
-        dataframe = Dataframe()
-        dataframe.prepare_the_dataframe()
+        dataframe = OntologyDataframeSetup()
+        dataframe.prepare_the_ontology_pickled_dataframe()
         ontology = Ontology(
             match=FuzzyMatch(
                 subject=subject,

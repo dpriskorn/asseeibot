@@ -1,14 +1,9 @@
-from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel
 
-from asseeibot.models.wikimedia.wikidata.entity import EntityId
-
-
-class MatchBasedOn(Enum):
-    LABEL = "label"
-    ALIAS = "alias"
+from asseeibot.models.enums import MatchBasedOn
+from asseeibot.models.wikimedia.wikidata.entity_id import EntityId
 
 
 class FuzzyMatch(BaseModel):
@@ -18,10 +13,11 @@ class FuzzyMatch(BaseModel):
     match_based_on: Optional[MatchBasedOn]
     original_subject: Optional[str]
     split_subject: Optional[bool]
+    approved: Optional[bool]
     alias: Optional[str]
     label: Optional[str]
     description: Optional[str]
 
     def __str__(self):
-        return (f"{self.label} ({self.alias}): {self.description} "
+        return (f"[bold green]{self.label}[/bold green] ({self.alias}): {self.description} "
                 f"{self.qid.url()}")

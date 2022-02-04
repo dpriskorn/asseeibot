@@ -4,24 +4,22 @@ from typing import Any, Dict
 
 from caseconverter import snakecase
 from habanero import Crossref
-from pydantic.dataclasses import dataclass
-from requests import HTTPError
+from pydantic import BaseModel
+from requests import HTTPError, JSONDecodeError
 
 import config
-from asseeibot.helpers.console import console, print_match_table
+from asseeibot.helpers.console import console
 from asseeibot.models.crossref.enums import CrossrefEntryType
 from asseeibot.models.crossref.work import CrossrefWork
 
 
-@dataclass
-class CrossrefEngine:
+class CrossrefEngine(BaseModel):
     """Lookup a work in Crossref"""
-    doi: Any
+    data: Any = None
+    object_type: str = None
     result: Any = None
+    wikipedia_doi: str
     work: CrossrefWork = None
-
-    # def __post_init_post_parse__(self):
-    #     logger = logging.getLogger(__name__)
 
     def __convert_to_snake_case__(self):
         """This converts to snakecase 2 levels down in the dictionary
@@ -60,9 +58,9 @@ class CrossrefEngine:
                 value = new_list
             renamed_key = snakecase(key).lower()
             finished_data[renamed_key] = value
-        if config.loglevel == logging.DEBUG:
-            logger.debug("Here is the renamed dict")
-            console.print(finished_data)
+        # if config.loglevel == logging.DEBUG:
+        #     logger.debug("Here is the renamed dict")
+        #     console.print(finished_data)
         self.data = finished_data
 
     def __lookup_work__(self):
@@ -71,14 +69,14 @@ class CrossrefEngine:
         # https://www.crossref.org/education/retrieve-metadata/rest-api/
         # async client here https://github.com/izihawa/aiocrossref but only 1 contributor
         # https://github.com/sckott/habanero >6 contributors not async
-        logger.debug(f"Looking up work {self.doi.value} in Crossref")
+        logger.debug(f"Looking up work {self.wikipedia_doi} in Crossref")
         # logging.info("Looking up from Crossref")
         cr = Crossref(mailto=config.crossref_polite_pool_email)
-        # result = cr.works(doi=doi)
         try:
-            self.result = cr.works(ids=self.doi.value)
-        except (HTTPError, ConnectionError) as e:
-            logger.error(f"Got error from Crossref: {e}")
+            self.result = cr.works(ids=self.wikipedia_doi)
+        except (HTTPError, ConnectionError, JSONDecodeError) as e:
+            if "Resource not found" not in str(e):
+                logger.error(f"Got error from Crossref: {e}")
 
     def __parse_habanero_data__(self):
         logger = logging.getLogger(__name__)
@@ -102,25 +100,22 @@ class CrossrefEngine:
                         work = CrossrefWork(**self.data)
                         if work is not None:
                             if config.loglevel == logging.DEBUG:
-                                logger.debug("Finished model dict")
+                                logger.debug("CrossrefWork dict")
                                 console.print(work.dict())
-                            console.print(work)
-                            # references = work.reference
-                            # if references is not None:
-                            #     for reference in references:
-                            #         if reference.first_page is not None:
-                            #             int(reference.first_page)
-                        # exit(0)
+                            work.pretty_print()
+                            if config.loglevel == logging.DEBUG:
+                                input("press enter to continue after printing work")
                         self.work = work
+                        # exit(0)
                 else:
                     raise ValueError("type not found")
             else:
                 logger.error("no message dict in result from Crossref")
                 sleep(10)
 
-    def __print_matches_found__(self):
-        if self.work.number_of_subject_matches > 0:
-            print_match_table(self.work)
+    # def __print_matches_found__(self):
+    #     if self.work.number_of_subject_matches > 0:
+    #         print_match_table(self.work)
 
     def lookup_work(self):
         """Lookup, parse and match subjects and store the
@@ -132,5 +127,5 @@ class CrossrefEngine:
         """Match subjects"""
         if config.match_subjects_to_qids_and_upload and self.work is not None:
             self.work.match_subjects_to_qids()
-            self.__print_matches_found__()
-
+            # Disabled because we print all matches in the end instead for better UX
+            # self.__print_matches_found__()

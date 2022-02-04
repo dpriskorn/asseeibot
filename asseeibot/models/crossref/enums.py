@@ -3,10 +3,12 @@ from enum import Enum
 
 class CrossrefEntryType(Enum):
     BOOK = "book"
-    JOURNAL_ARTICLE = "journal-article"
-    PROCEEDINGS_ARTICLE = "proceedings-article"
     BOOK_CHAPTER = "book-chapter"
     COMPONENT = "component"
+    JOURNAL_ARTICLE = "journal-article"
+    PROCEEDINGS_ARTICLE = "proceedings-article"
+    REFERENCE_ENTRY = "reference-entry"
+    REPORT = "report"
 
 
 class CrossrefContentType(Enum):
@@ -16,3 +18,8 @@ class CrossrefContentType(Enum):
     TEXT_XML = "text/xml"
     XML = "application/xml"
     PLAIN_TEXT = "text/plain"
+
+
+class SupportedSplit(Enum):
+    COMMA = ","
+    AND = " and "

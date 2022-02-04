@@ -25,7 +25,8 @@ ask_before_lookup = False
 max_events = 0  # Max events to read. 0 = unlimited
 missing_identitifier_limit = 2  # How many DOIs to stop after. 0 = unlimited
 loglevel = logging.WARNING
-cache_pickle_filename = "old_cache.pkl"
+cache_pickle_filename = "cache.pkl"
+statistic_pickle_filename = "statistic.pkl.gz"
 # excluded_wikis = ["ceb", "zh", "ja"]
 # trust_url_file_endings = True
 
@@ -33,6 +34,7 @@ cache_pickle_filename = "old_cache.pkl"
 version = "0.3-alpha1"
 user_agent = f"Asynchronous Server Side Events External Identifier Bot/v{version} " \
              f"https://github.com/dpriskorn/asseeibot run by User:{username}"
-wd_prefix = "http://www.wikidata.org/entity/"
-wd_prefixes = ["http://www.wikidata.org/entity/", "https://www.wikidata.org/entity/",
-               "https://www.wikidata.org/wiki/", "http://www.wikidata.org/wiki/"]
+wikidata_entity_prefix = "http://www.wikidata.org/entity/"
+wikidata_wiki_prefix = "https://www.wikidata.org/wiki/"
+wikidata_prefixes = ["http://www.wikidata.org/entity/", "https://www.wikidata.org/entity/",
+                     "https://www.wikidata.org/wiki/", "http://www.wikidata.org/wiki/"]

@@ -1,19 +1,19 @@
 from typing import Optional
 
-from asseeibot.models.identifiers.doi import Doi
+# from asseeibot.models.identifiers.doi import Doi
 from asseeibot.models.wikimedia.wikipedia.wikipedia_page_reference import WikipediaPageReference
 
 
 class CiteJournal(WikipediaPageReference):
     """This models the template cite journal in English Wikipedia"""
-    doi: Optional[Doi]
+    doi: Optional[str] = None
     journal_title: str = None
     jstor: str = None
     pmid: str = None
     scopus_id: str = None
 
-    def __post_init_post_parse__(self):
-        pass
+    # def __post_init_post_parse__(self):
+    #     pass
         # logger = logging.getLogger(__name__)
         # # uGlY hack
         # # Convert after pydantic finished parsing
@@ -46,4 +46,4 @@ class CiteJournal(WikipediaPageReference):
     #             self.article_title = value
 
     def __str__(self):
-        return f"<{self.title} (doi:{self.doi} pmid:{self.pmid} jstor:{self.jstor})>"
+        return f"<[bold green]{self.title}[/bold green] (doi:{self.doi} pmid:{self.pmid} jstor:{self.jstor})>"

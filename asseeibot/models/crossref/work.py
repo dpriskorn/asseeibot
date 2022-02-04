@@ -1,72 +1,45 @@
 #!/usr/bin/env python3
-from datetime import datetime
-from typing import List, Any, Optional, Union
+import logging
+from typing import List, Any, Optional
 
 from habanero import Crossref  # type: ignore
-from pydantic import BaseModel, PositiveInt, conint
+from pydantic import BaseModel, conint
 
-from asseeibot.models.crossref.enums import CrossrefEntryType, CrossrefContentType
+from asseeibot.models.crossref.author import CrossrefAuthor
+from asseeibot.models.crossref.date_parts import CrossrefDateParts
+from asseeibot.models.crossref.enums import CrossrefEntryType
+from asseeibot.models.crossref.link import CrossrefLink, CrossrefReference
 from asseeibot.models.identifiers.isbn import Isbn
 from asseeibot.models.named_entity_recognition import NamedEntityRecognition
 
-
-class OrdinalWordToIntegerConverter(BaseModel):
-    word: str
-    words = ["first", "second"]
-
-    def get_integer(self):
-        if self.word in self.words:
-            for index, value in enumerate(self.words):
-                if value == self.word:
-                    # Python lists are zero indexed so we +1 here
-                    return index + 1
-        else:
-            raise ValueError(f"{self.word} is not supported")
+logger = logging.getLogger(__name__)
 
 
-class CrossrefAuthor(BaseModel):
-    given: Optional[str]
-    family: Optional[str]
-    sequence: Optional[str]
-    affiliation: Optional[List[Any]]
-
-
-class CrossrefDateParts(BaseModel):
-    """This model date-parts in the crossref API.
-    They contain None sometimes."""
-    date_parts: Optional[List[List[Union[conint(ge=0, lt=2023), None]]]]
-    date_time: Optional[datetime]
-
-
-class CrossrefLink(BaseModel):
-    url: str
-    content_type: Optional[CrossrefContentType]
-    intended_application: Optional[str]
-
-
-class CrossrefReference(BaseModel):
-    key: Optional[str]
-    # doi-asserted-by
-    first_page: Optional[Union[PositiveInt, str]]
-    doi: Optional[str]
-    article_title: Optional[str]
-    volume: Optional[str]  # This is often a PositiveInt but str like "Volume 8" do appear
-    author: Optional[str]
-    year: Optional[Union[conint(gt=1800, lt=2023), str]]  # can be a string like "2002a"
-    journal_tile: Optional[str]
+# class OrdinalWordToIntegerConverter(BaseModel):
+#     word: str
+#     words = ["first", "second"]
+#
+#     def get_integer(self):
+#         if self.word in self.words:
+#             for index, value in enumerate(self.words):
+#                 if value == self.word:
+#                     # Python lists are zero indexed so we +1 here
+#                     return index + 1
+#         else:
+#             raise ValueError(f"{self.word} is not supported")
 
 
 class CrossrefWork(BaseModel):
-    author: Optional[List[CrossrefAuthor]]
-    doi: str  # typing it here does not work. We get an ugly " not yet prepared so type is still a ForwardRef" error
-    is_referenced_by_count: Optional[conint(ge=0)]
     __isbn: Optional[List[str]]
+    __license_url: Optional[str]
+    author: Optional[List[CrossrefAuthor]]
+    doi: str
+    is_referenced_by_count: Optional[conint(ge=0)]
     issn: Optional[List[str]]
     issn_qid: Optional[str]
     issued: Optional[CrossrefDateParts]
-    __license_url: Optional[str]
     link: Optional[List[CrossrefLink]]
-    ner: NamedEntityRecognition = None
+    named_entity_recognition: NamedEntityRecognition = None
     object_type: Optional[CrossrefEntryType]
     original_title: Optional[List[str]]
     pdf_urls: Optional[List[str]]
@@ -78,12 +51,12 @@ class CrossrefWork(BaseModel):
     reference: Optional[List[CrossrefReference]]
     references_count: Optional[conint(ge=0)]
     score: str
-    subject: Optional[List[str]]  # raw subjects
     source: str
+    subject: Optional[List[str]]  # raw subjects
     subtitle: Optional[List[str]]
     title: Optional[List[Any]]
     # url: str
-    xml_urls: Optional[List[str]]
+    # xml_urls: Optional[List[str]]
 
     class Config:
         arbitrary_types_allowed = True
@@ -106,8 +79,13 @@ class CrossrefWork(BaseModel):
 
     @property
     def number_of_subject_matches(self):
-        if self.ner is not None:
-            return len(self.ner.subject_matches)
+        if self.named_entity_recognition is not None:
+            number_of_matches = len(self.named_entity_recognition.subject_matches)
+            logger.debug(f"Nnumber of matches was {number_of_matches}")
+            if self.named_entity_recognition is not None and number_of_matches > 0:
+                return number_of_matches
+            else:
+                return 0
         else:
             return 0
 
@@ -117,12 +95,13 @@ class CrossrefWork(BaseModel):
         # raise NotImplementedError("resolve the license url before returning")
 
     def __str__(self):
-        return f"<{self.doi} {self.first_title} with {self.references_count} references>"
+        return f"<{self.doi} [green][bold]{self.first_title}[/bold][/green] with {self.references_count} references>"
 
     def match_subjects_to_qids(self):
+        logger.info(f"Matching subjects for {self.doi} now")
         if self.subject is not None:
-            self.ner = NamedEntityRecognition(raw_subjects=self.subject)
-            self.ner.start()
+            self.named_entity_recognition = NamedEntityRecognition(raw_subjects=self.subject)
+            self.named_entity_recognition.start()
 
     def parse_into_objects(self):
         # now we got the messy data from CrossRef
@@ -132,7 +111,8 @@ class CrossrefWork(BaseModel):
         from asseeibot.helpers.console import console
         console.print(f"<{self.doi} [bold orange]"
                       f"{self.first_title}[/bold orange] "
-                      f"with {self.references_count} references>")
+                      f"with {self.references_count} references and "
+                      f"{f'the subjects ' + str(self.subject) if self.subject is not None else 'no subjects'}>")
 
     # def handle_references(
     #         references: List[Dict[str, str]],

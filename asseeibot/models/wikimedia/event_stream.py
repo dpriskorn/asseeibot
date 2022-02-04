@@ -11,7 +11,7 @@ from pywikibot import APISite
 import config
 from asseeibot.helpers.console import console
 from asseeibot.models.identifiers.doi import Doi
-from asseeibot.models.pywikibot import PywikibotSite
+from asseeibot.models.enums import PywikibotSite
 from asseeibot.models.wikimedia.enums import WikimediaSite
 from asseeibot.models.wikimedia.event import WikimediaEvent
 
@@ -115,7 +115,11 @@ class EventStream:
             percentage = int(round(self.total_number_of_missing_dois * 100 / self.total_number_of_dois, 0))
         else:
             percentage = 0
-        if self.event_count % 10 == 0:
+        if config.loglevel == logging.DEBUG:
+            event_logging_threshold = 1
+        else:
+            event_logging_threshold = 10
+        if self.event_count % event_logging_threshold == 0:
             console.print(f"Processed {self.event_count} events and found {self.total_number_of_dois}" +
                           f" DOIs. {self.total_number_of_missing_dois} "
                           f"({percentage}%) "

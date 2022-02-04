@@ -42,21 +42,6 @@ class WikimediaEvent:
         self.bot_edit = bool(self.event_data['bot'])
         self.edit_type = WikimediaEditType(self.event_data['type'])
 
-    def process(self):
-        logger = logging.getLogger(__name__)
-        if self.language_code != "en":
-            return
-        # We only want the article namespace (0)
-        if self.server_name.find(self.event_stream.event_site.value) != -1 and self.namespace == 0:
-            logger.info("Found enwp article edit")
-            self.__print_progress__()
-            self.wikipedia_page = WikipediaPage(wikimedia_event=self)
-        else:
-            logger.debug(f"Skipping event from {self.server_name}")
-
-    def url(self):
-        return f"http://{self.server_name}/wiki/{quote(self.page_title)}"
-
     def __print_progress__(self):
         logger = logging.getLogger(__name__)
         if self.edit_type is not None:
@@ -66,3 +51,20 @@ class WikimediaEvent:
                 bot = "(!bot)"
             logger.info(f"Working on '{self.page_title}'")
             logger.info(f"({self.edit_type.value})\t{self.server_name}\t{bot}\t\"{self.url()}\"")
+
+    def process(self):
+        logger = logging.getLogger(__name__)
+        if self.language_code != "en":
+            return
+        # We only want the article namespace (0)
+        if self.server_name.find(self.event_stream.event_site.value) != -1 and self.namespace == 0:
+            logger.info("Found enwp article edit")
+            self.__print_progress__()
+            self.wikipedia_page = WikipediaPage(wikimedia_event=self)
+            self.wikipedia_page.start()
+        else:
+            logger.debug(f"Skipping event from {self.server_name}")
+
+    def url(self):
+        return f"http://{self.server_name}/wiki/{quote(self.page_title)}"
+
