@@ -64,6 +64,15 @@ sources and decide for yourself whether to trust their authors and the code.
 ## Configuration
 Edit the config.py file in the asseeibot/ directory and add your WMF username there.
 
+## PlanUML diagrams
+### Sequence diagram
+![bild](https://user-images.githubusercontent.com/68460690/152594521-e1029803-a849-4556-ac1d-3fc54d62e6db.png)
+*Diagram over the flow of the program*
+
+### Class diagram
+![bild](https://user-images.githubusercontent.com/68460690/152605482-af0349e5-ada2-4833-a405-02251b24e06f.png)
+*Diagram showing the relations between the classes and their attributes and methods*
+
 ## History
 The development was paused in 2021 because the Wikidata infrastructure is not 
 ready to handle all the new items and triples that this bot would create over time.
