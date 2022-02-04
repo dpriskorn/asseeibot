@@ -31,7 +31,6 @@ class WikidataScientificItem(Item):
     doi_found_in_crossref: bool = False
     doi_found_in_wikidata: bool = False
     qid: EntityId = None
-    subject_matches: List[FuzzyMatch] = None
     wikipedia_doi: str  # This is mandatory
 
     def __call_the_hub_api__(self, doi: str = None):
@@ -211,10 +210,10 @@ class WikidataScientificItem(Item):
                     self.crossref.work.number_of_subject_matches > 0
             ):
                 logger.info(f"Uploading {self.crossref.work.number_of_subject_matches} now to {self.qid.url()}")
-                for match in self.subject_matches:
+                for match in self.crossref.work.named_entity_recognition.subject_matches:
                     self.__upload_main_subject_using_wbi__(match=match)
             else:
-                logger.debug("No subject Q-items matched for this DOI")
+                logger.info("No subject Q-items matched for this DOI")
         else:
             logger.debug("DOI not found in both Wikidata and Crossref")
 
