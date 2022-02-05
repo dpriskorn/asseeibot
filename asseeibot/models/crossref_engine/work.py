@@ -118,7 +118,7 @@ class CrossrefWork(BaseModel):
                 if crossref_subject.match_status == MatchStatus.APPROVED:
                     logger.debug("Adding approved match to the list of matches")
                     if crossref_subject.matcher.match is None:
-                        raise ValueError("crossref_subject.matcher.match was wrong")
+                        raise ValueError("crossref_subject.matcher.match was None")
                     self.subject_matches.append(crossref_subject.matcher.match)
                     self.already_matched_qids.append(crossref_subject.matcher.match.qid.value)
                 elif crossref_subject.match_status == MatchStatus.DECLINED:
