@@ -12,6 +12,8 @@ from asseeibot.helpers.console import console
 from asseeibot.models.crossref_engine.enums import CrossrefEntryType
 from asseeibot.models.crossref_engine.work import CrossrefWork
 
+logger = logging.getLogger(__name__)
+
 
 class CrossrefEngine(BaseModel):
     """Lookup a work in CrossrefEngine"""
@@ -64,7 +66,6 @@ class CrossrefEngine(BaseModel):
 
     def __lookup_work_using_habanero__(self):
         """Lookup the data"""
-        logger = logging.getLogger(__name__)
         # https://www.crossref.org/education/retrieve-metadata/rest-api/
         # async client here https://github.com/izihawa/aiocrossref but only 1 contributor
         # https://github.com/sckott/habanero >6 contributors not async
@@ -78,7 +79,6 @@ class CrossrefEngine(BaseModel):
                 logger.error(f"Got error from CrossrefEngine: {e}")
 
     def __parse_habanero_data__(self):
-        logger = logging.getLogger(__name__)
         if self.result is not None:
             # print(result.keys())
             if "message" in self.result:
@@ -125,6 +125,7 @@ class CrossrefEngine(BaseModel):
     def match_subjects(self):
         """Match subjects"""
         if config.match_subjects_to_qids_and_upload and self.work is not None:
+            logger.debug(f"match_subjects: Running")
             self.work.match_subjects_to_qids()
             # Disabled because we print all matches in the end instead for better UX
             # self.__print_matches_found__()
