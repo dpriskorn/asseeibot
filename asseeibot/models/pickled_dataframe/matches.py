@@ -5,7 +5,8 @@ import pandas as pd
 from pandas import DataFrame
 
 import config
-from asseeibot import runtime_variables, FuzzyMatch
+from asseeibot.helpers.runtime_variable_setup import runtime_variables
+from asseeibot.models.crossref_engine.ontology_based_ner_matcher.fuzzy_match import FuzzyMatch
 from asseeibot.models.enums import OntologyDataframeColumn, MatchBasedOn, CacheDataframeColumn
 from asseeibot.models.pickled_dataframe import PickledDataframe
 from asseeibot.models.wikimedia.wikidata.entity_id import EntityId
