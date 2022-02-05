@@ -5,15 +5,15 @@ from fuzzywuzzy import fuzz
 from pandas import DataFrame
 from pydantic import BaseModel, PositiveInt
 
-import asseeibot.runtime_variables
-import config
-from asseeibot import Matches
 from asseeibot.helpers.runtime_variable_setup import prepare_the_ontology_pickled_dataframe
 from asseeibot.helpers.util import yes_no_question
 from asseeibot.helpers.wikidata import string_search_url
 from asseeibot.models.crossref_engine.ontology_based_ner_matcher.fuzzy_match import FuzzyMatch
 from asseeibot.models.enums import OntologyDataframeColumn, MatchBasedOn
+from asseeibot.models.pickled_dataframe.matches import Matches
 from asseeibot.models.wikimedia.wikidata.entity_id import EntityId
+import asseeibot.runtime_variables
+import config
 
 logger = logging.getLogger(__name__)
 
