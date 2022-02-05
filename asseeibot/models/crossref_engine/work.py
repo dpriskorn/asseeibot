@@ -91,6 +91,8 @@ class CrossrefWork(BaseModel):
                 return number_of_matches
             else:
                 return 0
+        else:
+            return 0
 
     @property
     def references(self):
@@ -108,10 +110,10 @@ class CrossrefWork(BaseModel):
         https://en.wikipedia.org/wiki/Levenshtein_distance
         """
         logger.debug("__lookup_subjects__: Running")
+        self.subject_matches = []
         if self.subject is not None:
             original_subjects = self.subject
             self.already_matched_qids = []
-            self.subject_matches = []
             for original_subject in original_subjects:
                 crossref_subject = CrossrefSubject(original_subject=original_subject)
                 crossref_subject.lookup()
