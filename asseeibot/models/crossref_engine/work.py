@@ -41,7 +41,7 @@ class CrossrefWork(BaseModel):
     issn_qid: Optional[str]
     issued: Optional[CrossrefDateParts]
     link: Optional[List[CrossrefLink]]
-    object_type: Optional[CrossrefEntryType]
+    object_type: Optional[str]
     original_title: Optional[List[str]]
     pdf_urls: Optional[List[str]]
     prefix: Optional[str]
