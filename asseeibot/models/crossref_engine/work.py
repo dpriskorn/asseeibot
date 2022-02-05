@@ -85,12 +85,13 @@ class CrossrefWork(BaseModel):
 
     @property
     def number_of_subject_matches(self):
-        number_of_matches = len(self.subject_matches)
-        logger.debug(f"Nnumber of matches was {number_of_matches}")
-        if number_of_matches > 0:
-            return number_of_matches
-        else:
-            return 0
+        if self.subject_matches is not None:
+            number_of_matches = len(self.subject_matches)
+            logger.debug(f"Nnumber of matches was {number_of_matches}")
+            if number_of_matches > 0:
+                return number_of_matches
+            else:
+                return 0
 
     @property
     def references(self):
