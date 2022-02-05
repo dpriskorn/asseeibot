@@ -154,7 +154,8 @@ class WikipediaPage(BaseModel):
                 [doi.wikidata_scientific_item.crossref.work.number_of_subject_matches for doi in self.dois
                  if (
                     doi.wikidata_scientific_item.crossref is not None and
-                    doi.wikidata_scientific_item.crossref.work is not None
+                    doi.wikidata_scientific_item.crossref.work is not None and
+                    doi.wikidata_scientific_item.crossref.work.number_of_subject_matches is not None
                  )]
             )
             if number_of_subject_matches > 0:
