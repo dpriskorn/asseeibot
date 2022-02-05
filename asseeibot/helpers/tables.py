@@ -26,7 +26,8 @@ def print_all_matches_table(wikipedia_page: WikipediaPage):
          wikipedia_page.dois
          if (
                  doi.wikidata_scientific_item.crossref is not None and
-                 doi.wikidata_scientific_item.crossref.work is not None
+                 doi.wikidata_scientific_item.crossref.work is not None and
+                 doi.wikidata_scientific_item.crossref.work.subject_matches is not None
          )]
     for match_list in matches_lists:
         matches.extend(match_list)
