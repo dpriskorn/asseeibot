@@ -57,7 +57,6 @@ class CrossrefWork(BaseModel):
     subtitle: Optional[List[str]]
     title: Optional[List[Any]]
 
-    raw_subjects: Optional[List[str]]
     already_matched_qids: List[str] = None
     subject_matches: List[FuzzyMatch] = None
 
@@ -108,11 +107,12 @@ class CrossrefWork(BaseModel):
         The higher the closer the words are semantically calculated using
         https://en.wikipedia.org/wiki/Levenshtein_distance
         """
-        logger.debug("__lookup_subjects__:Running")
-        if self.raw_subjects is not None:
+        logger.debug("__lookup_subjects__: Running")
+        if self.subject is not None:
+            original_subjects = self.subject
             self.already_matched_qids = []
             self.subject_matches = []
-            for original_subject in self.raw_subjects:
+            for original_subject in original_subjects:
                 crossref_subject = CrossrefSubject(original_subject=original_subject)
                 crossref_subject.lookup()
                 if crossref_subject.match_status == MatchStatus.APPROVED:
