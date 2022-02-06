@@ -3,7 +3,6 @@
 
 'BaseModel is not included in the hierarchy
 
-' Abstract classes
 abstract class BaseModel
 
 package Identifiers {
