@@ -9,7 +9,6 @@ from requests import HTTPError, JSONDecodeError
 
 import config
 from asseeibot.helpers.console import console
-from asseeibot.models.crossref_engine.enums import CrossrefEntryType
 from asseeibot.models.crossref_engine.work import CrossrefWork
 
 logger = logging.getLogger(__name__)
@@ -85,29 +84,21 @@ class CrossrefEngine(BaseModel):
                 self.data = self.result["message"]
                 # pprint(self.data)
                 # exit(0)
-                if "type" in self.data:
-                    self.object_type = CrossrefEntryType(self.data["type"])
-                    if self.object_type == "book":
-                        logger.info("Book detected, we exclude those for now.")
-                        return None
-                    else:
-                        logger.debug(f"Parsing the following crossref_engine data now")
-                        # if config.loglevel == logging.DEBUG:
-                        #     logger.debug("Data from Habanero")
-                        #     console.print(self.data)
-                        self.__convert_to_snake_case__()
-                        work = CrossrefWork(**self.data)
-                        if work is not None:
-                            if config.loglevel == logging.DEBUG:
-                                logger.debug("CrossrefWork dict")
-                                console.print(work.dict())
-                            work.pretty_print()
-                            if config.loglevel == logging.DEBUG:
-                                input("press enter to continue after printing work")
-                        self.work = work
-                        # exit(0)
-                else:
-                    raise ValueError("type not found")
+                logger.debug(f"Parsing the following crossref_engine data now")
+                # if config.loglevel == logging.DEBUG:
+                #     logger.debug("Data from Habanero")
+                #     console.print(self.data)
+                self.__convert_to_snake_case__()
+                work = CrossrefWork(**self.data)
+                if work is not None:
+                    if config.loglevel == logging.DEBUG:
+                        logger.debug("CrossrefWork dict")
+                        console.print(work.dict())
+                    work.pretty_print()
+                    if config.loglevel == logging.DEBUG:
+                        input("press enter to continue after printing work")
+                self.work = work
+                # exit(0)
             else:
                 logger.error("no message dict in result from CrossrefEngine")
                 sleep(10)
