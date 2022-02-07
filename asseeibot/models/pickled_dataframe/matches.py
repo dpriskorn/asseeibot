@@ -21,8 +21,9 @@ logger = logging.getLogger(__name__)
 
 
 class Matches(PickledDataframe):
-    """This models our cache of matches"""
-    _pickle_filename = config.cache_pickle_filename
+    """This models our cache of matches.
+    It includes accepted and declined matches"""
+    __pickle_filename__ = config.cache_pickle_filename
     crossref_subject: str = None
     crossref_subject_found: bool = None
     match: FuzzyMatch = None
@@ -182,7 +183,7 @@ class Matches(PickledDataframe):
     def read(self) -> Optional[FuzzyMatch]:
         """Returns None or result from the cache"""
         self.__check_crossref_subject__()
-        logger.debug(f"read: {self._pickle_filename}")
+        logger.debug(f"read: {self.__pickle_filename__}")
         self.__verify_that_the_cache_file_exists_and_read__()
         self.__lookup_crossref_subject__()
         if self.crossref_subject_found:

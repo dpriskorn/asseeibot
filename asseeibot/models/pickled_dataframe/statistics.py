@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class Statistics(PickledDataframe):
     """This class stores all uploaded data to a dataframe
     It makes it easy to follow edits over time"""
-    _pickle_filename: str = config.statistic_pickle_filename
+    __pickle_filename__: str = config.statistic_pickle_filename
 
     class Config:
         arbitrary_types_allowed = True
@@ -42,7 +42,7 @@ class Statistics(PickledDataframe):
 
     def add(self):
         """Add an uploaded match to the dataframe"""
-        logger.debug(f"add: {self._pickle_filename}")
+        logger.debug(f"add: {self.__pickle_filename__}")
         self.__verify_that_the_cache_file_exists_and_read__()
         self.__append_to_the_dataframe__()
         self.__save_dataframe_to_disk__()
