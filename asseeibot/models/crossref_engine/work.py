@@ -7,7 +7,6 @@ from pydantic import BaseModel, conint
 
 from asseeibot.models.crossref_engine.author import CrossrefAuthor
 from asseeibot.models.crossref_engine.date_parts import CrossrefDateParts
-from asseeibot.models.crossref_engine.enums import CrossrefEntryType
 from asseeibot.models.crossref_engine.link import CrossrefLink, CrossrefReference
 from asseeibot.models.crossref_engine.ontology_based_ner_matcher import FuzzyMatch
 from asseeibot.models.crossref_engine.subject import CrossrefSubject
