@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import List, Any, TYPE_CHECKING
+from typing import List, Any, TYPE_CHECKING, Optional
 
-import pywikibot
+import pywikibot  # type: ignore
 from pydantic import BaseModel
 from pywikibot import Page
 
@@ -25,8 +25,8 @@ logger = logging.getLogger(__name__)
 class WikipediaPage(BaseModel):
     """Models a WMF Wikipedia page"""
     pywikibot_page: Page = None
-    dois: List[Doi] = None
-    missing_dois: List[Doi] = None
+    dois: Optional[List[Doi]] = None
+    missing_dois: Optional[List[Doi]] = None
     number_of_dois: int = 0
     number_of_isbns: int = 0
     number_of_missing_dois: int = 0

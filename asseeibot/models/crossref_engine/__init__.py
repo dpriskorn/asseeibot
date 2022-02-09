@@ -2,8 +2,8 @@ import logging
 from time import sleep
 from typing import Any, Dict
 
-from caseconverter import snakecase
-from habanero import Crossref
+from caseconverter import snakecase  # type: ignore
+from habanero import Crossref  # type: ignore
 from pydantic import BaseModel
 from requests import HTTPError, JSONDecodeError
 
