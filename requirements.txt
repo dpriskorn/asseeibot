@@ -14,3 +14,4 @@ pydantic~=1.9.0
 pywikibot~=6.6.3
 requests>=2.7.0
 rich~=10.10.0
+typed-argument-parser#egg=tap

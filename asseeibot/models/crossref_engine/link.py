@@ -1,6 +1,6 @@
 from typing import Optional, Union
 
-from pydantic import BaseModel, PositiveInt, conint
+from pydantic import BaseModel, PositiveInt, conint, conint
 
 from asseeibot.models.crossref_engine.enums import CrossrefContentType
 

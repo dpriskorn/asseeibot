@@ -6,8 +6,7 @@ from asseeibot.models.wikimedia.wikipedia.templates.wikipedia_page_reference imp
 
 class CiteBook(WikipediaPageReference):
     """This models the template cite book in English Wikipedia"""
-    title: str = None
-    publisher: str = None
+    publisher: Optional[str] = None
     isbn: Optional[Isbn]
 
     def __post_init_post_parse__(self):

@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-import pandas as pd
+import pandas as pd  # type: ignore
 
 import config
 from asseeibot.models.enums import StatisticDataframeColumn

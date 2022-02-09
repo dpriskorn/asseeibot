@@ -7,10 +7,10 @@ from asseeibot.models.wikimedia.wikipedia.templates.wikipedia_page_reference imp
 class CiteJournal(WikipediaPageReference):
     """This models the template cite journal in English Wikipedia"""
     doi: Optional[str] = None
-    journal_title: str = None
-    jstor: str = None
-    pmid: str = None
-    scopus_id: str = None
+    journal_title: Optional[str] = None
+    jstor: Optional[str] = None
+    pmid: Optional[str] = None
+    scopus_id: Optional[str] = None
 
     # def __post_init_post_parse__(self):
     #     pass

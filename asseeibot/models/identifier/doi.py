@@ -1,8 +1,8 @@
 import logging
 import re
+from typing import Optional
 
-from asseeibot.models.identifier.__init__ import Identifier
-# @dataclass
+from asseeibot.models.identifier import Identifier
 from asseeibot.models.wikimedia.wikidata.scientific_item import WikidataScientificItem
 
 logger = logging.getLogger(__name__)
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class Doi(Identifier):
     """Models a DOI"""
     regex_validated: bool = True
-    wikidata_scientific_item: WikidataScientificItem = None
+    wikidata_scientific_item: Optional[WikidataScientificItem] = None
 
     def test_doi_then_lookup_in_crossref_and_then_in_wikidata_and_then_match_subjects(self):
         self.__test_doi__()
@@ -36,4 +36,3 @@ class Doi(Identifier):
             if re.match(doi_regex_pattern, self.value) is None:
                 self.regex_validated = False
                 logger.error(f"{self.value} did not match the doi regex")
-

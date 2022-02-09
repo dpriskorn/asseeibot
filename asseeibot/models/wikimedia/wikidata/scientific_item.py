@@ -1,18 +1,19 @@
 import logging
 from datetime import datetime, timezone
+from typing import Optional
 from urllib.parse import quote
 
 import requests
-from wikibaseintegrator import wbi_login, wbi_config, WikibaseIntegrator
-from wikibaseintegrator.datatypes import Time, Item as WbiItemType, String
-from wikibaseintegrator.entities.item import Item as WbiEntityItem
-from wikibaseintegrator.wbi_enums import ActionIfExists
+from wikibaseintegrator import wbi_login, wbi_config, WikibaseIntegrator  # type: ignore
+from wikibaseintegrator.datatypes import Time, Item as WbiItemType, String  # type: ignore
+from wikibaseintegrator.entities.item import Item as WbiEntityItem  # type: ignore
+from wikibaseintegrator.wbi_enums import ActionIfExists  # type: ignore
 
 import asseeibot.runtime_variables
 import config
-from asseeibot import FuzzyMatch
+from asseeibot.models.crossref_engine.ontology_based_ner_matcher import FuzzyMatch
 from asseeibot.helpers.console import console
-from asseeibot.models.crossref_engine.__init__ import CrossrefEngine
+from asseeibot.models.crossref_engine import CrossrefEngine
 from asseeibot.models.pickled_dataframe.statistics import Statistics
 from asseeibot.models.wikimedia.enums import StatedIn, Property, DeterminationMethod
 from asseeibot.models.wikimedia.wikidata.entity_id import EntityId
@@ -25,11 +26,10 @@ class WikidataScientificItem(Item):
     """This models a scientific item on Wikidata
 
     We get data on init, because getting a Doi object leads to circular dependency issues"""
-    crossref: CrossrefEngine = None
-    crossref_doi: str = None
+    crossref: Optional[CrossrefEngine] = None
+    crossref_doi: Optional[str] = None
     doi_found_in_crossref: bool = False
     doi_found_in_wikidata: bool = False
-    qid: EntityId = None
     wikipedia_doi: str  # This is mandatory
 
     def __call_the_hub_api__(self, doi: str = None):
@@ -47,7 +47,7 @@ class WikidataScientificItem(Item):
                 if config.wikidata_wiki_prefix in location:
                     logger.debug("Found QID via Hub")
                     self.doi_found_in_wikidata = True
-                    self.qid = EntityId(location)
+                    self.qid = EntityId(raw_identifier=location)
                 else:
                     logger.error(f"Got {location} from Hub instead of a QID")
                     self.doi_found_in_wikidata = False

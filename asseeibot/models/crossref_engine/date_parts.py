@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List, Union
 
-from pydantic import BaseModel, conint
+from pydantic import BaseModel, conint, ConstrainedInt
 
 
 class CrossrefDateParts(BaseModel):

@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-import pandas as pd
+import pandas as pd  # type: ignore
 from pandas import DataFrame
 
 import config
@@ -24,11 +24,10 @@ class Matches(PickledDataframe):
     """This models our cache of matches.
     It includes accepted and declined matches"""
     __pickle_filename__ = config.cache_pickle_filename
-    crossref_subject: str = None
-    crossref_subject_found: bool = None
-    match: FuzzyMatch = None
-    qid_dropped: bool = None
-    qid_found: bool = None
+    crossref_subject: Optional[str] = None
+    crossref_subject_found: Optional[bool] = None
+    qid_dropped: Optional[bool] = None
+    qid_found: Optional[bool] = None
 
     def __append_match_result_to_the_dataframe__(self):
         self.__validate_match_variables__()
@@ -92,7 +91,7 @@ class Matches(PickledDataframe):
                 # print(row)
                 # print(row[CacheDataframeColumn.QID.value].values[0])
                 # exit()
-                qid: EntityId = EntityId(row[CacheDataframeColumn.QID.value][0])
+                qid: EntityId = EntityId(raw_identifier=row[CacheDataframeColumn.QID.value][0])
                 original_subject: str = row[CacheDataframeColumn.ORIGINAL_SUBJECT.value][0]
                 crossref_subject: str = row[CacheDataframeColumn.ORIGINAL_SUBJECT.value][0]
                 match_based_on: MatchBasedOn = MatchBasedOn(
@@ -190,3 +189,5 @@ class Matches(PickledDataframe):
             self.__extract_match__()
             self.__validate_match_variables__()
             return self.match
+        else:
+            return None

@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 class CrossrefSubject(BaseModel):
     """This class handles all the splitting and lookup of a single original subject from CrossrefEngine"""
     original_subject: str
-    subject: str = None
-    match_status: MatchStatus = None
-    matcher: OntologyBasedNerMatcher = None
+    subject: Optional[str] = None
+    match_status: Optional[MatchStatus] = None
+    matcher: Optional[OntologyBasedNerMatcher] = None
 
     class Config:
         arbitrary_types_allowed = True

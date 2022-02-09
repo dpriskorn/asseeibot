@@ -24,16 +24,16 @@ logger = logging.getLogger(__name__)
 
 class WikipediaPage(BaseModel):
     """Models a WMF Wikipedia page"""
-    pywikibot_page: Page = None
+    pywikibot_page: Optional[Page] = None
     dois: Optional[List[Doi]] = None
     missing_dois: Optional[List[Doi]] = None
     number_of_dois: int = 0
     number_of_isbns: int = 0
     number_of_missing_dois: int = 0
     number_of_missing_isbns: int = 0
-    page_id: int = None
-    references: List[WikipediaPageReference] = None
-    title: str = None
+    page_id: Optional[int] = None
+    references: Optional[List[WikipediaPageReference]] = None
+    title: Optional[str] = None
     # We can't type this with WikimediaEvent because of pydantic
     wikimedia_event: Any
 

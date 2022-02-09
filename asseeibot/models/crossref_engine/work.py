@@ -3,7 +3,7 @@ import logging
 from typing import List, Any, Optional
 
 from habanero import Crossref  # type: ignore
-from pydantic import BaseModel, conint
+from pydantic import BaseModel, conint, conint
 
 from asseeibot.models.crossref_engine.author import CrossrefAuthor
 from asseeibot.models.crossref_engine.date_parts import CrossrefDateParts
@@ -56,8 +56,8 @@ class CrossrefWork(BaseModel):
     subtitle: Optional[List[str]]
     title: Optional[List[Any]]
 
-    already_matched_qids: List[str] = None
-    subject_matches: List[FuzzyMatch] = None
+    already_matched_qids: Optional[List[str]] = None
+    subject_matches: Optional[List[FuzzyMatch]] = None
 
     # url: str
     # xml_urls: Optional[List[str]]

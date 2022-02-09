@@ -2,9 +2,9 @@
 import logging
 from urllib.parse import quote
 
-import pandas as pd
-from wikibaseintegrator import wbi_config
-from wikibaseintegrator.wbi_helpers import execute_sparql_query
+import pandas as pd  # type: ignore
+from wikibaseintegrator import wbi_config  # type: ignore
+from wikibaseintegrator.wbi_helpers import execute_sparql_query  # type: ignore
 
 import config
 
@@ -309,3 +309,5 @@ def string_search_url(string: str) -> str:
                 "profile=advanced&fulltext=0&" +
                 "advancedSearch-current=%7B%7D&ns0=1"
         )
+    else:
+        return None

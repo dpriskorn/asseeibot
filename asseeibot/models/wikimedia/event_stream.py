@@ -1,12 +1,12 @@
 import asyncio
 import logging
-from typing import List, Set
+from typing import List, Set, Optional
 
-import pywikibot
-from aiohttp import ClientPayloadError
-from aiosseclient import aiosseclient
-from purl import URL
-from pywikibot import APISite
+import pywikibot  # type: ignore
+from aiohttp import ClientPayloadError  # type: ignore
+from aiosseclient import aiosseclient  # type: ignore
+from purl import URL  # type: ignore
+from pywikibot import APISite  # type: ignore
 
 import config
 from asseeibot.helpers.console import console
@@ -18,11 +18,11 @@ from asseeibot.models.wikimedia.event import WikimediaEvent
 
 class EventStream:
     """This models an event stream from WMF"""
-    language_code: str = None
-    pywikibot_site: PywikibotSite = None
-    event_site: WikimediaSite = None
+    language_code: Optional[str] = None
+    pywikibot_site: Optional[PywikibotSite] = None
+    event_site: Optional[WikimediaSite] = None
     # event_limit: int = 30
-    missing_dois: List[Doi] = None
+    missing_dois: Optional[List[Doi]] = None
     missing_identitifier_limit: int = config.missing_identitifier_limit
     total_number_of_missing_dois: int = 0
     total_number_of_dois: int = 0

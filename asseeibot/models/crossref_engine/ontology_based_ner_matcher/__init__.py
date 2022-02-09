@@ -1,8 +1,8 @@
 import logging
 from typing import Optional
 
-from fuzzywuzzy import fuzz
-from pandas import DataFrame
+from fuzzywuzzy import fuzz   # type: ignore
+from pandas import DataFrame  # type: ignore
 from pydantic import BaseModel, PositiveInt
 
 from asseeibot.helpers.runtime_variable_setup import prepare_the_ontology_pickled_dataframe
@@ -120,7 +120,7 @@ class OntologyBasedNerMatcher(BaseModel):
         if row.label is None:
             raise ValueError("row.label was None")
         return FuzzyMatch(**dict(
-            qid=EntityId(row.item),
+            qid=EntityId(raw_identifier=row.item),
             alias=row.alias,
             label=row.label,
             description=row.description,

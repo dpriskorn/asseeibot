@@ -4,7 +4,7 @@ import logging
 from os.path import exists
 from typing import TYPE_CHECKING, Optional
 
-import pandas as pd
+import pandas as pd  # type: ignore
 from pandas import DataFrame
 from pydantic import BaseModel
 
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class PickledDataframe(BaseModel):
     __pickle_filename__: Optional[str]
     dataframe: DataFrame = None
-    match: FuzzyMatch = None
+    match: Optional[FuzzyMatch] = None
 
     class Config:
         arbitrary_types_allowed = True

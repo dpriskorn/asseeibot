@@ -1,6 +1,6 @@
 import logging
 from time import sleep
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from caseconverter import snakecase  # type: ignore
 from habanero import Crossref  # type: ignore
@@ -17,10 +17,10 @@ logger = logging.getLogger(__name__)
 class CrossrefEngine(BaseModel):
     """Lookup a work in CrossrefEngine"""
     data: Any = None
-    object_type: str = None
+    object_type: Optional[str] = None
     result: Any = None
     wikipedia_doi: str
-    work: CrossrefWork = None
+    work: Optional[CrossrefWork] = None
 
     def __convert_to_snake_case__(self):
         """This converts to snakecase 2 levels down in the dictionary

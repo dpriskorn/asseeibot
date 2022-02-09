@@ -1,8 +1,7 @@
 import logging
 from unittest import TestCase
 
-from asseeibot import FuzzyMatch
-from asseeibot.models.crossref_engine.ontology_based_ner_matcher import OntologyBasedNerMatcher
+from asseeibot.models.crossref_engine.ontology_based_ner_matcher import OntologyBasedNerMatcher, FuzzyMatch
 from asseeibot.models.enums import OntologyDataframeColumn
 
 logging.basicConfig(level=logging.INFO)

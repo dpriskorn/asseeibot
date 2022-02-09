@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from urllib.parse import quote
 
 from asseeibot.models.wikimedia.enums import WikimediaEditType
@@ -10,14 +10,14 @@ from asseeibot.models.wikimedia.wikipedia.wikipedia_page import WikipediaPage
 class WikimediaEvent:
     """This models a WMF kafka event from the EventStream API"""
     bot_edit: bool
-    edit_type: WikimediaEditType = None
-    event_data: Dict[str, str] = None
+    edit_type: Optional[WikimediaEditType] = None
+    event_data: Optional[Dict[str, str]] = None
     event_stream: Any = None  # We can't type this because of pydantic
-    language_code: str = None
-    namespace: int = None
-    page_title: str = None
-    server_name: str = None
-    wikipedia_page: WikipediaPage = None
+    language_code: Optional[str] = None
+    namespace: Optional[int] = None
+    page_title: Optional[str] = None
+    server_name: Optional[str] = None
+    wikipedia_page: Optional[WikipediaPage] = None
 
     def __init__(self, event: Any = None,
                  event_stream: Any = None):

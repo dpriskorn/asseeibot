@@ -1,8 +1,8 @@
 from typing import Optional, List
 
 from pydantic import BaseModel
-from wikibaseintegrator import wbi_config, WikibaseIntegrator
-from wikibaseintegrator.entities import Item as EntityItem
+from wikibaseintegrator import wbi_config, WikibaseIntegrator  # type: ignore
+from wikibaseintegrator.entities import Item as EntityItem  # type: ignore
 
 import config
 from asseeibot.models.wikimedia.enums import WikimediaLanguage
@@ -10,7 +10,7 @@ from asseeibot.models.wikimedia.wikidata.entity_id import EntityId
 
 
 class Item(BaseModel):
-    qid: EntityId
+    qid: Optional[EntityId]
     __item: Optional[EntityItem]
     __aliases: Optional[List[str]]
     __description: Optional[str]
