@@ -22,7 +22,10 @@ class Dataframe:
         if asseeibot.runtime_variables.ontology_dataframe is None:
             # This pickle is ~4MB in size and takes less than a second to load.
             # noinspection PyUnresolvedReferences
-            dataframe: Dataset["item", "itemLabel", "alias"] = pd.read_pickle("ontology.pkl")
+            try:
+                dataframe: Dataset["item", "itemLabel", "alias"] = pd.read_pickle("ontology.pkl")
+            except:
+                raise
             # This is needed for the fuzzymatching to work properly
             asseeibot.runtime_variables.ontology_dataframe = dataframe.fillna('')
 
