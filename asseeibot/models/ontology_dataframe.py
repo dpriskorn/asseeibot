@@ -24,7 +24,7 @@ class Dataframe:
             # noinspection PyUnresolvedReferences
             try:
                 dataframe: Dataset["item", "itemLabel", "alias"] = pd.read_pickle("ontology.pkl")
-            except:
+            except NameError:
                 raise
             # This is needed for the fuzzymatching to work properly
             asseeibot.runtime_variables.ontology_dataframe = dataframe.fillna('')
