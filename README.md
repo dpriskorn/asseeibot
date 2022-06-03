@@ -58,7 +58,7 @@ Then install the dependencies:
 
  $ sudo pip3 install -r requirements.txt
 
-Please don't hold me accountable if the dependecies eat your dog. Look at their
+Please don't hold me accountable if the dependencies eat your dog. Look at their
 sources and decide for yourself whether to trust their authors and the code.
 
 ## Configuration
