@@ -4,7 +4,7 @@ import logging
 # This file should be copied to config.py in the same directory
 
 bot_username = ""
-password = ""
+password = ""  # nosec: B105
 
 # User settings
 crossref_polite_pool_email = None
